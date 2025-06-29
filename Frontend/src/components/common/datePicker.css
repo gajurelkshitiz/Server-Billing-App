@@ -1,0 +1,10 @@
+.form-control{
+    padding: 7px;
+    border-radius: 10px;
+    width: 100%;
+    /* z-index: 9999 !important; */
+}
+
+/* .np-calendar-container {
+    z-index: 9999 !important;
+} */

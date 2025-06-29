@@ -1,0 +1,24 @@
+site_name: Billing Documentation
+site_description: Documentation for Billing
+site_author: DeskGoo Pvt. Ltd.
+
+nav:
+  - Home: index.md
+  - Introduction: introduction.md
+  - Installation: installation.md
+  - Getting Started: getting-started.md
+  - Login and User Access: login-and-user-access.md
+  - Dashboard Overview: dashboard-overview.md
+  - Creating and Managing Bills: creating-and-managing-bills.md
+  - Customer Management: customer-management.md
+  - Usage: usage.md
+  - API Reference: api-reference.md
+  - Developer Guide: developer-guide.md
+  - FAQ: faq.md
+  - About Us: about-us.md
+
+theme:
+  name: readthedocs
+
+# extra_css:
+#   - css/extra.css
