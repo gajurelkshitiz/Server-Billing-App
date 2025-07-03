@@ -138,7 +138,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         const activeFY = Array.isArray(data.fiscalYears)
           ? data.fiscalYears.find((fy: any) => fy.status === true)
           : null;
-        if (activeFY) setFiscalYear(activeFY.name);
+        if (activeFY) {
+          setFiscalYear(activeFY.name);
+          localStorage.setItem('fiscalYear', activeFY.name);
+        }
       } catch (err) {
         setFiscalYear("");
       }
@@ -247,8 +250,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                 <span className="text-gray-900">System</span>
               </h2>
               {fiscalYear && (
-                <span className="text-sm font-semibold mt-1 ml-7">
-                  FY: {fiscalYear}
+                <span className="text-sm mt-1">
+                  CURRENT FY: <span className="font-semibold">{fiscalYear}</span>
                 </span>
               )}
             </div>

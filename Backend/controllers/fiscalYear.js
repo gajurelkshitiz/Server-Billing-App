@@ -62,8 +62,19 @@ const updateFiscalYear = async (req, res) => {
     throw new BadRequestError("All fields cannot be empty");
   }
 
+  
+  const fiscalYear = await FiscalYear.findOneAndUpdate(
+    { _id: fiscalYearID },
+    req.body,
+    { new: true, runValidators: true }
+  );
+  
+  if (!fiscalYear) {
+    throw new BadRequestError(`No Fiscal Year found.`);
+  }
+
   // If status is true, deactivate all other fiscal years for this superadmin
-  if (status === true) {
+  if (status === true || status === 'true') {
     const fiscalYear = await FiscalYear.findById(fiscalYearID);
     if (fiscalYear) {
       await FiscalYear.updateMany(
@@ -73,15 +84,6 @@ const updateFiscalYear = async (req, res) => {
     }
   }
 
-  const fiscalYear = await FiscalYear.findOneAndUpdate(
-    { _id: fiscalYearID },
-    req.body,
-    { new: true, runValidators: true }
-  );
-
-  if (!fiscalYear) {
-    throw new BadRequestError(`No Fiscal Year found.`);
-  }
   res.status(StatusCodes.OK).json({ fiscalYear });
 };
 

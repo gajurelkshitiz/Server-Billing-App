@@ -7,25 +7,34 @@ import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui/statusBatch";
 
 const columns = [
+  { key: "sn", label: "S.N.", sortable: true},
+  { key: "billNo", label: "Bill Number", sortable: true },
   { key: "date", label: "Bill Date", sortable: true },
-  { key: "amount", label: "Total Amount", sortable: true },
+  { key: "customerName", label: "Customer", sortable: true },
   { key: "itemDescription", label: "Item Description"},
   { key: "billAttachment", label: "Bill"},
-  { key: "paid", 
-    label: "Status", 
-    sortable: true,
-    render: (value: boolean) => (
-    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-      <label>
-        <input type="checkbox" checked={!!value} readOnly /> Paid
-      </label>
-      <label>
-        <input type="checkbox" checked={!value} readOnly /> Due
-      </label>
-    </div>
-    ),
+  { key: "amount", label: "Amount", sortable: true },
+  { 
+    key: "vat", 
+    label: "Vat %", 
+    sortable: true, 
+    render: (value: any, row: any) => {
+      if (!value) return '-';
+      return `${value}%`
+    }
   },
-  { key: "dueAmount", label: "Due Amount", sortable: true}
+  { 
+    key: "discount", 
+    label: "Discount", 
+    sortable: true,
+    render: (value: any, row: any) => {
+      if (!value) return '-';
+      return row.discountType === 'percentage' 
+        ? `${value}%` 
+        : `Rs. ${value}`;
+    }
+  },
+  { key: "netTotalAmount", label: "Net Total Amount", sortable: true },
 ];
 
 type SalesEntryPageProps = {

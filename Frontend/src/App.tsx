@@ -27,11 +27,11 @@ import SetPassword from "@/components/auth/SetPassword";
 import { ProfilePage } from "./pages/Profile";
 import { ProfileProvider } from "@/context/ProfileContext"; // <-- import
 import { CompanyProvider } from "@/context/CompanyContext"; // <-- import
-import PurchaseDueListPage from "./pages/Purchase Due List";
-import SalesDueListPage from "./pages/Sales Due List";
+import PurchaseDueListPage from "./pages/PurchaseDueList";
+import SalesDueListPage from "./pages/SalesDueList";
 import { CompanyStateProvider } from "./provider/companyState";
 import DropdownComponent from "./DropdownText";
-import SalesPaymentListPage from "./pages/Sales Payment List";
+import SalesPaymentListPage from "./pages/SalesPaymentList";
 
 // Routes for testing only
 import SalesLayout from './pages/Sales/SalesLayout';
@@ -40,7 +40,8 @@ import Customer from './pages/Sales/Customer';
 import WithSearchLayout from './pages/Sales/WithSearchLayout';
 import SalesDueList from './pages/Sales/SalesDueList';
 import SalesPaymentList from './pages/Sales/SalesPaymentList';
-import PurchasePaymentListPage from "./pages/Purchase Payment List";
+import PurchasePaymentListPage from "./pages/PurchasePaymentList";
+import { FiscalYearProvider } from "./context/FiscalYearContext";
 
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <ProfileProvider> {/* <-- wrap here */}
+        <FiscalYearProvider>
         <CompanyProvider>
         <CompanyStateProvider>
         <BrowserRouter>
@@ -251,6 +253,7 @@ const App = () => (
         </BrowserRouter>
         </CompanyStateProvider>
         </CompanyProvider>
+        </FiscalYearProvider>
       </ProfileProvider>
     </TooltipProvider>
   </QueryClientProvider>

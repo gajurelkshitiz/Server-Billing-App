@@ -126,175 +126,178 @@ const PurchaseEntryFormModal = ({
             style={{ minHeight: 0 }}
           >
             {/* Bill Date (English) */}
-            {/* <Label htmlFor="date">
-              Bill Date (AD)<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="date"
-              type="date"
-              value={formData["date"] || ""}
-              onChange={e => handleInputChange("date", e.target.value)}
-              required
-              className="mt-1 w-full border rounded p-2"
-            /> */}
+            {/* <div>
+              <Label htmlFor="date">
+                Bill Date (AD)<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData["date"] || ""}
+                onChange={e => handleInputChange("date", e.target.value)}
+                required
+                className="mt-1 w-full border rounded p-2"
+              />
+            </div> */}
 
             {/* Bill Date (Nepali) */}
-            <Label htmlFor="nepaliDate" className="mt-4">
-              Bill Date (BS)<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <NepaliDate 
-                handleInputChange={handleInputChange} 
-                formData={formData}
-                fieldName="date"
-              />
-
-
-          {/* <label htmlFor="nepali-datepicker">Select Nepali Date:</label>
-          <input
-            type="text"
-            id="nepali-datepicker"
-            ref={inputRef}
-            placeholder="Select Nepali Date"
-            onChange={e => setSelectedDate(e.target.value)}
-            autoComplete="off"
-          />*/}
+            <div>
+              <Label htmlFor="nepaliDate" className="mt-4">
+                Bill Date (BS)<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <NepaliDate 
+                  handleInputChange={handleInputChange} 
+                  formData={formData}
+                  fieldName="date"
+                />
+            </div>
 
             {/* Total Amount */}
-            <Label htmlFor="amount">
-              Total Amount<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              value={formData["amount"] || ""}
-              onChange={(e) => handleInputChange("amount", e.target.value)}
-              placeholder="Enter total amount"
-              required
-              className="mt-1"
-            />
+            <div>
+              <Label htmlFor="amount">
+                Total Amount<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={formData["amount"] || ""}
+                onChange={(e) => handleInputChange("amount", e.target.value)}
+                placeholder="Enter total amount"
+                required
+                className="mt-1"
+              />
+            </div>
 
             {/* Bill Photo (File Input) */}
-            <Label htmlFor="billAttachment">
-              Bill Photo<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="billAttachment"
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                handleImageFileChange(
-                  "billAttachment",
-                  e.target.files?.[0] || null
-                )
-              }
-              required
-              className="mt-1"
-            />
-            {imagePreview && (
-              <div className="mt-2">
-                <span className="text-sm font-medium">Preview:</span>
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setOpenImageDialog(true)}
-                  style={{
-                    width: "50%",
-                    maxHeight: "100px",
-                    objectFit: "contain",
-                  }}
-                />
-                <div className="mt-1">
-                  <span className="text-xs text-gray-500">
-                    Click to view full size
-                  </span>
+            <div>
+              <Label htmlFor="billAttachment">
+                Bill Photo<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="billAttachment"
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  handleImageFileChange(
+                    "billAttachment",
+                    e.target.files?.[0] || null
+                  )
+                }
+                required
+                className="mt-1"
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <span className="text-sm font-medium">Preview:</span>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setOpenImageDialog(true)}
+                    style={{
+                      width: "50%",
+                      maxHeight: "100px",
+                      objectFit: "contain",
+                    }}
+                  />
+                  <div className="mt-1">
+                    <span className="text-xs text-gray-500">
+                      Click to view full size
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Supplier Name (Select) */}
-            <Label htmlFor="supplierID">
-              Supplier Name<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Select
-              value={formData["supplierID"] || ""}
-              onValueChange={(value) => handleInputChange("supplierID", value)}
-              disabled={loadingSuppliers}
-            >
-              <SelectTrigger id="supplierID" className="mt-1">
-                <SelectValue
-                  placeholder={
-                    loadingSuppliers ? "Loading..." : "Select Supplier"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingSuppliers ? (
-                  <SelectItem value="__loading__" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : suppliers.length === 0 ? (
-                  <SelectItem value="__none__" disabled>
-                    No suppliers found
-                  </SelectItem>
-                ) : (
-                  suppliers.map((supplier) => (
-                    <SelectItem key={supplier._id} value={supplier._id}>
-                      {supplier.name}
+            <div>
+              <Label htmlFor="supplierID">
+                Supplier Name<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                value={formData["supplierID"] || ""}
+                onValueChange={(value) => handleInputChange("supplierID", value)}
+                disabled={loadingSuppliers}
+              >
+                <SelectTrigger id="supplierID" className="mt-1">
+                  <SelectValue
+                    placeholder={
+                      loadingSuppliers ? "Loading..." : "Select Supplier"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingSuppliers ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
                     </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  ) : suppliers.length === 0 ? (
+                    <SelectItem value="__none__" disabled>
+                      No suppliers found
+                    </SelectItem>
+                  ) : (
+                    suppliers.map((supplier) => (
+                      <SelectItem key={supplier._id} value={supplier._id}>
+                        {supplier.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Description of Items (Textarea) */}
-            <Label htmlFor="itemDescription">
-              Description of Items<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <textarea
-              id="itemDescription"
-              value={formData["itemDescription"] || ""}
-              onChange={(e) =>
-                handleInputChange("itemDescription", e.target.value)
-              }
-              placeholder="Enter item description"
-              required
-              rows={4}
-              className="mt-1 w-full border rounded p-2"
-            />
+            <div>
+              <Label htmlFor="itemDescription">
+                Description of Items<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <textarea
+                id="itemDescription"
+                value={formData["itemDescription"] || ""}
+                onChange={(e) =>
+                  handleInputChange("itemDescription", e.target.value)
+                }
+                placeholder="Enter item description"
+                required
+                rows={4}
+                className="mt-1 w-full border rounded p-2"
+              />
+            </div>
 
             {/* Status (Checkboxes) */}
-            <Label>
-              Status<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <div className="flex gap-4 mt-1">
-              <label className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={formData["paid"] === "true"}
-                  onChange={() => {
-                    handleInputChange("paid", "true");
-                    handleInputChange("dueAmount", "0");
-                  }}
-                />
-                Paid
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={formData["paid"] === "false"}
-                  onChange={() => {
-                    handleInputChange("paid", "false");
-                    handleInputChange("dueAmount", "");
-                  }}
-                />
-                Due
-              </label>
+            <div>
+              <Label>
+                Status<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <div className="flex gap-4 mt-1">
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={formData["paid"] === "true"}
+                    onChange={() => {
+                      handleInputChange("paid", "true");
+                      handleInputChange("dueAmount", "0");
+                    }}
+                  />
+                  Paid
+                </label>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={formData["paid"] === "false"}
+                    onChange={() => {
+                      handleInputChange("paid", "false");
+                      handleInputChange("dueAmount", "");
+                    }}
+                  />
+                  Due
+                </label>
+              </div>
             </div>
 
             {/* Due Amount (only if paid is false) */}
             {formData["paid"] === "false" && (
-              <>
+              <div>
                 <Label htmlFor="dueAmount">Due Amount</Label>
                 <Input
                   id="dueAmount"
@@ -304,7 +307,7 @@ const PurchaseEntryFormModal = ({
                   placeholder="Enter Amount Left to pay"
                   className="mt-1"
                 />
-              </>
+              </div>
             )}
 
             <div className="flex space-x-3 pt-4">

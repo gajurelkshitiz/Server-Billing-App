@@ -5,17 +5,9 @@ import SalesEntryFormModal from "./Form/SalesEntryFormModal";
 import { useSalesEntry } from "./Hooks/useSalesEntries";
 import { SalesEntry } from "./types";
 import SalesEntryTable from "./SalesEntryPage";
-import { useCompanyStateGlobal } from "@/provider/companyState";
+import { useCompanyStateGlobal, CompanyContextType } from "@/provider/companyState";
 import { useNavigate } from "react-router-dom";
 
-
-interface CompanyContext {
-    state?: {
-        companyID: string,
-    };
-    dispatch?: (value: { type: "SET_COMPANYID", payload: any }) =>  void;
-
-}
 
 
 const SalesEntryPage = () => {
@@ -32,7 +24,7 @@ const SalesEntryPage = () => {
     setFormData,
   } = useSalesEntry();
 
-  const {state, dispatch}:CompanyContext = useCompanyStateGlobal()
+  const {state, dispatch}:CompanyContextType = useCompanyStateGlobal()
   const role = localStorage.getItem('role')
 
   
@@ -65,20 +57,24 @@ const SalesEntryPage = () => {
   // };
 
   const handleInputChange = (name: string, value: string) => {
-    // Only validate if dueAmount is being changed and amount is present
-    if (name === "dueAmount" && typeof value === "string") {
-      const due = parseFloat(value);
-      const amount = parseFloat(String(formData.amount ?? "0"));
-      if (due > amount) {
-        // alert("Due Amount cannot be greater than Total Amount!");
+    // Only Validate if billNo is unique
+    if (name === "billNo" && typeof value === "string") {
+      // Check if billNo already exists in salesEntries
+      const isDuplicate = salesEntries.some(entry => 
+        entry.billNo === value && 
+        (!editingSalesEntry || entry._id !== formData._id) // Exclude current entry when editing
+      );
+      
+      if (isDuplicate) {
         toast({
-          title: "Error",
-          description: `Due Amount cannot be greater than ${formData.amount}`,
+          title: "Validation Error",
+          description: "Bill number already exists. Please use a unique bill number.",
           variant: "destructive",
         });
-        return; // Prevent update
+        return; // Don't update the form data if duplicate
       }
     }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

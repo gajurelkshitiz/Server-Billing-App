@@ -81,7 +81,7 @@ export function useSuppliers() {
       } else {
         toast({
           title: "Error",
-          description: `Failed to create admin: ${res_data.msg}`,
+          description: `Failed to create supplier: ${res_data.msg}`,
           variant: "destructive",
         });
         return false;
@@ -89,7 +89,7 @@ export function useSuppliers() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create admin",
+        description: "Failed to create supplier",
         variant: "destructive",
       });
       return false;
@@ -103,7 +103,7 @@ export function useSuppliers() {
       if (!formData._id) {
       toast({
         title: "Error",
-        description: "No admin selected for update",
+        description: "No supplier selected for update",
         variant: "destructive",
       });
       return false;
@@ -128,7 +128,7 @@ export function useSuppliers() {
       } else {
       toast({
         title: "Error",
-        description: `Failed to update admin: ${res_data.msg}`,
+        description: `Failed to update supplier: ${res_data.msg}`,
         variant: "destructive",
       });
       return false;
@@ -136,7 +136,7 @@ export function useSuppliers() {
     } catch (error) {
       toast({
       title: "Error",
-      description: "Failed to update admin",
+      description: "Failed to update supplier",
       variant: "destructive",
       });
       return false;

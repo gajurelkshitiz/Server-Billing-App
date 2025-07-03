@@ -29,10 +29,11 @@ const createCompany = async (req, res) => {
 
 const getAllCompanies = async (req, res) => {
   const { tokenID, companyID } = req.user;
+  console.log("tokenID and companyID", tokenID, companyID);
   const companies = await Company.find({
     $or: [
-      { adminID: tokenID },
-      { _id: companyID}
+      { _id: companyID},
+      { adminID: tokenID }
     ]
   });
   res.status(StatusCodes.OK).json({ companies, count: companies.length });
@@ -56,6 +57,8 @@ const updateCompany = async (req, res) => {
   const { id: companyId } = req.params;
   const { name, email, phoneNo, address, vat, industrytype } = req.body;
 
+  console.log('succefully called update from frontend here.')
+
   if (
     name === "" ||
     email === "" ||
@@ -65,6 +68,18 @@ const updateCompany = async (req, res) => {
     industrytype === ""
   ) {
     throw new BadRequestError("All fields cannot be empty");
+  }
+
+  // for logo updating 
+  if (req.file && req.file.path) {
+    const uploaded = await uploadOnCloudinary(
+      req.file.path,
+      `${Date.now()}-${req.file.originalname}`,
+      "BILL APP/COMPANY LOGO"
+    );
+    if (uploaded && uploaded.url) {
+      req.body.logo = uploaded.url;
+    }
   }
 
   const company = await Company.findOneAndUpdate(
@@ -79,6 +94,8 @@ const updateCompany = async (req, res) => {
 
   res.status(StatusCodes.OK).json({ company });
 };
+
+
 
 const deleteCompany = async (req, res) => {
   const { tokenID } = req.user;

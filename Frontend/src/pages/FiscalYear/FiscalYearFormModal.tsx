@@ -50,67 +50,74 @@ const FiscalYearFormModal = ({
           className="space-y-4 flex-1 overflow-y-auto p-2"
           style={{ minHeight: 0 }}
         >
-
           {/* Start Fiscal Date (Nepali) */}
-          <Label htmlFor="nepaliDate" className="mt-4">
-            Start Date (BS)<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <NepaliDate
-            handleInputChange={handleInputChange}
-            formData={formData}
-            fieldName="startDate"
-            position="after"
-          />
+          <div>
+            <Label htmlFor="nepaliDate" className="mt-4">
+              Start Date (BS)<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <NepaliDate
+              handleInputChange={handleInputChange}
+              formData={formData}
+              fieldName="startDate"
+              position="after"
+            />
+          </div>
 
           {/* End Fiscal Date (Nepali) */}
-          <Label htmlFor="nepaliDate" className="mt-4">
-            End Date (BS)<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <NepaliDate
-            handleInputChange={handleInputChange}
-            formData={formData}
-            fieldName="endDate"
-          />
+          <div>
+            <Label htmlFor="nepaliDate" className="mt-4">
+              End Date (BS)<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <NepaliDate
+              handleInputChange={handleInputChange}
+              formData={formData}
+              fieldName="endDate"
+            />
+          </div>
 
           {/* FiscalYear Name */}
-          <Label htmlFor="name">
-            FiscalYear Name<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData["name"] || ""}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="FiscalYear Name (e.g. 2082/83)"
-            required
-            className="mt-1"
-            disabled={editingFiscalYear}
-          />
+          <div>
+            <Label htmlFor="name">
+              FiscalYear Name<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData["name"] || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="FiscalYear Name (e.g. 2082/83)"
+              required
+              className="mt-1"
+              disabled={editingFiscalYear}
+            />
+          </div>
           
           {/* Status */}
-          <Label htmlFor="status">
-            Status<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={
-              formData.status === true
-                ? "true"
-                : formData.status === false
-                ? "false"
-                : 
-                formData.status || ""
-            }
-            onValueChange={(value) => handleInputChange("status", value)}
-            required
-          >
-            <SelectTrigger id="status" className="mt-1">
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="true">Active</SelectItem>
-              <SelectItem value="false">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <Label htmlFor="status">
+              Status<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={
+                formData.status === true
+                  ? "true"
+                  : formData.status === false
+                  ? "false"
+                  : 
+                  formData.status || ""
+              }
+              onValueChange={(value) => handleInputChange("status", value)}
+              required
+            >
+              <SelectTrigger id="status" className="mt-1">
+                <SelectValue placeholder="Select..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="flex space-x-3 pt-4">
             <Button

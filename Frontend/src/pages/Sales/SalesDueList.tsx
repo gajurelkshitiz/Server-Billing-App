@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import CustomerSearch from "../Sales Due List/components/CustomerSearch";
-import DueSummary from "../Sales Due List/components/DueSummary";
+import CustomerSearch from "../SalesDueList/components/CustomerSearch";
+import DueSummary from "../SalesDueList/components/DueSummary";
 import { getAuthHeaders } from "@/utils/auth";
-import DataTable from "../Sales Due List/components/Table/DataTable";
+import DataTable from "../SalesDueList/components/Table/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useCompanyStateGlobal } from "@/provider/companyState";
-import PayNowForm from "../Sales Due List/components/PayNowForm";
+import PayNowForm from "../SalesDueList/components/PayNowForm";
 
 /**
  * SalesDueList Component

@@ -143,107 +143,112 @@ const AdminFormModal = ({
         >
 
           {/* Full Name */}
-          <Label htmlFor="name">
-            Full Name<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData["name"] || ""}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="Full Name"
-            required
-            className="mt-1"
-          />
+          <div>
+            <Label htmlFor="name">
+              Full Name<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData["name"] || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="Full Name"
+              required
+            />
+          </div>
 
           {/* Profile Image Upload */}
-          <Label htmlFor="profileImage">
-            Profile Image<span className="text-red-500 ml-1"> (optional)</span>
-          </Label>
-          <Input
-            id="profileImage"
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              handleImageFileChange(
-                "profileImage", 
-                e.target.files?.[0] || null
-              )
-            }
-            className="mt-1"
-          />
-          {imagePreview && (
-            <div className="mt-2">
-              <span className="text-sm font-medium">Preview:</span>
-              <img
-                src={imagePreview}
-                alt="Profile Preview"
-                className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setOpenImageDialog(true)}
-                  style={{
-                    width: "50%",
-                    maxHeight: "100px",
-                    objectFit: "contain",
-                  }}
-              />
-              <div className="mt-1">
-                <span className="text-xs text-gray-500">
-                  Click to view full size
-                </span>
+          <div>
+            <Label htmlFor="profileImage">
+              Profile Image<span className="text-red-500 ml-1"> (optional)</span>
+            </Label>
+            <Input
+              id="profileImage"
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                handleImageFileChange(
+                  "profileImage", 
+                  e.target.files?.[0] || null
+                )
+              }
+            />
+            {imagePreview && (
+              <div className="mt-2">
+                <span className="text-sm font-medium">Preview:</span>
+                <img
+                  src={imagePreview}
+                  alt="Profile Preview"
+                  className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setOpenImageDialog(true)}
+                    style={{
+                      width: "50%",
+                      maxHeight: "100px",
+                      objectFit: "contain",
+                    }}
+                />
+                <div className="mt-1">
+                  <span className="text-xs text-gray-500">
+                    Click to view full size
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Subscription (dynamic select) */}
-          <Label htmlFor="subsName">
-            Subscription<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={formData["subsName"] || ""}
-            onValueChange={(value) => handleInputChange("subsName", value)}
-            disabled={loadingSubscriptions || editingAdmin}
-            required
-          >
-            <SelectTrigger id="subsName" className="mt-1">
-              <SelectValue placeholder={loadingSubscriptions ? "Loading..." : "Select Subscription"} />
-            </SelectTrigger>
-            <SelectContent>
-              {loadingSubscriptions ? (
-                <SelectItem value="__loading__" disabled>
-                  Loading...
-                </SelectItem>
-              ) : subscriptions.length === 0 ? (
-                <SelectItem value="__none__" disabled>
-                  No subscriptions found
-                </SelectItem>
-              ) : (
-                subscriptions.map((sub) => (
-                  <SelectItem key={sub._id} value={sub.name}>
-                    {sub.name}
+          <div>
+            <Label htmlFor="subsName">
+              Subscription<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={formData["subsName"] || ""}
+              onValueChange={(value) => handleInputChange("subsName", value)}
+              disabled={loadingSubscriptions || editingAdmin}
+              required
+            >
+              <SelectTrigger id="subsName">
+                <SelectValue placeholder={loadingSubscriptions ? "Loading..." : "Select Subscription"} />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingSubscriptions ? (
+                  <SelectItem value="__loading__" disabled>
+                    Loading...
                   </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+                ) : subscriptions.length === 0 ? (
+                  <SelectItem value="__none__" disabled>
+                    No subscriptions found
+                  </SelectItem>
+                ) : (
+                  subscriptions.map((sub) => (
+                    <SelectItem key={sub._id} value={sub.name}>
+                      {sub.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Email */}
-          <Label htmlFor="email">
-            Email<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData["email"] || ""}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            placeholder="Enter email (eg. example@gmail.com)"
-            required
-            className="mt-1"
-            disabled={editingAdmin}
-          />
+          <div>
+            <Label htmlFor="email">
+              Email<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData["email"] || ""}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              placeholder="Enter email (eg. example@gmail.com)"
+              required
+              disabled={editingAdmin}
+            />
+          </div>
 
           {/* Password (only when creating) */}
           {/* {!editingAdmin && (
-            <>
+            <div>
               <Label htmlFor="password">
                 Password<span className="text-red-500 ml-1">*</span>
               </Label>
@@ -254,36 +259,34 @@ const AdminFormModal = ({
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 placeholder="Enter password (min 8 Character)"
                 required
-                className="mt-1"
               />
-            </>
+            </div>
           )} */}
 
           {/* Phone Number */}
-          <Label htmlFor="phoneNo">
-            Phone Number<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <PhoneInput
-            id="phoneNo"
-            international
-            defaultCountry="NP"
-            countries={["IN", "BD", "NP", "CN", "BT", "US"]}
-            value={formData.phoneNo || ""}
-            onChange={(value) => handleInputChange("phoneNo", value)}
-            inputComponent={Input}
-            className="mt-1"
-            required
-            error={
-              formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
-                ? "Invalid phone number"
-                : undefined
-            }
-          />
-          {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
-            <p style={{ color: "red" }}>Invalid phone number</p>
-          )}
-
-          
+          <div>
+            <Label htmlFor="phoneNo">
+              Phone Number<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <PhoneInput
+              id="phoneNo"
+              international
+              defaultCountry="NP"
+              countries={["IN", "BD", "NP", "CN", "BT", "US"]}
+              value={formData.phoneNo || ""}
+              onChange={(value) => handleInputChange("phoneNo", value)}
+              inputComponent={Input}
+              required
+              error={
+                formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
+                  ? "Invalid phone number"
+                  : undefined
+              }
+            />
+            {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
+              <p style={{ color: "red" }}>Invalid phone number</p>
+            )}
+          </div>
 
           <div className="flex space-x-3 pt-4">
             <Button

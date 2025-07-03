@@ -1,13 +1,25 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import reducer from './reducer';
-const CompanyContext = createContext({});
 
 interface InitialState {
-    companyId: string
+    companyID: string;
+    companyName: string;
 }
 
+// Export the CompanyContext interface for reuse
+export interface CompanyContextType {
+  state?: {
+    companyID: string;
+    companyName: string;
+  };
+  dispatch?: (value: { type: "SET_COMPANY"; payload: { companyID: string; companyName: string } }) => void;
+}
+
+const CompanyContext = createContext<CompanyContextType>({});
+
 const initialState : InitialState  = {
-    companyId: ''
+    companyID: '',
+    companyName: ''
 }
 
 const CompanyStateProvider = ({ children }: { children: React.ReactNode }) => {
@@ -19,9 +31,8 @@ const CompanyStateProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-
-const useCompanyStateGlobal = () => {
+const useCompanyStateGlobal = (): CompanyContextType => {
   return useContext(CompanyContext);
 };
 
-export {useCompanyStateGlobal, CompanyStateProvider};
+export { useCompanyStateGlobal, CompanyStateProvider };

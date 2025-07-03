@@ -23,7 +23,7 @@ router.route("/")
 
 router.route("/:id")
     .get(authorizeRoles(["admin"]), getCompany)
-    .patch(authorizeRoles(["admin"]), updateCompany)
+    .patch(authorizeRoles(["admin"]), upload.single('logo'), updateCompany)
     .delete(authorizeRoles(["admin"]), deleteCompany);
 
 // yo chai future ma companies name ko dropdown ma use garna ko lagi ho

@@ -6,6 +6,7 @@ import { useCompany } from "./useCompanies";
 import { Company } from "./types";
 import CompanyTable from "./CompanyPage";
 import { useCompanyContext } from "@/context/CompanyContext";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 const CompanyPage = () => {
   
@@ -21,6 +22,10 @@ const CompanyPage = () => {
   const [editingCompany, setEditingCompany] = useState<boolean>(false);
   const { company, setCompany } = useCompanyContext(); // context only
   const { toast } = useToast();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  
 
   console.log('value after fetching company in context api', company);
 
@@ -37,9 +42,20 @@ const CompanyPage = () => {
   };
 
   const handleDelete = async (company: Company) => {
-    if (window.confirm("Are you sure you want to delete this Company?")) {
-      await deleteCompany(company);
-    }
+    // if (window.confirm("Are you sure you want to delete this Company?")) {
+    //   await deleteCompany(company);
+    // }
+    setCompanyToDelete(company);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!companyToDelete) return;
+    setDeleteLoading(true);
+    await deleteCompany(companyToDelete);
+    setDeleteLoading(false);
+    setConfirmOpen(false);
+    setCompanyToDelete(null);
   };
 
   const handleInputChange = (name: string, value: string) => {
@@ -51,7 +67,7 @@ const CompanyPage = () => {
   // subscriptionFormSubmitHandler
   const handleSubmit = async (e : any) => {
     e.preventDefault();
-
+    console.log('before update the formData is:', formData);
     if (editingCompany) {
       await updateCompanyHandler();
       setIsModalOpen(false);
@@ -84,6 +100,16 @@ const CompanyPage = () => {
         handleSubmit={handleSubmit}
         editingCompany={editingCompany}
         title={editingCompany ? "Edit Company" : "Add New Company"}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete Company"
+        description="Are you sure you want to delete this company? This action cannot be undone."
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     </div>
   );

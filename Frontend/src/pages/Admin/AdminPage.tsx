@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const columns = [
+  { key: 'sn', label: "S.N.", sortable: true},
   { key: "name", label: "Full Name", sortable: true },
   { key: "profileImage", label: "Profile"},
   { key: "email", label: "Email", sortable: true },

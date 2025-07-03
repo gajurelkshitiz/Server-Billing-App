@@ -6,8 +6,8 @@ const { BadRequestError, NotFoundError } = require('../errors');
 
 // Create a new customer
 const createCustomer = async (req, res) => {
-  const { name, email, phoneNo, address, status, companyID } = req.body;
-  if (!name || !email || !phoneNo || !address || !status || !companyID) {
+  const { name, email, phoneNo, address, prevClosingBalance, panNo, status, companyID } = req.body;
+  if (!name || !email || !phoneNo || !prevClosingBalance || !panNo || !address || !status || !companyID) {
     throw new BadRequestError('Please provide all values');
   }
   console.log(req.body)
@@ -25,23 +25,18 @@ const createCustomer = async (req, res) => {
 
 // Get all customers
 const getAllCustomers = async (req, res) => {
-  // ID's from token
-  const { adminID, companyID, tokenID } = req.user;
+  
+  let companyID;
+  // for user, companyID from token:
+  companyID = req.user.companyID;
 
-  let customers;
-
-  if (adminID) {
-    // User: fetch customers created by this user
-    customers = await Customer.find({ companyID: companyID }).sort('createdAt');
-  } else {
-    // Admin: fetch customers created by admin (adminID == null) or by users under this admin (adminID == tokenID)
-    customers = await Customer.find({
-      $or: [
-        { createdBy: tokenID, adminID: null },
-        { adminID: tokenID }
-      ]
-    }).sort('createdAt');
+  // for admin, where companyID comes from param
+  if (!companyID && req.query.companyID){
+    companyID = req.query.companyID;
   }
+
+
+  const customers = await Customer.find({ companyID: companyID }).sort('createdAt');
   
   res.status(StatusCodes.OK).json({ customers, count: customers.length });
 };

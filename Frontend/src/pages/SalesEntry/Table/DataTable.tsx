@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import TableH from "./TableH";
 import TableB from "./TableB";
+import { processDataDates } from "@/utils/dateUtils";
+import { filterData, sortData, addSerialNumbers, handleSortLogic } from "@/utils/tableUtils";
 
 interface Column {
   key: string;
@@ -24,9 +26,7 @@ interface Column {
 interface DataTableProps {
   data: any[];
   columns: Column[];
-  // onAdd: () => void;
   handleEdit: (row: any) => void;
-  // handleDelete: (row: any) => void;
   loading?: boolean;
 }
 
@@ -40,46 +40,15 @@ const DataTable = ({
   const [sortField, setSortField] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  // Format date function
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    return dateString.split('T')[0]; // Gets "2025-05-29" from "2025-05-29T00:00:00.000Z"
-  };
-
-  // Process data to format dates
-  const processedData = data.map(row => ({
-    ...row,
-    date: row.date ? formatDate(row.date) : row.date
-  }));
-
   const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
+    handleSortLogic(sortField, field, sortDirection, setSortField, setSortDirection);
   };
 
-  const filteredData = processedData.filter((row) =>
-    Object.values(row).some((value) =>
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
-  const sortedData = sortField
-    ? [...filteredData].sort((a, b) => {
-        const aVal = a[sortField];
-        const bVal = b[sortField];
-        if (sortDirection === "asc") {
-          return aVal > bVal ? 1 : -1;
-        }
-        return aVal < bVal ? 1 : -1;
-      })
-    : filteredData;
-
-  // just for checking purpose
-  // console.log('Filtered and sorted data:', sortedData
+  // Process data through utility functions
+  const processedData = processDataDates(data);
+  const filteredData = filterData(processedData, searchTerm);
+  const sortedData = sortData(filteredData, sortField, sortDirection);
+  const dataWithSerialNumbers = addSerialNumbers(sortedData);
 
   return (
     <Card>
@@ -101,7 +70,7 @@ const DataTable = ({
         {loading ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600">
-              Loding...
+              Loading...
             </div>
           </div>
         ) : (
@@ -116,13 +85,13 @@ const DataTable = ({
               />
     
               <TableB 
-                sortedData={sortedData}
+                sortedData={dataWithSerialNumbers}
                 columns={columns}
                 handleEdit={handleEdit}
               />
             </table>
 
-            {sortedData.length === 0 && (
+            {dataWithSerialNumbers.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 No data found
               </div>

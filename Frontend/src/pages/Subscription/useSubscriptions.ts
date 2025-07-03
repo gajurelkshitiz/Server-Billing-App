@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Subscription } from "./types";
+import { getAuthHeaders } from "@/utils/auth";
 
 export function useSubscription() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Subscription>>({});
+  
 
   const { toast } = useToast();
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-    "Content-Type": "application/json",
-    "X-Role": localStorage.getItem("role") || "",
-  });
+  // const getAuthHeaders = () => ({
+  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //   "Content-Type": "application/json",
+  //   "X-Role": localStorage.getItem("role") || "",
+  // });
 
   const fetchSubscriptions = async () => {
     setLoading(true);

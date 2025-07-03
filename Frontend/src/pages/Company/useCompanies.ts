@@ -51,10 +51,22 @@ export function useCompany() {
   const addNewCompanyHandler = async () => {
     const url = `${import.meta.env.REACT_APP_API_URL}/company/`;
     try {
+      const form = new FormData();
+      // Append all fields to FormData
+      for (const key in formData) {
+        if (formData[key] !== undefined && formData[key] !== null) {
+          form.append(key, formData[key]);
+        }
+      }
+
       const response = await fetch(url, {
         method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(formData),
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "X-Role": localStorage.getItem("role") || "",
+          // Do NOT set Content-Type, browser will set it for FormData
+        },
+        body: form,
       });
       const res_data = await response.json();
 
@@ -86,6 +98,8 @@ export function useCompany() {
   };
 
   const updateCompanyHandler = async () => {
+    console.log('formData before update handler', formData);
+    
     try {
       if (!formData._id) {
         toast({
@@ -95,20 +109,36 @@ export function useCompany() {
         });
         return false;
       }
+
+      // Create FormData just like addNewCompanyHandler
+      const form = new FormData();
+      // Append all fields to FormData
+      for (const key in formData) {
+        if (formData[key] !== undefined && formData[key] !== null) {
+          form.append(key, formData[key]);
+        }
+      }
+
       const response = await fetch(
         `${import.meta.env.REACT_APP_API_URL}/company/${formData._id}`,
         {
           method: "PATCH",
-          headers: getAuthHeaders(),
-          body: JSON.stringify(formData),
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "X-Role": localStorage.getItem("role") || "",
+            // Do NOT set Content-Type, browser will set it for FormData
+          },
+          body: form, // Use FormData instead of JSON.stringify
         }
       );
+      
       const res_data = await response.json();
       if (response.ok) {
         toast({
           title: "Success",
           description: "Company updated successfully",
         });
+        fetchCompanies();
         setFormData({});
         return true;
       } else {
@@ -140,6 +170,7 @@ export function useCompany() {
       );
       if (response.ok) {
         toast({ title: "Success", description: "Company deleted successfully" });
+        fetchCompanies();
       } else {
         toast({
           title: "Error",

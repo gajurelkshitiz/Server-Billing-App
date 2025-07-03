@@ -189,136 +189,148 @@ const SupplierFormModal = ({
           style={{ minHeight: 0 }}
         >
           {/* Name Field */}
-          <Label htmlFor="name">
-            Full Name
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData["name"] || ""}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="enter your name"
-            required={true}
-            className="mt-1"
-          />
+          <div>
+            <Label htmlFor="name">
+              Full Name
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData["name"] || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="enter your name"
+              required={true}
+              className="mt-1"
+            />
+          </div>
 
           {/* for company name dropdown */}
-          <Label htmlFor="companyID">
-            Company Name
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={formData["companyID"] || ""}
-            onValueChange={(value) => handleInputChange("companyID", value)}
-            disabled={loadingCompanies || editingSupplier}
-          >
-            <SelectTrigger id="companyID" className="mt-1">
-              <SelectValue
-                placeholder={loadingCompanies ? "Loading..." : "Select Company"}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {loadingCompanies ? (
-                <SelectItem value="__loading__" disabled>
-                  Loading...
-                </SelectItem>
-              ) : companies.length === 0 ? (
-                <SelectItem value="__none__" disabled>
-                  No companies found
-                </SelectItem>
-              ) : (
-                companies.map((company) => (
-                  <SelectItem key={company._id} value={company._id}>
-                    {company.name}
+          <div>
+            <Label htmlFor="companyID">
+              Company Name
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={formData["companyID"] || ""}
+              onValueChange={(value) => handleInputChange("companyID", value)}
+              disabled={loadingCompanies || editingSupplier}
+            >
+              <SelectTrigger id="companyID" className="mt-1">
+                <SelectValue
+                  placeholder={loadingCompanies ? "Loading..." : "Select Company"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingCompanies ? (
+                  <SelectItem value="__loading__" disabled>
+                    Loading...
                   </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+                ) : companies.length === 0 ? (
+                  <SelectItem value="__none__" disabled>
+                    No companies found
+                  </SelectItem>
+                ) : (
+                  companies.map((company) => (
+                    <SelectItem key={company._id} value={company._id}>
+                      {company.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Name Field */}
-          <Label htmlFor="address">
-            Address
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="address"
-            type="text"
-            value={formData["address"] || ""}
-            onChange={(e) => handleInputChange("address", e.target.value)}
-            placeholder="enter you address"
-            required={true}
-            className="mt-1"
-          />
+          {/* Address Field */}
+          <div>
+            <Label htmlFor="address">
+              Address
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="address"
+              type="text"
+              value={formData["address"] || ""}
+              onChange={(e) => handleInputChange("address", e.target.value)}
+              placeholder="enter you address"
+              required={true}
+              className="mt-1"
+            />
+          </div>
 
-          {/* Name Field */}
-          <Label htmlFor="email">
-            Email
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData["email"] || ""}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            placeholder="email (e.g. example@gmail.com) "
-            required={true}
-            className="mt-1"
-            disabled={editingSupplier}
-          />
+          {/* Email Field */}
+          <div>
+            <Label htmlFor="email">
+              Email
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData["email"] || ""}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              placeholder="email (e.g. example@gmail.com) "
+              required={true}
+              className="mt-1"
+              disabled={editingSupplier}
+            />
+          </div>
 
-          <Label htmlFor="phoneNo">
-            Phone Number<span className="text-red-500 ml-1">*</span>
-          </Label>
+          {/* Phone Number Field */}
+          <div>
+            <Label htmlFor="phoneNo">
+              Phone Number<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <PhoneInput
+              id="phoneNo"
+              international
+              defaultCountry="NP"
+              countries={["IN", "BD", "NP", "CN", "BT", "US"]}
+              value={formData.phoneNo || ""}
+              onChange={(value) => handleInputChange("phoneNo", value)}
+              inputComponent={Input}
+              className="mt-1"
+              required
+              error={
+                formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
+                  ? "Invalid phone number"
+                  : undefined
+              }
+            />
+            {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
+              <p style={{ color: "red" }}>Invalid phone number</p>
+            )}
+          </div>
 
-          <PhoneInput
-            id="phoneNo"
-            international
-            defaultCountry="NP"
-            countries={["IN", "BD", "NP", "CN", "BT", "US"]} // Only these countries
-            value={formData.phoneNo || ""}
-            onChange={(value) => handleInputChange("phoneNo", value)}
-            inputComponent={Input}
-            className="mt-1"
-            required
-            error={
-              formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
-                ? "Invalid phone number"
-                : undefined
-            }
-          />
-
-          {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
-            <p style={{ color: "red" }}>Invalid phone number</p>
-          )}
-
-          <Label htmlFor="companyID">
-            Status
-            <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={
-              formData.status === "true"
-                ? "true"
-                : formData.status === "false"
-                ? "false"
-                : ""
-            }
-            onValueChange={(value) => handleInputChange("status", value)}
-          >
-            <SelectTrigger id="status" className="mt-1">
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem key="true" value="true">
-                Active
-              </SelectItem>
-              <SelectItem key="false" value="false">
-                Inactive
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Status Field */}
+          <div>
+            <Label htmlFor="status">
+              Status
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={
+                formData.status === true
+                  ? "true"
+                  : formData.status === false
+                  ? "false"
+                  : ""
+              }
+              onValueChange={(value) => handleInputChange("status", value)}
+            >
+              <SelectTrigger id="status" className="mt-1">
+                <SelectValue placeholder="Select..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem key="true" value="true">
+                  Active
+                </SelectItem>
+                <SelectItem key="false" value="false">
+                  Inactive
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="flex space-x-3 pt-4">
             <Button
@@ -348,143 +360,6 @@ const SupplierFormModal = ({
               </Button>
             )}
           </div>
-
-          {/* //   {fields
-        //     .filter((field) => !(editingSupplier && field.name === "password")) // Hide password when editing
-        //     .map((field) => {
-        //       const isDisabled =
-        //         editingSupplier &&
-        //         (field.name === "email" || field.name === "companyID");
-        //       return (
-        //         <div key={field.name}>
-        //           <Label htmlFor={field.name}>
-        //             {field.label}
-        //             {field.required && (
-        //               <span className="text-red-500 ml-1">*</span>
-        //             )}
-        //           </Label>
-
-        //           {field.type === "select" ? (
-        //             // Get options dynamically or use static options
-        //             (() => {
-        //               const options = field.dynamicOptions 
-        //                 ? getDynamicOptions(field.name)
-        //                 : field.options || [];
-
-        //               return (
-        //                 <Select
-        //                   value={
-        //                     field.name === "status"
-        //                       ? formData.status === true
-        //                         ? "true"
-        //                         : formData.status === false
-        //                         ? "false"
-        //                         : formData.status || ""
-        //                       : formData[field.name] || ""
-        //                   }
-        //                   onValueChange={(value) => handleInputChange(field.name, value)}
-        //                   disabled={isDisabled || (field.dynamicOptions && loadingCompanies)}
-        //                 >
-        //                   <SelectTrigger id={field.name} className="mt-1">
-        //                     <SelectValue
-        //                       placeholder={
-        //                         field.dynamicOptions && loadingCompanies 
-        //                           ? "Loading..." 
-        //                           : (field.placeholder || "Select...")
-        //                       }
-        //                     />
-        //                   </SelectTrigger>
-        //                   <SelectContent>
-        //                     {options.length === 0 && field.dynamicOptions && !loadingCompanies ? (
-        //                       <SelectItem value="" disabled>
-        //                         No companies found
-        //                       </SelectItem>
-        //                     ) : (
-        //                       options.map((option) => (
-        //                         <SelectItem key={option.value} value={option.value}>
-        //                           {option.label}
-        //                         </SelectItem>
-        //                       ))
-        //                     )}
-        //                   </SelectContent>
-        //                 </Select>
-        //               );
-        //             })()
-        //           ) : (
-        //           <Input
-        //             id={field.name}
-        //             type={field.type}
-        //             value={formData[field.name] || ""}
-        //             onChange={(e) =>
-        //               handleInputChange(field.name, e.target.value)
-        //             }
-        //             placeholder={field.placeholder}
-        //             required={field.required}
-        //             className="mt-1"
-        //             disabled={isDisabled}
-        //           />
-        //           )}
-        //         </div>
-        //       );
-        //     })}
-
-        //   <div>
-        //     <Label htmlFor="phoneNo">
-        //       Phone Number<span className="text-red-500 ml-1">*</span>
-        //     </Label>
-
-        //     <PhoneInput
-        //       id="phoneNo"
-        //       international
-        //       defaultCountry="NP"
-        //       countries={["IN", "BD", "NP", "CN", "BT", "US"]} // Only these countries
-        //       value={formData.phoneNo || ""}
-        //       onChange={(value) => handleInputChange("phoneNo", value)}
-        //       inputComponent={Input}
-        //       className="mt-1"
-        //       required
-        //       error={
-        //         formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
-        //           ? "Invalid phone number"
-        //           : undefined
-        //       }
-        //     />
-
-        //     {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
-        //       <p style={{ color: "red" }}>Invalid phone number</p>
-        //     )}
-            
-        //   </div>
-
-        //   <div className="flex space-x-3 pt-4">
-        //     <Button
-        //       type="button"
-        //       variant="outline"
-        //       // TODO: Close the popup
-        //       onClick={() => setIsModalOpen(false)}
-        //       className="flex-1"
-        //       disabled={loading}
-        //     >
-        //       Cancel
-        //     </Button>
-        //     {editingSupplier ? (
-        //       <Button
-        //         type="submit"
-        //         className="flex-1 bg-blue-600 hover:bg-blue-700"
-        //         disabled={loading}
-        //       >
-        //         {loading ? "Processing..." : "Update"}
-        //       </Button>
-        //     ) : (
-        //       <Button
-        //         type="submit"
-        //         className="flex-1 bg-blue-600 hover:bg-blue-700"
-        //         disabled={loading}
-        //       >
-        //         {loading ? "Processing..." : "Create"}
-        //       </Button>
-        //     )}
-        //   </div> */}
         </form>
       </DialogContent>
     </Dialog>

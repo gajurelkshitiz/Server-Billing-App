@@ -131,124 +131,131 @@ const UserFormModal = ({
           style={{ minHeight: 0 }}
         >
           {/* Full Name */}
-          <Label htmlFor="name">
-            Full Name<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData["name"] || ""}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="Full Name"
-            required
-            className="mt-1"
-          />
+          <div>
+            <Label htmlFor="name">
+              Full Name<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData["name"] || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="Full Name"
+              required
+              className="mt-1"
+            />
+          </div>
 
           {/* Profile Image Upload */}
-          <Label htmlFor="profileImage">
-            Profile Image<span className="text-red-500 ml-1"> (optional)</span>
-          </Label>
-          <Input
-            id="profileImage"
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              handleImageFileChange(
-                "profileImage", 
-                e.target.files?.[0] || null
-              )
-            }
-            className="mt-1"
-          />
-          {imagePreview && (
-            <div className="mt-2">
-              <span className="text-sm font-medium">Preview:</span>
-              <img
-                src={imagePreview}
-                alt="Profile Preview"
-                className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setOpenImageDialog(true)}
-                  style={{
-                    width: "50%",
-                    maxHeight: "100px",
-                    objectFit: "contain",
-                  }}
-              />
-              <div className="mt-1">
-                <span className="text-xs text-gray-500">
-                  Click to view full size
-                </span>
+          <div>
+            <Label htmlFor="profileImage">
+              Profile Image<span className="text-red-500 ml-1"> (optional)</span>
+            </Label>
+            <Input
+              id="profileImage"
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                handleImageFileChange(
+                  "profileImage", 
+                  e.target.files?.[0] || null
+                )
+              }
+              className="mt-1"
+            />
+            {imagePreview && (
+              <div className="mt-2">
+                <span className="text-sm font-medium">Preview:</span>
+                <img
+                  src={imagePreview}
+                  alt="Profile Preview"
+                  className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setOpenImageDialog(true)}
+                    style={{
+                      width: "50%",
+                      maxHeight: "100px",
+                      objectFit: "contain",
+                    }}
+                />
+                <div className="mt-1">
+                  <span className="text-xs text-gray-500">
+                    Click to view full size
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
-          
+            )}
+          </div>
 
           {/* Company (dynamic select) */}
-          <Label htmlFor="companyID">
-            Company<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={formData["companyID"] || ""}
-            onValueChange={(value) => handleInputChange("companyID", value)}
-            disabled={loadingCompanies || editingUser}
-            required
-          >
-            <SelectTrigger id="companyID" className="mt-1">
-              <SelectValue placeholder={loadingCompanies ? "Loading..." : "Select Company"} />
-            </SelectTrigger>
-            <SelectContent>
-              {loadingCompanies ? (
-                <SelectItem value="__loading__" disabled>
-                  Loading...
-                </SelectItem>
-              ) : companies.length === 0 ? (
-                <SelectItem value="__none__" disabled>
-                  No companies found
-                </SelectItem>
-              ) : (
-                companies.map((company) => (
-                  <SelectItem key={company._id} value={company._id}>
-                    {company.name}
+          <div>
+            <Label htmlFor="companyID">
+              Company<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={formData["companyID"] || ""}
+              onValueChange={(value) => handleInputChange("companyID", value)}
+              disabled={loadingCompanies || editingUser}
+              required
+            >
+              <SelectTrigger id="companyID" className="mt-1">
+                <SelectValue placeholder={loadingCompanies ? "Loading..." : "Select Company"} />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingCompanies ? (
+                  <SelectItem value="__loading__" disabled>
+                    Loading...
                   </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+                ) : companies.length === 0 ? (
+                  <SelectItem value="__none__" disabled>
+                    No companies found
+                  </SelectItem>
+                ) : (
+                  companies.map((company) => (
+                    <SelectItem key={company._id} value={company._id}>
+                      {company.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Department */}
-          <Label htmlFor="departmentNo">
-            Department<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="departmentNo"
-            type="text"
-            value={formData["departmentNo"] || ""}
-            onChange={(e) => handleInputChange("departmentNo", e.target.value)}
-            placeholder="Department"
-            required
-            className="mt-1"
-          />
-          
+          <div>
+            <Label htmlFor="departmentNo">
+              Department<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="departmentNo"
+              type="text"
+              value={formData["departmentNo"] || ""}
+              onChange={(e) => handleInputChange("departmentNo", e.target.value)}
+              placeholder="Department"
+              required
+              className="mt-1"
+            />
+          </div>
           
           {/* Email */}
-          <Label htmlFor="email">
-            Email<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData["email"] || ""}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            placeholder="Enter email (eg. example@gmail.com)"
-            required
-            className="mt-1"
-            disabled={editingUser}
-          />
-          
+          <div>
+            <Label htmlFor="email">
+              Email<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData["email"] || ""}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              placeholder="Enter email (eg. example@gmail.com)"
+              required
+              className="mt-1"
+              disabled={editingUser}
+            />
+          </div>
 
           {/* Password (hide when editing) */}
           {/* {!editingUser && (
-            <>
+            <div>
               <Label htmlFor="password">
                 Password<span className="text-red-500 ml-1">*</span>
               </Label>
@@ -261,32 +268,34 @@ const UserFormModal = ({
                 required
                 className="mt-1"
               />
-            </>
+            </div>
           )} */}
 
           {/* Phone Number */}
-          <Label htmlFor="phoneNo">
-            Phone Number<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <PhoneInput
-            id="phoneNo"
-            international
-            defaultCountry="NP"
-            countries={["IN", "BD", "NP", "CN", "BT", "US"]}
-            value={formData.phoneNo || ""}
-            onChange={(value) => handleInputChange("phoneNo", value)}
-            inputComponent={Input}
-            className="mt-1"
-            required
-            error={
-              formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
-                ? "Invalid phone number"
-                : undefined
-            }
-          />
-          {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
-            <p style={{ color: "red" }}>Invalid phone number</p>
-          )}
+          <div>
+            <Label htmlFor="phoneNo">
+              Phone Number<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <PhoneInput
+              id="phoneNo"
+              international
+              defaultCountry="NP"
+              countries={["IN", "BD", "NP", "CN", "BT", "US"]}
+              value={formData.phoneNo || ""}
+              onChange={(value) => handleInputChange("phoneNo", value)}
+              inputComponent={Input}
+              className="mt-1"
+              required
+              error={
+                formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
+                  ? "Invalid phone number"
+                  : undefined
+              }
+            />
+            {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
+              <p style={{ color: "red" }}>Invalid phone number</p>
+            )}
+          </div>
 
           <div className="flex space-x-3 pt-4">
             <Button

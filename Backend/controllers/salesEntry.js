@@ -1,19 +1,18 @@
 const SalesEntry = require('../models/salesEntry');
+const Customer = require('../models/Customer');
+const FiscalYear = require('../models/FiscalYear');
 const { BadRequestError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 const  uploadOnCloudinary  = require('../utils/cloudinary')
 
 // Create a new sales entry
 const createSalesEntry = async (req, res) => {
-  const { date, amount, itemDescription, customerID, paid, dueAmount } = req.body;
-  if (!date || !amount || !itemDescription || !customerID || paid === undefined || dueAmount === undefined) {
+  console.log('before creating sales entry, ', req.body);
+  const { customerID, billNo, date, amount, itemDescription,  netTotalAmount } = req.body;
+  if ( !customerID || !billNo || !date || !amount || !itemDescription ||  !netTotalAmount ) {
     throw new BadRequestError('Please provide all values');
   }
   console.log(req.body)
-  // const { date, amount, itemDescription, paid, dueAmount } = req.body;
-  // if (!date || !amount || !itemDescription || paid === undefined  || dueAmount === undefined) {
-  //   throw new BadRequestError('Please provide all values');
-  // }
 
   const billAttachmentPath  = req.file.path
   if (!billAttachmentPath) {
@@ -30,6 +29,8 @@ const createSalesEntry = async (req, res) => {
     throw new BadRequestError('Error while uploading on bill')
   }
 
+
+
   let companyID;
   // for user, companyID from token:
   companyID = req.user.companyID;
@@ -39,37 +40,43 @@ const createSalesEntry = async (req, res) => {
     companyID = req.query.companyID;
   }
 
+  // put the customer Name here in the database:
+  const customerObj = await Customer.findOne({_id: customerID})
+  const customerName = customerObj.name;
+
+  // save the current fiscal Year value also, for filter by filter year later
+  const fiscalYearObj = await FiscalYear.findOne({status:true})
+  const fiscalYear = fiscalYearObj.name;
+
   req.body.billAttachment = billAttachment.url
   req.body.createdBy = req.user.tokenID;
   req.body.adminID = req.user.adminID;
   req.body.companyID = companyID;
+  req.body.customerName = customerName;
+  req.body.fiscalYear = fiscalYear;
 
   const salesEntry = await SalesEntry.create({ ...req.body });
   res.status(StatusCodes.CREATED).json({ salesEntry });
 };
 
+
 // Get all sales entries
 const getAllSalesEntries = async (req, res) => {
-  // ID's from token
-  const { adminID, companyID, tokenID } = req.user;
 
-  let salesEntries;
+  let companyID;
+  // for user, companyID from token:
+  companyID = req.user.companyID;
 
-  if (adminID) {
-    // User: fetch sales Entry created by this user
-    salesEntries = await SalesEntry.find({ companyID: companyID }).sort('createdAt');
-  } else {
-    // Admin: fetch sales Entry created by admin (adminID == null) or by users under this admin (adminID == tokenID)
-    salesEntries = await SalesEntry.find({
-      $or: [
-        { createdBy: tokenID, adminID: null },
-        { adminID: tokenID }
-      ]
-    }).sort('createdAt');
+  // for admin, where companyID comes from param
+  if (!companyID && req.query.companyID){
+    companyID = req.query.companyID;
   }
-  // const salesEntries = await SalesEntry.find({}).sort('createdAt');
+
+  const salesEntries = await SalesEntry.find({ companyID: companyID }).sort('createdAt');
+
   res.status(StatusCodes.OK).json({ salesEntries, count: salesEntries.length });
 };
+
 
 // Get a single sales entry
 const getSalesEntry = async (req, res) => {
@@ -85,6 +92,7 @@ const getSalesEntry = async (req, res) => {
 
   res.status(StatusCodes.OK).json({ salesEntry });
 };
+
 
 // Update a sales entry
 const updateSalesEntry = async (req, res) => {

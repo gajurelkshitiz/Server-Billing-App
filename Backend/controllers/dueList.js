@@ -1,6 +1,11 @@
 // const Due = require('../models/DueList');
 const PurchaseEntry = require('../models/PurchaseEntry');
+
+const Customer = require('../models/Customer');
+const CustomerPayment = require('../models/CustomerPayment');
 const SalesEntry = require('../models/salesEntry');
+
+const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 
 // list all the purchase entry for a supplier:
@@ -120,9 +125,185 @@ const getSalesDuesSummary = async (req, res) => {
 };
 
 
+
+const getCustomerCompleteData = async (req, res) => {
+  try {
+    const { customerID, companyID } = req.query;
+
+    const result = await Customer.aggregate([
+      // Match the specific customer
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(customerID),
+          companyID: new mongoose.Types.ObjectId(companyID)
+        }
+      },
+      
+      // Lookup sales entries
+      {
+        $lookup: {
+          from: 'salesentries', // Collection name (MongoDB converts SalesEntry to salesentries)
+          localField: '_id',
+          foreignField: 'customerID',
+          as: 'salesEntries'
+        }
+      },
+      
+      // Lookup payments
+      {
+        $lookup: {
+          from: 'customerpayments', // Collection name
+          localField: '_id',
+          foreignField: 'customerID',
+          as: 'payments'
+        }
+      },
+      
+      // Add calculated fields
+      {
+        $addFields: {
+          totalSalesAmount: { $sum: '$salesEntries.netTotalAmount' },
+          totalPayments: { $sum: '$payments.amountPaid' },
+          totalDue: {
+            $subtract: [
+              { $add: ['$prevClosingBalance', { $sum: '$salesEntries.netTotalAmount' }] },
+              { $sum: '$payments.amountPaid' }
+            ]
+          },
+          lastSaleDate: { $max: '$salesEntries.date' },
+          lastPaymentDate: { $max: '$payments.createdAt' }
+        }
+      }
+    ]);
+
+    res.json(result[0] || null);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching customer data', error });
+  }
+};
+
+
+const getAllCustomersCompleteData = async (req, res) => {
+  try {
+    const { companyID } = req.query;
+
+    // Validate companyID
+    if (!ObjectId.isValid(companyID)) {
+      return res.status(400).json({ message: 'Invalid companyID' });
+    }
+
+    const result = await Customer.aggregate([
+      // Match all customers for the specific company
+      {
+        $match: {
+          companyID: new mongoose.Types.ObjectId(companyID)
+        }
+      },
+      
+      // Lookup sales entries
+      {
+        $lookup: {
+          from: 'salesentries',
+          localField: '_id',
+          foreignField: 'customerID',
+          as: 'salesEntries'
+        }
+      },
+      
+      // Lookup payments
+      {
+        $lookup: {
+          from: 'customerpayments',
+          localField: '_id',
+          foreignField: 'customerID',
+          as: 'payments'
+        }
+      },
+      
+      // Add calculated fields
+      {
+        $addFields: {
+          totalSalesAmount: { $sum: '$salesEntries.netTotalAmount' },
+          totalPayments: { $sum: '$payments.amountPaid' },
+          thisYearDue: {
+            $subtract: [
+              { $sum: '$salesEntries.netTotalAmount' },
+              { $sum: '$payments.amountPaid' }
+            ]
+          },
+          netTotalDue: {
+            $subtract: [
+              { $add: ['$prevClosingBalance', { $sum: '$salesEntries.netTotalAmount' }] },
+              { $sum: '$payments.amountPaid' }
+            ]
+          },
+          lastSaleDate: { $max: '$salesEntries.date' },
+          lastPaymentDate: { $max: '$payments.createdAt' }
+        }
+      },
+      
+      // Project only the fields you want to send to frontend
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          phoneNo: 1,
+          address: 1,
+          prevClosingBalance: 1,
+          totalSalesAmount: 1,
+          totalPayments: 1,
+          netTotalDue: 1,
+          thisYearDue: 1,
+          lastSaleDate: 1,
+          lastPaymentDate: 1,
+          // Add any other customer fields you need
+        }
+      },
+      
+      // Sort by customer name or any other field
+      {
+        $sort: { customerName: 1 }
+      }
+    ]);
+
+    // Remap the output for frontend
+    const remappedData = result.map(customer => ({
+      customerID: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phoneNo,
+      address: customer.address,
+      prevClosingBalance: customer.prevClosingBalance || 0,
+      totalSales: customer.totalSalesAmount || 0,
+      totalPayments: customer.totalPayments || 0,
+      totalDue: customer.netTotalDue || 0,
+      currentDue: customer.thisYearDue || 0,
+      lastSaleDate: customer.lastSaleDate,
+      lastPaymentDate: customer.lastPaymentDate,
+      status: customer.netTotalDue > 0 ? 'Due' : 'Paid'
+    }));
+
+    res.json({
+      success: true,
+      count: remappedData.length,
+      customers: remappedData
+    });
+
+  } catch (error) {
+    console.error('Error fetching all customers data:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching customers data', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
     getPurchaseDuesList,
     getPurchaseDuesSummary,
     getSalesDuesList,
-    getSalesDuesSummary
+    getSalesDuesSummary,
+    getCustomerCompleteData,
+    getAllCustomersCompleteData // Add this new function
 };

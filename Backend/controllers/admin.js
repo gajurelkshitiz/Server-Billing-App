@@ -131,6 +131,20 @@ const updateAdmin = async (req, res) => {
     throw new BadRequestError("All fields cannot be empty");
   }
 
+  // Optional profile image upload
+  let profileImageUrl = undefined;
+  if (req.file && req.file.path) {
+    const uploaded = await uploadOnCloudinary(
+      req.file.path,
+      `${Date.now()}-${req.file.originalname}`,
+      "BILL APP/ADMIN PROFILES"
+    );
+    if (uploaded && uploaded.url) {
+      req.body.profileImage = uploaded.url;
+    }
+  }
+
+
   const admin = await Admin.findOneAndUpdate({ _id: adminID }, req.body, {
     new: true,
     runValidators: true,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ interface CompanyFormModalProps {
   isModalOpen: boolean;
   setIsModalOpen: any;
   formData: Record<string, any>;
-  handleInputChange: (name: string, value: string) => void;
+  handleInputChange: (name: string, value: string | File | null) => void;
   handleSubmit: (e: any) => void;
   editingCompany: boolean;
   title: string;
@@ -42,30 +42,53 @@ const CompanyFormModal = ({
 }: CompanyFormModalProps) => {
   const { toast } = useToast();
 
-  const validateForm = () => {
-    if (!formData.name?.trim()) return "Company Name";
-    if (!formData.email?.trim()) return "Email";
-    if (!formData.address?.trim()) return "Address";
-    if (!formData.vat?.trim()) return "Vat";
-    if (!formData.industrytype?.trim()) return "Industry";
-    if (!formData.phoneNo || !isValidPhoneNumber(formData.phoneNo)) {
-      return "Phone Number";
-    }
-    return null;
-  };
+  // --- State for image preview and dialog for full-size image ---
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [openImageDialog, setOpenImageDialog] = useState(false);
 
-  const handleFormSubmit = (e: any) => {
-    e.preventDefault();
-    const missing = validateForm();
-    if (missing) {
-      toast({
-        title: "Warn",
-        description: `Please fill the ${missing} field`,
-        variant: "destructive",
-      });
+  // --- Add local loading state for submit button ---
+  const [localLoading, setLocalLoading] = useState(false);
+
+  // const validateForm = () => {
+  //   if (!formData.name?.trim()) return "Company Name";
+  //   if (!formData.email?.trim()) return "Email";
+  //   if (!formData.address?.trim()) return "Address";
+  //   if (!formData.vat?.trim()) return "Vat";
+  //   if (!formData.industrytype?.trim()) return "Industry";
+  //   if (!formData.phoneNo || !isValidPhoneNumber(formData.phoneNo)) {
+  //     return "Phone Number";
+  //   }
+  //   return null;
+  // };
+
+  const handleImageFileChange = (name: string, file: File | null) => {
+    if (!file) {
+      setImagePreview(null);
+      handleInputChange(name, null); // allow empty image
       return;
     }
-    handleSubmit(e);
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed!");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    handleInputChange(name, file);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLocalLoading(true);
+
+    try {
+      await handleSubmit(e);
+      setImagePreview(null);
+    } finally {
+      setLocalLoading(false);
+    }
   };
 
   return (
@@ -80,108 +103,162 @@ const CompanyFormModal = ({
           style={{ minHeight: 0 }}
         >
           {/* Company Name */}
-          <Label htmlFor="name">
-            Company Name<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData["name"] || ""}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="name of your business"
-            required
-            className="mt-1"
-            disabled={editingCompany}
-          />
+          <div>
+            <Label htmlFor="name">
+              Company Name<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData["name"] || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="name of your business"
+              required
+              className="mt-1"
+              disabled={editingCompany}
+            />
+          </div>
+
+          {/* Company Logo Upload */}
+          <div>
+            <Label htmlFor="logo">
+              Company Logo<span className="text-red-500 ml-1"> (optional)</span>
+            </Label>
+            <Input
+              id="logo"
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                handleImageFileChange(
+                  "logo",
+                  e.target.files?.[0] || null
+                )
+              }
+              className="mt-1"
+            />
+          </div>
+
+          {imagePreview && (
+            <div className="mt-2">
+              <span className="text-sm font-medium">Preview:</span>
+              <img
+                src={imagePreview}
+                alt="Logo Preview"
+                className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setOpenImageDialog(true)}
+                style={{
+                  width: "50%",
+                  maxHeight: "100px",
+                  objectFit: "contain",
+                }}
+              />
+              <div className="mt-1">
+                <span className="text-xs text-gray-500">
+                  Click to view full size
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Email */}
-          <Label htmlFor="email">
-            Email<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData["email"] || ""}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            placeholder="email address (e.g. example@gmail.com)"
-            required
-            className="mt-1"
-            disabled={editingCompany}
-          />
+          <div>
+            <Label htmlFor="email">
+              Email<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData["email"] || ""}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              placeholder="email address (e.g. example@gmail.com)"
+              required
+              className="mt-1"
+              disabled={editingCompany}
+            />
+          </div>
 
           {/* Address */}
-          <Label htmlFor="address">
-            Address<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="address"
-            type="text"
-            value={formData["address"] || ""}
-            onChange={(e) => handleInputChange("address", e.target.value)}
-            placeholder="your company address"
-            required
-            className="mt-1"
-          />
+          <div>
+            <Label htmlFor="address">
+              Address<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="address"
+              type="text"
+              value={formData["address"] || ""}
+              onChange={(e) => handleInputChange("address", e.target.value)}
+              placeholder="your company address"
+              required
+              className="mt-1"
+            />
+          </div>
 
           {/* Vat */}
-          <Label htmlFor="vat">
-            Vat<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="vat"
-            type="text"
-            value={formData["vat"] || ""}
-            onChange={(e) => handleInputChange("vat", e.target.value)}
-            placeholder="your vat number"
-            required
-            className="mt-1"
-            disabled={editingCompany}
-          />
+          <div>
+            <Label htmlFor="vat">
+              Vat<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="vat"
+              type="text"
+              value={formData["vat"] || ""}
+              onChange={(e) => handleInputChange("vat", e.target.value)}
+              placeholder="your vat number"
+              required
+              className="mt-1"
+              disabled={editingCompany}
+            />
+          </div>
 
           {/* Industry */}
-          <Label htmlFor="industrytype">
-            Industry<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={formData["industrytype"] || ""}
-            onValueChange={(value) => handleInputChange("industrytype", value)}
-            required
-            disabled={editingCompany}
-          >
-            <SelectTrigger id="industrytype" className="mt-1">
-              <SelectValue placeholder="Select Industry" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="IT">Information Technology</SelectItem>
-              <SelectItem value="Finance">Finance</SelectItem>
-              <SelectItem value="Healthcare">HealthCare</SelectItem>
-              <SelectItem value="Education">Education</SelectItem>
-              <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-              <SelectItem value="Retail">Retail</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <Label htmlFor="industrytype">
+              Industry<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={formData["industrytype"] || ""}
+              onValueChange={(value) => handleInputChange("industrytype", value)}
+              required
+              disabled={editingCompany}
+            >
+              <SelectTrigger id="industrytype" className="mt-1">
+                <SelectValue placeholder="Select Industry" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="IT">Information Technology</SelectItem>
+                <SelectItem value="Finance">Finance</SelectItem>
+                <SelectItem value="Healthcare">HealthCare</SelectItem>
+                <SelectItem value="Education">Education</SelectItem>
+                <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                <SelectItem value="Retail">Retail</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Phone Number */}
-          <Label htmlFor="phoneNo">
-            Phone Number<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <PhoneInput
-            id="phoneNo"
-            international
-            defaultCountry="NP"
-            countries={["IN", "BD", "NP", "CN", "BT", "US"]}
-            value={formData.phoneNo || ""}
-            onChange={(value) => handleInputChange("phoneNo", value)}
-            inputComponent={Input}
-            className="mt-1"
-            required
-            error={
-              formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
-                ? "Invalid phone number"
-                : undefined
-            }
-          />
+          <div>
+            <Label htmlFor="phoneNo">
+              Phone Number<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <PhoneInput
+              id="phoneNo"
+              international
+              defaultCountry="NP"
+              countries={["IN", "BD", "NP", "CN", "BT", "US"]}
+              value={formData.phoneNo || ""}
+              onChange={(value) => handleInputChange("phoneNo", value)}
+              inputComponent={Input}
+              className="mt-1"
+              required
+              error={
+                formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
+                  ? "Invalid phone number"
+                  : undefined
+              }
+            />
+          </div>
+          {/* for red text to show invalid phone number  */}
           {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
             <p style={{ color: "red" }}>Invalid phone number</p>
           )}
@@ -192,17 +269,21 @@ const CompanyFormModal = ({
               variant="outline"
               onClick={() => setIsModalOpen(false)}
               className="flex-1"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
-              {loading
-                ? "Processing..."
+              {(loading || localLoading)
+                ? (
+                  <>
+                    <span className="loader mr-2"></span> Processing...
+                  </>
+                )
                 : editingCompany
                 ? "Update"
                 : "Create"}

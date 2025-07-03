@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { fetchCustomers } from "../../DataFetchingFunctions/fetchCustomers";
+import { useCustomers } from "@/pages/Customer/useCustomers";
 import { Customer } from "../../Customer/types";
 import NepaliDate from "../../../components/common/DatePicker";
 
@@ -54,6 +54,26 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
+  const [discountType, setDiscountType] = useState<"percentage" | "amount">("percentage");
+
+
+  // Use the hook to get fetchCustomers
+  const { fetchCustomers } = useCustomers();
+
+
+  // Initialize discount type in formData when component mounts or modal opens
+  useEffect(() => {
+    if (isModalOpen && !formData["discountType"]) {
+      handleInputChange("discountType", "percentage");
+    }
+  }, [isModalOpen]);
+
+  // Initialize discount type from form data when editing
+  useEffect(() => {
+    if (formData["discountType"]) {
+      setDiscountType(formData["discountType"]);
+    }
+  }, [formData["discountType"]]);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -104,12 +124,44 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
     e.preventDefault();
     setLocalLoading(true);
     try {
+      console.log('discount Type before form Submit button', discountType);
+      console.log('formData discountType:', formData["discountType"]);
+      // discountType should already be in formData now
       await handleSubmit(e);
       setImagePreview(null);
     } finally {
       setLocalLoading(false);
     }
   };
+
+  // Function to calculate net total amount
+  const calculateNetTotal = () => {
+    const amount = parseFloat(formData["amount"] || "0");
+    const vat = parseFloat(formData["vat"] || "0");
+    const discount = parseFloat(formData["discount"] || "0");
+    
+    if (isNaN(amount)) return "";
+    
+    const vatAmount = (amount * vat) / 100;
+    let discountAmount = 0;
+    
+    if (discountType === "percentage") {
+      discountAmount = (amount * discount) / 100;
+    } else {
+      discountAmount = discount;
+    }
+    
+    const netTotal = amount + vatAmount - discountAmount;
+    return netTotal.toFixed(2);
+  };
+
+  // Update netTotalAmount in formData whenever dependent values change
+  useEffect(() => {
+    const netTotal = calculateNetTotal();
+    if (netTotal !== formData["netTotalAmount"]) {
+      handleInputChange("netTotalAmount", netTotal);
+    }
+  }, [formData["amount"], formData["vat"], formData["discount"], discountType]);
 
   return (
     <>
@@ -123,63 +175,203 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
             className="space-y-4 flex-1 overflow-y-auto p-2"
             style={{ minHeight: 0 }}
           >
-            {/* Bill Date (AD) */}
-            {/* <Label htmlFor="date">
-              Bill Date (AD)
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="date"
-              type="date"
-              value={formData["date"] || ""}
-              onChange={(e) => handleInputChange("date", e.target.value)}
-              required
-              className="mt-1 w-full border rounded p-2"
-            /> */}
-
+            {/* Customer Name (Select) */}
+            <div>
+              <Label htmlFor="customerID">
+                Customer Name
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                value={formData["customerID"] || ""}
+                onValueChange={(value) =>
+                  handleInputChange("customerID", value)
+                }
+                disabled={loadingCustomers}
+              >
+                <SelectTrigger id="customerID">
+                  <SelectValue
+                    placeholder={
+                      loadingCustomers ? "Loading..." : "Select customer"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingCustomers ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : customers.length === 0 ? (
+                    <SelectItem value="__none__" disabled>
+                      No customers found
+                    </SelectItem>
+                  ) : (
+                    customers.map((customer) => (
+                      <SelectItem key={customer._id} value={customer._id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            
             {/* Bill Date (Nepali) */}
-            <Label htmlFor="nepaliDate" className="mt-4">
-              Bill Date (BS)<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <NepaliDate
-              handleInputChange={handleInputChange}
-              formData={formData}
-              fieldName="date"
-            />
+            <div>
+              <Label htmlFor="nepaliDate">
+                Bill Date (BS)<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <NepaliDate
+                handleInputChange={handleInputChange}
+                formData={formData}
+                fieldName="date"
+              />
+            </div>
 
+
+            {/* Bill Number */}
+            <div>
+              <Label htmlFor="billNo">
+                Bill Number
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="billNo"
+                type="text"
+                value={formData["billNo"] || ""}
+                onChange={(e) => handleInputChange("billNo", e.target.value)}
+                placeholder="Enter Bill Number"
+                required
+              />
+            </div>
+
+           
             {/* Total Amount */}
-            <Label htmlFor="amount">
-              Total Amount
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              value={formData["amount"] || ""}
-              onChange={(e) => handleInputChange("amount", e.target.value)}
-              placeholder="Enter total amount"
-              required
-              className="mt-1"
-            />
+            <div>
+              <Label htmlFor="amount">
+                Total Amount
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={formData["amount"] || ""}
+                onChange={(e) => handleInputChange("amount", e.target.value)}
+                placeholder="Enter total amount"
+                required
+              />
+            </div>
+
+            {/* Vat Percentage*/}
+            <div>
+              <Label htmlFor="vat">
+                VAT [in %]
+                <span className="text-red-500 ml-1"> (optional) </span>
+              </Label>
+              <Input
+                id="vat"
+                type="number"
+                value={formData["vat"] || ""}
+                onChange={(e) => handleInputChange("vat", e.target.value)}
+                placeholder="Enter VAT in %"
+              />
+            </div>
+
+            {/* Discount Percentage/Amount*/}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Label htmlFor="discount">
+                  Discount
+                  <span className="text-red-500 ml-1"> (optional) </span>
+                </Label>
+                <Select
+                  value={discountType}
+                  onValueChange={(value: "percentage" | "amount") => {
+                    console.log('value selected from discount dropdown: ', value);
+                    
+                    setDiscountType(value);
+                    // Update formData immediately when discount type changes
+                    handleInputChange("discountType", value);
+                    // Clear discount value when switching types
+                    handleInputChange("discount", "");
+                  }}
+                >
+                  <SelectTrigger className="w-20 h-8">
+                    <SelectValue placeholder="%" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">%</SelectItem>
+                    <SelectItem value="amount">रुपैयाँ</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                id="discount"
+                type="number"
+                value={formData["discount"] || ""}
+                onChange={(e) => handleInputChange("discount", e.target.value)}
+                placeholder={
+                  discountType === "percentage" 
+                    ? "Enter Discount in %" 
+                    : "Enter Discount Amount"
+                }
+              />
+            </div>
+
+            {/* Net Total Amount (Read-only, calculated) */}
+            <div>
+              <Label htmlFor="netTotalAmount">
+                Net Total Amount
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="netTotalAmount"
+                type="number"
+                value={formData["netTotalAmount"] || ""}
+                placeholder="Net total amount"
+                readOnly
+                disabled
+              />
+            </div>
+
+
+            {/* Description of Items (Textarea) */}
+            <div>
+              <Label htmlFor="itemDescription">
+                Description of Items
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <textarea
+                id="itemDescription"
+                value={formData["itemDescription"] || ""}
+                onChange={(e) =>
+                  handleInputChange("itemDescription", e.target.value)
+                }
+                placeholder="Enter item description"
+                required
+                rows={4}
+                className="w-full border rounded p-2"
+              />
+            </div>
 
             {/* Bill Photo (File Input) */}
-            <Label htmlFor="billAttachment">
-              Bill Photo
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="billAttachment"
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                handleImageFileChange(
-                  "billAttachment",
-                  e.target.files?.[0] || null
-                )
-              }
-              required
-              className="mt-1"
-            />
+            <div>
+              <Label htmlFor="billAttachment">
+                Bill Photo
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                id="billAttachment"
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  handleImageFileChange(
+                    "billAttachment",
+                    e.target.files?.[0] || null
+                  )
+                }
+                required
+              />
+            </div>
             {imagePreview && (
               <div className="mt-2">
                 <span className="text-sm font-medium">Preview:</span>
@@ -202,105 +394,7 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
               </div>
             )}
 
-            {/* Customer Name (Select) */}
-            <Label htmlFor="customerID">
-              Customer Name
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Select
-              value={formData["customerID"] || ""}
-              onValueChange={(value) => handleInputChange("customerID", value)}
-              disabled={loadingCustomers}
-            >
-              <SelectTrigger id="customerID" className="mt-1">
-                <SelectValue
-                  placeholder={
-                    loadingCustomers ? "Loading..." : "Select customer"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingCustomers ? (
-                  <SelectItem value="__loading__" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : customers.length === 0 ? (
-                  <SelectItem value="__none__" disabled>
-                    No customers found
-                  </SelectItem>
-                ) : (
-                  customers.map((customer) => (
-                    <SelectItem key={customer._id} value={customer._id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-
-            {/* Description of Items (Textarea) */}
-            <Label htmlFor="itemDescription">
-              Description of Items
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <textarea
-              id="itemDescription"
-              value={formData["itemDescription"] || ""}
-              onChange={(e) =>
-                handleInputChange("itemDescription", e.target.value)
-              }
-              placeholder="Enter item description"
-              required
-              rows={4}
-              className="mt-1 w-full border rounded p-2"
-            />
-
-            {/* Status (Checkboxes) */}
-            <Label>
-              Status
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <div className="flex gap-4 mt-1">
-              <label className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={formData["paid"] === "true"}
-                  onChange={() => {
-                    handleInputChange("paid", "true");
-                    handleInputChange("dueAmount", "0");
-                  }}
-                />
-                Paid
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={formData["paid"] === "false"}
-                  onChange={() => {
-                    handleInputChange("paid", "false");
-                    handleInputChange("dueAmount", "");
-                  }}
-                />
-                Due
-              </label>
-            </div>
-
-            {/* Due Amount (only if paid is false) */}
-            {formData["paid"] === "false" && (
-              <>
-                <Label htmlFor="dueAmount">Due Amount</Label>
-                <Input
-                  id="dueAmount"
-                  type="text"
-                  value={formData["dueAmount"] || ""}
-                  onChange={(e) =>
-                    handleInputChange("dueAmount", e.target.value)
-                  }
-                  placeholder="Enter Amount Left to pay"
-                  className="mt-1"
-                />
-              </>
-            )}
+            
 
             <div className="flex space-x-3 pt-4">
               <Button
@@ -317,12 +411,14 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
                 className="flex-1 bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
                 disabled={loading || localLoading}
               >
-                {(loading || localLoading) ? (
+                {loading || localLoading ? (
                   <>
                     <span className="loader mr-2"></span> Processing...
                   </>
+                ) : editingSalesEntry ? (
+                  "Update"
                 ) : (
-                  editingSalesEntry ? "Update" : "Create"
+                  "Create"
                 )}
               </Button>
             </div>
@@ -355,20 +451,3 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
 };
 
 export default SalesEntryFormModal;
-
-/* Add this CSS for a simple spinner if you don't have a spinner component */
-/*
-.loader {
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3498db;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-*/

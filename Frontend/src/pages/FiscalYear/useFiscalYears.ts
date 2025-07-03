@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { FiscalYear } from "./types";
+import { getAuthHeaders } from "@/utils/auth";
 
 export function useFiscalYear() {
   const [fiscalYears, setFiscalYears] = useState<FiscalYear[]>([]);
@@ -9,11 +10,11 @@ export function useFiscalYear() {
 
   const { toast } = useToast();
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-    "Content-Type": "application/json",
-    "X-Role": localStorage.getItem("role") || "",
-  });
+  // const getAuthHeaders = () => ({
+  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //   "Content-Type": "application/json",
+  //   "X-Role": localStorage.getItem("role") || "",
+  // });
 
   const fetchFiscalYears = async () => {
     setLoading(true);

@@ -77,8 +77,8 @@ const CustomerPage = () => {
         formData={formData}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
-        addNewCustomerHandler={addNewCustomerHandler}
-        updateCustomerHandler={updateCustomerHandler}
+        // addNewCustomerHandler={addNewCustomerHandler}
+        // updateCustomerHandler={updateCustomerHandler}
         editingCustomer={editingCustomer}
         title={editingCustomer ? "Edit Customer" : "Add New Customer"}
       />

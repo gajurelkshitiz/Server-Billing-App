@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { METHODS } from "http";
 import { AppleIcon, Edit, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import ImagePreviewDialog from "@/components/ui/ImagePreviewDialog";
 
 type Props = {
   sortedData: any;
@@ -17,6 +18,18 @@ const TableB = (props: Props) => {
   // Add these states
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [openImageDialog, setOpenImageDialog] = useState(false);
+
+  const handleImageClick = (imageUrl: string) => {
+    setImagePreview(imageUrl);
+    setOpenImageDialog(true);
+  };
+
+  const handleCloseDialog = (open: boolean) => {
+    setOpenImageDialog(open);
+    if (!open) {
+      setImagePreview(null);
+    }
+  };
 
   return (
     <>
@@ -74,8 +87,16 @@ const TableB = (props: Props) => {
         ))}
       </tbody>
 
+
+      <ImagePreviewDialog
+        isOpen={openImageDialog}
+        onClose={handleCloseDialog}
+        imageUrl={imagePreview}
+        title="Profile Preview"
+      />
+
       {/* Image Preview Dialog */}
-      <Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
+      {/* <Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] p-0">
           <DialogHeader className="p-4">
             <DialogTitle>Profile Preview</DialogTitle>
@@ -93,7 +114,7 @@ const TableB = (props: Props) => {
             )}
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 };

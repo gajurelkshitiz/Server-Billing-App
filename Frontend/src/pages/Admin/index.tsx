@@ -8,7 +8,7 @@ import { Admin } from "./types";
 import ConfirmDialog from "@/components/common/ConfirmDialog"; // <-- import
 
 const AdminPage = () => {
-  // yaha yo admins, loading haru le k kaam gariraxa ???
+  
   const {
     admins,
     loading,

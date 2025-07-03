@@ -13,6 +13,14 @@ const customerSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide address"],
   },
+  prevClosingBalance: {
+    type: Number,
+    default: 0
+  },
+  panNo: {
+    type: String,
+    required: [true, "Please provide PAN No"]
+  },
   email: {
     type: String,
     required:[true, 'please provide a valid email number'],

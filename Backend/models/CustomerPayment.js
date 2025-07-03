@@ -13,10 +13,6 @@ const customerPaymentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'Company',
     },
-   totalDueLeft: {
-        type: Number,
-        required: true
-    },
     amountPaid: {
         type: Number,
         required: true

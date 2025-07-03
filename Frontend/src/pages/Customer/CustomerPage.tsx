@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui/statusBatch";
 
 const columns = [
+  { key: 'sn', label: "S.N.", sortable: true},
   { key: "name", label: "Full Name", sortable: true },
   { key: "email", label: "Email", sortable: true },
+  { key: "prevClosingBalance", label: "Prev Year Closing Amt", sortable: true},
   { key: "address", label: "Address", sortable: true },
   { key: "phoneNo", label: "Phone", sortable: true },
+  { key: "panNo", label: "PAN", sortable: true},
+
   { key: "companyName", label: "Company", sortable: true },
-  // { key: "departmentNo", label: "Department", sortable: true },
   {
       key: "status",
       label: "Status",

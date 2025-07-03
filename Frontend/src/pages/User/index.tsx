@@ -34,6 +34,7 @@ const UserPage = () => {
   };
 
   const handleDelete = async (user: User) => {
+    console.log('user before delete', user);
     if (window.confirm("Are you sure you want to delete this user?")) {
       await deleteUser(user);
     }
@@ -54,7 +55,7 @@ const UserPage = () => {
       await updateUserHandler();
       setIsModalOpen(false);
     } else {
-      console.log("New User Creation");
+      console.log("New User Creation", formData);
       await addNewUserHandler();
       setIsModalOpen(false);
     }

@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
 
 const salesEntrySchema = new mongoose.Schema({
+  customerID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
+    required: [true, "Please provide a customer ID"],
+  },
+  customerName: {
+    type: String,
+  },
+  billNo:{
+    type: String,
+    required: [true, "Please provide Bill Number"],
+  },
   date: {
     type: Date,
     required: [true, "Please provide a date"],
@@ -9,26 +21,33 @@ const salesEntrySchema = new mongoose.Schema({
     type: Number,
     required: [true, "Please provide an amount"],
   },
+  vat: {
+    type: Number,
+    default: 0
+  },
+  discount:{
+    type: Number,
+    default: 0
+  },
+  discountType: {
+    type: String,
+    enum: ['percentage', 'amount'],
+    default: 'percentage'
+  },
+  netTotalAmount: {
+    type: Number,
+  },
   itemDescription: {
     type: String,
     required: [true, "Please provide an item description"],
-  },
-  customerID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Customer',
-    // required: [true, "Please provide a customer ID"],
   },
   billAttachment: {
     type: String,
     required: [true, "Please provide a bill attachment"],
   },
-  paid:{
-    type:Boolean,
-    required: [true, "Please specify if the amount is paid"],
-  },
-  dueAmount:{
-    type: Number,
-    required:function() {return this.isDue}
+  fiscalYear: {
+    type: String,
+    ref: 'FiscalYear'
   },
   createdBy:{
     type: mongoose.Schema.Types.ObjectId,

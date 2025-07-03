@@ -50,88 +50,98 @@ const SubscriptionFormModal = ({
           style={{ minHeight: 0 }}
         >
           {/* Subscription Name */}
-          <Label htmlFor="name">
-            Subscription Name<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData["name"] || ""}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="Subscription Name"
-            required
-            className="mt-1"
-            disabled={editingSubscription}
-          />
+          <div>
+            <Label htmlFor="name">
+              Subscription Name<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData["name"] || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="Subscription Name"
+              required
+              className="mt-1"
+              disabled={editingSubscription}
+            />
+          </div>
 
           {/* No of Companies */}
-          <Label htmlFor="maxCompanies">
-            No of Companies<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="maxCompanies"
-            type="number"
-            value={formData["maxCompanies"] || ""}
-            onChange={(e) => handleInputChange("maxCompanies", e.target.value)}
-            placeholder="Num of Companies Allowed"
-            required
-            className="mt-1"
-            disabled={editingSubscription}
-          />
+          <div>
+            <Label htmlFor="maxCompanies">
+              No of Companies<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="maxCompanies"
+              type="number"
+              value={formData["maxCompanies"] || ""}
+              onChange={(e) => handleInputChange("maxCompanies", e.target.value)}
+              placeholder="Num of Companies Allowed"
+              required
+              className="mt-1"
+              disabled={editingSubscription}
+            />
+          </div>
 
           {/* Period */}
-          <Label htmlFor="period">
-            Period<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="period"
-            type="number"
-            value={formData["period"] || ""}
-            onChange={(e) => handleInputChange("period", e.target.value)}
-            placeholder="Period (in days)"
-            required
-            className="mt-1"
-            disabled={editingSubscription}
-          />
+          <div>
+            <Label htmlFor="period">
+              Period<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="period"
+              type="number"
+              value={formData["period"] || ""}
+              onChange={(e) => handleInputChange("period", e.target.value)}
+              placeholder="Period (in days)"
+              required
+              className="mt-1"
+              disabled={editingSubscription}
+            />
+          </div>
 
           {/* Price */}
-          <Label htmlFor="price">
-            Price<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input
-            id="price"
-            type="number"
-            value={formData["price"] || ""}
-            onChange={(e) => handleInputChange("price", e.target.value)}
-            placeholder="Price"
-            required
-            className="mt-1"
-            disabled={editingSubscription}
-          />
+          <div>
+            <Label htmlFor="price">
+              Price<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="price"
+              type="number"
+              value={formData["price"] || ""}
+              onChange={(e) => handleInputChange("price", e.target.value)}
+              placeholder="Price"
+              required
+              className="mt-1"
+              disabled={editingSubscription}
+            />
+          </div>
 
           {/* Status */}
-          <Label htmlFor="status">
-            Status<span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Select
-            value={
-              formData.status === true
-                ? "true"
-                : formData.status === false
-                ? "false"
-                : formData.status || ""
-            }
-            onValueChange={(value) => handleInputChange("status", value)}
-            required
-          >
-            <SelectTrigger id="status" className="mt-1">
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="true">Active</SelectItem>
-              <SelectItem value="false">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <Label htmlFor="status">
+              Status<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={
+                formData.status === true
+                  ? "true"
+                  : formData.status === false
+                  ? "false"
+                  : formData.status || ""
+              }
+              onValueChange={(value) => handleInputChange("status", value)}
+              required
+            >
+              <SelectTrigger id="status" className="mt-1">
+                <SelectValue placeholder="Select..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="flex space-x-3 pt-4">
             <Button

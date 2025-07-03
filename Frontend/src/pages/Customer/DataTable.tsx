@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import TableH from "./TableH";
 import TableB from "./TableB";
+import { addSerialNumbers, filterData, sortData } from "@/utils/tableUtils";
 
 interface Column {
   key: string;
@@ -41,22 +42,28 @@ const DataTable = ({
   const [sortField, setSortField] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const filteredData = data.filter((row) =>
-    Object.values(row).some((value) =>
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  // Process data through utility functions
+  const filteredData = filterData(data, searchTerm);
+  const sortedData = sortData(filteredData, sortField, sortDirection);
+  const dataWithSerialNumbers = addSerialNumbers(sortedData);
+  
 
-  const sortedData = sortField
-    ? [...filteredData].sort((a, b) => {
-        const aVal = a[sortField];
-        const bVal = b[sortField];
-        if (sortDirection === "asc") {
-          return aVal > bVal ? 1 : -1;
-        }
-        return aVal < bVal ? 1 : -1;
-      })
-    : filteredData;
+  // const filteredData = data.filter((row) =>
+  //   Object.values(row).some((value) =>
+  //     String(value).toLowerCase().includes(searchTerm.toLowerCase())
+  //   )
+  // );
+
+  // const sortedData = sortField
+  //   ? [...filteredData].sort((a, b) => {
+  //       const aVal = a[sortField];
+  //       const bVal = b[sortField];
+  //       if (sortDirection === "asc") {
+  //         return aVal > bVal ? 1 : -1;
+  //       }
+  //       return aVal < bVal ? 1 : -1;
+  //     })
+  //   : filteredData;
 
   return (
     <Card>
@@ -93,14 +100,14 @@ const DataTable = ({
               />
 
               <TableB
-                sortedData={sortedData}
+                sortedData={dataWithSerialNumbers}
                 columns={columns}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
               />
             </table>
 
-            {sortedData.length === 0 && (
+            {dataWithSerialNumbers.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 No data found
               </div>

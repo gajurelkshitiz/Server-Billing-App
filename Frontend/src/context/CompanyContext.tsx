@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState } from "react";
 
 type Company = {
   name?: string;
-  profileImage?: string;
+  logo?: string;
   [key: string]: any;
 };
 

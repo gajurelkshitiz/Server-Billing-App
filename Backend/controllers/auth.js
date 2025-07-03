@@ -102,13 +102,13 @@ const login = async (req, res) => {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "User with this email not found" });
   }
 
-  console.log('original password')
-  console.log(account.password)
-  console.log('entered password ')
-  console.log(password)
+  // console.log('original password')
+  // console.log(account.password)
+  // console.log('entered password ')
+  // console.log(password)
 
-  console.log(role)
-  console.log(account.isVerified)
+  // console.log(role)
+  // console.log(account.isVerified)
   // check for verified/unverified user or Admin.
   if (role === "user" || role === "admin") {
     if (!account.isVerified) {
@@ -121,8 +121,8 @@ const login = async (req, res) => {
   // Validate password
   const isPasswordCorrect = await checkPassword(password, account.password);
 
-  console.log(isPasswordCorrect)
-  console.log("check password correct or not boolean")
+  // console.log(isPasswordCorrect)
+  // console.log("check password correct or not boolean")
   if (!isPasswordCorrect) {
     throw new UnauthenticatedError("Incorrect Password");
   }

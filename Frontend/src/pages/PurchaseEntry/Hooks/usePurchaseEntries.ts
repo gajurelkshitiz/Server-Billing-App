@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PurchaseEntry } from "./../types";
+import { getAuthHeaders } from "@/utils/auth";
 
 export function usePurchaseEntry() {
   const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
@@ -9,11 +10,11 @@ export function usePurchaseEntry() {
 
   const { toast } = useToast();
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-    "Content-Type": "application/json",
-    "X-Role": localStorage.getItem("role") || "",
-  });
+  // const getAuthHeaders = () => ({
+  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //   "Content-Type": "application/json",
+  //   "X-Role": localStorage.getItem("role") || "",
+  // });
 
   const fetchPurchaseEntries = async () => {
     setLoading(true);

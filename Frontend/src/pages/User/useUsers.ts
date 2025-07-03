@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "./types";
 import { format } from "path";
+import { getAuthHeaders } from "@/utils/auth";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -10,11 +11,11 @@ export function useUsers() {
 
   const { toast } = useToast();
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-    "Content-Type": "application/json",
-    "X-Role": localStorage.getItem("role") || "",
-  });
+  // const getAuthHeaders = () => ({
+  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //   "Content-Type": "application/json",
+  //   "X-Role": localStorage.getItem("role") || "",
+  // });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -103,52 +104,67 @@ export function useUsers() {
       console.log(`After updateHandler Call`)
       console.log(formData);
       if (!formData._id) {
-      toast({
-        title: "Error",
-        description: "No user selected for update",
-        variant: "destructive",
-      });
-      return false;
+        toast({
+          title: "Error",
+          description: "No user selected for update",
+          variant: "destructive",
+        });
+        return false;
       }
+
+      // Create FormData just like addNewUserHandler
+      const form = new FormData();
+      // Append all fields to FormData
+      for (const key in formData) {
+        if (formData[key] !== undefined && formData[key] !== null) {
+          form.append(key, formData[key]);
+        }
+      }
+
       const response = await fetch(
-      `${import.meta.env.REACT_APP_API_URL}/user/${formData._id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(formData),
-      }
+        `${import.meta.env.REACT_APP_API_URL}/user/${formData._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "X-Role": localStorage.getItem("role") || "",
+            // Do NOT set Content-Type, browser will set it for FormData
+          },
+          body: form, // Use FormData instead of JSON.stringify
+        }
       );
+      
       const res_data = await response.json();
       if (response.ok) {
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-      fetchUsers();
-      setFormData({});
-      return true;
+        toast({
+          title: "Success",
+          description: "User updated successfully",
+        });
+        fetchUsers();
+        setFormData({});
+        return true;
       } else {
-      toast({
-        title: "Error",
-        description: `Failed to update user: ${res_data.msg}`,
-        variant: "destructive",
-      });
-      return false;
+        toast({
+          title: "Error",
+          description: `Failed to update user: ${res_data.msg}`,
+          variant: "destructive",
+        });
+        return false;
       }
     } catch (error) {
       toast({
-      title: "Error",
-      description: "Failed to update user",
-      variant: "destructive",
+        title: "Error",
+        description: "Failed to update user",
+        variant: "destructive",
       });
       return false;
     }
   };
 
-  const deleteUser = async (admin: User) => {
+  const deleteUser = async (user: User) => {
     try {
       const response = await fetch(
-        `${import.meta.env.REACT_APP_API_URL}/admin/${admin._id}`,
+        `${import.meta.env.REACT_APP_API_URL}/user/${user._id}`,
         {
           method: "DELETE",
           headers: getAuthHeaders(),

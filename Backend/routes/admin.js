@@ -24,7 +24,7 @@ router.route("/")
 
 router.route("/:id")
   .get(authorizeRoles(["superadmin"]), getAdmin)
-  .patch(authorizeRoles(["superadmin"]), updateAdmin)
+  .patch(authorizeRoles(["superadmin"]), upload.single('profileImage'), updateAdmin)
   .delete(authorizeRoles(["superadmin"]), deleteAdmin);
 
 

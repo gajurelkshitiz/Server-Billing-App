@@ -10,10 +10,10 @@ const companySchema = new mongoose.Schema(
     logo: {
       type: String,
       // required: [true, 'Please provide company logo'],
-      match: [
-        /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg))$/,
-        "Logo URL not valid",
-      ],
+      // match: [
+      //   /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg))$/,
+      //   "Logo URL not valid",
+      // ],
     },
     email: {
       type: String,

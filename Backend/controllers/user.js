@@ -26,11 +26,14 @@ const createUser = async (req, res) => {
     adminID: req.user.tokenID,
   });
 
+  console.log('company object in user', company);
+
   if (!company) {
     throw new UnauthenticatedError("Company not found");
   }
 
   req.body.adminID = req.user.tokenID;
+  req.body.companyName = company.name;
 
   // Optional profile image upload
   if (req.file && req.file.path) {
@@ -128,6 +131,19 @@ const updateUser = async (req, res) => {
   if (name === "" || email === "" || phoneNo === "") {
     throw new BadRequestError("All fields are required");
   }
+
+  // Optional profile image upload
+  if (req.file && req.file.path) {
+    const uploaded = await uploadOnCloudinary(
+      req.file.path,
+      `${Date.now()}-${req.file.originalname}`,
+      "BILL APP/USER PROFILES"
+    );
+    if (uploaded && uploaded.url) {
+      req.body.profileImage = uploaded.url;
+    }
+  }
+
   const user = await User.findOneAndUpdate(
     { _id: userID, adminID: tokenID },
     req.body,
@@ -146,14 +162,18 @@ const deleteUser = async (req, res) => {
     params: { id: userID },
   } = req;
   const user = await User.findOneAndDelete({ _id: userID, adminID: tokenID });
+
+  console.log(user);
+
   if (!user) {
     throw new notFoundError(`No User Found with id: ${userID}`);
   }
   res.status(StatusCodes.OK).send();
 };
 
-// Functionalities done by User(self):
 
+
+// Functionalities done by User(self):
 const getOwnProfile = async (req, res) => {
   const user = await User.findById(req.user.tokenID);
   if (!user) {

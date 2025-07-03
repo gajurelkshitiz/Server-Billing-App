@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Customer } from "./types";
 import { format } from "path";
+import { getAuthHeaders } from "@/utils/auth";
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -10,30 +11,28 @@ export function useCustomers() {
 
   const { toast } = useToast();
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    
-    if (!token) {
-      throw new Error("No authentication token found");
-    }
-    
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "X-Role": role || "",
-    };
-  };
-
   const fetchCustomers = async () => {
     setLoading(true);
+    const baseUrl = `${import.meta.env.REACT_APP_API_URL}/customer/`
+
+    // Read role and optionally companyId from formData or another source
+    const role = localStorage.getItem("role");
+    const isAdmin = role === "admin";
+    const companyID = localStorage.getItem('companyID'); 
+
+    // Build the URL based on role
+    const url = isAdmin && companyID
+      ? `${baseUrl}?companyID=${encodeURIComponent(companyID)}`
+      : baseUrl;
+
     try {
-      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/customer/`, {
+      const response = await fetch(url, {
         headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
         setCustomers(data.customers || []);
+        return data.customers
       } else {
         toast({
           title: "Error",
@@ -173,6 +172,7 @@ export function useCustomers() {
   return {
     customers,
     loading,
+    fetchCustomers,
     updateCustomerHandler,
     deleteCustomer,
     addNewCustomerHandler,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SalesEntry } from "./../types";
+import { getAuthHeaders } from "@/utils/auth";
 
 export function useSalesEntry() {
   const [salesEntries, setSalesEntries] = useState<SalesEntry[]>([]);
@@ -9,16 +10,23 @@ export function useSalesEntry() {
 
   const { toast } = useToast();
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-    "Content-Type": "application/json",
-    "X-Role": localStorage.getItem("role") || "",
-  });
-
   const fetchSalesEntries = async () => {
     setLoading(true);
+    const baseUrl = `${import.meta.env.REACT_APP_API_URL}/salesEntry/`;
+  
+    // Read role and optionally companyId from formData or another source
+    const role = localStorage.getItem("role");
+    const isAdmin = role === "admin";
+    const companyID = localStorage.getItem('companyID'); 
+
+    // Build the URL based on role
+    const url = isAdmin && companyID
+      ? `${baseUrl}?companyID=${encodeURIComponent(companyID)}`
+      : baseUrl;
+
+
     try {
-      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/salesEntry/`, {
+      const response = await fetch(url, {
         headers: getAuthHeaders(),
       });
       if (response.ok) {
