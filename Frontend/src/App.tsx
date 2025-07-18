@@ -9,6 +9,7 @@ import Dashboard from "./components/dashboard/Dashboard";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import NotFound from "./pages/NotFound";
+import { NotificationProvider } from '@/context/NotificationContext';
 
 // importing admin
 import AdminPage from "./pages/Admin";
@@ -27,21 +28,23 @@ import SetPassword from "@/components/auth/SetPassword";
 import { ProfilePage } from "./pages/Profile";
 import { ProfileProvider } from "@/context/ProfileContext"; // <-- import
 import { CompanyProvider } from "@/context/CompanyContext"; // <-- import
-import PurchaseDueListPage from "./pages/PurchaseDueList";
+// import PurchaseDueListPage from "./pages/PurchaseDueList";
 import SalesDueListPage from "./pages/SalesDueList";
 import { CompanyStateProvider } from "./provider/companyState";
 import DropdownComponent from "./DropdownText";
-import SalesPaymentListPage from "./pages/SalesPaymentList";
+// import SalesPaymentListPage from "./pages/SalesPaymentList";
 
 // Routes for testing only
-import SalesLayout from './pages/Sales/SalesLayout';
-import SalesEntry from './pages/Sales/SalesEntry';
-import Customer from './pages/Sales/Customer';
-import WithSearchLayout from './pages/Sales/WithSearchLayout';
-import SalesDueList from './pages/Sales/SalesDueList';
-import SalesPaymentList from './pages/Sales/SalesPaymentList';
-import PurchasePaymentListPage from "./pages/PurchasePaymentList";
+// import SalesLayout from './pages/Sales/SalesLayout';
+// import SalesEntry from './pages/Sales/SalesEntry';
+// import Customer from './pages/Sales/Customer';
+// import WithSearchLayout from './pages/Sales/WithSearchLayout';
+// import SalesDueList from './pages/Sales/SalesDueList';
+// import SalesPaymentList from './pages/Sales/SalesPaymentList';
+// import PurchasePaymentListPage from "./pages/PurchasePaymentList";
 import { FiscalYearProvider } from "./context/FiscalYearContext";
+import CustomerInfoPage from "./pages/CustomerProfileInfo/CustomerInfoPage";
+import SettingsPage from "./pages/Settings/SettingsPage";
 
 
 const queryClient = new QueryClient();
@@ -49,6 +52,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <NotificationProvider>
       <Toaster />
       <Sonner />
       <ProfileProvider> {/* <-- wrap here */}
@@ -151,7 +155,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route 
+            {/* <Route 
               path="/purchasedueList"
               element={
                 <ProtectedRoute>
@@ -160,7 +164,7 @@ const App = () => (
                   </Layout>
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route 
               path="/salesdueList"
               element={
@@ -171,7 +175,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route 
+            {/* <Route 
               path="/salespaymentList"
               element={
                 <ProtectedRoute>
@@ -180,8 +184,8 @@ const App = () => (
                   </Layout>
                 </ProtectedRoute>
               }
-            />
-            <Route 
+            /> */}
+            {/* <Route 
               path="/purchasepaymentList"
               element={
                 <ProtectedRoute>
@@ -190,7 +194,7 @@ const App = () => (
                   </Layout>
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route 
               path="/fiscalyear"
               element={
@@ -211,6 +215,17 @@ const App = () => (
               }
             />
 
+            <Route 
+              path="/customerInfo/:companyID/:customerID"
+              element={
+                  <Layout>
+                    <CustomerInfoPage />
+                  </Layout>
+              }
+            />
+
+
+
             <Route
               path="/test"
               element={
@@ -225,22 +240,32 @@ const App = () => (
             /> */}
 
             {/* This is for testing of nested route of sales module */}
-            <Route path="sales" element={<SalesLayout />}>
+            {/* <Route path="sales" element={<Layout><SalesLayout /></Layout>}>
               <Route path="entry" element={<SalesEntry />} />
-              <Route path="customer" element={<Customer />} />
+              <Route path="customer" element={<Customer />} /> */}
 
               {/* Nested Layout With Search Bar */}
-              <Route element={<WithSearchLayout />}>
+              {/* <Route element={<WithSearchLayout />}>
                 <Route path="due-list" element={<SalesDueList />} />
                 <Route path="payment-list" element={<SalesPaymentList />} />
               </Route>
-            </Route>
+            </Route> */}
 
 
 
             {/* Add more protected routes here for other pages like:
                 /user, /company, /customer, /supplier, /salesEntry, /purchaseEntry, etc.
                 Follow the same pattern as AdminPage */}
+            <Route 
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SettingsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
             <Route 
               path="*" 
               element={
@@ -255,6 +280,7 @@ const App = () => (
         </CompanyProvider>
         </FiscalYearProvider>
       </ProfileProvider>
+      </NotificationProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

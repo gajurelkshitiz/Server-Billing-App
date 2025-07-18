@@ -10,27 +10,29 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Search, Calendar, Settings, User, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LogoutDialog from "@/components/common/LogoutDialog";
 import DateTimeDisplay from '../common/DateTimeDisplay';
 import WeatherInfo from '../common/Location';
 import { useProfile } from "@/context/ProfileContext";
 import { useFiscalYear } from "@/context/FiscalYearContext";
+import { useNotifications } from "@/context/NotificationContext";
 import { getAuthHeaders } from "@/utils/auth";
-
-const editableFields = []; // Add your editable fields here
+import NotificationDropdown from "@/components/common/NotificationDropdown";
 
 const Header = () => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isSettingsRotated, setIsSettingsRotated] = useState(false);
   const { profile, setProfile, formData, setFormData } = useProfile();
   const { fiscalYear, setFiscalYear } = useFiscalYear();
+  const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications();
   const [loading, setLoading] = useState(true);
-  // const [formData, setFormData] = useState<any>({});
   const username = localStorage.getItem('name') || 'User';
   const role = localStorage.getItem('role') || 'user';
   const navigate = useNavigate();
+  const location = useLocation();
+  const [fiscalYearRefetch, setFiscalYearRefetch] = useState(0);
   
-
 
   // Fetch profile data on mount or when role changes
   useEffect(() => {
@@ -77,7 +79,38 @@ const Header = () => {
       }
     };
     fetchFiscalYears();
+  }, [fiscalYearRefetch]);
+
+  // Listen for custom events to trigger refetch
+  useEffect(() => {
+    const handleFiscalYearUpdate = () => {
+      setFiscalYearRefetch(prev => prev + 1);
+    };
+
+    window.addEventListener('fiscalYearUpdated', handleFiscalYearUpdate);
+    return () => {
+      window.removeEventListener('fiscalYearUpdated', handleFiscalYearUpdate);
+    };
   }, []);
+
+  const handleSettingsClick = () => {
+    if (isSettingsRotated) {
+      // If already rotated, go back to previous page
+      navigate(-1);
+      setIsSettingsRotated(false);
+    } else {
+      // First click: rotate icon and navigate to settings
+      setIsSettingsRotated(true);
+      navigate('/settings');
+    }
+  };
+
+  // Reset rotation when navigating away from settings
+  useEffect(() => {
+    if (location.pathname !== '/settings') {
+      setIsSettingsRotated(false);
+    }
+  }, [location.pathname]);
 
 
 
@@ -93,6 +126,7 @@ const Header = () => {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Fiscal Year Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="relative flex items-center gap-2 px-3 py-2 border-gray-200 hover:bg-gray-50 transition-colors">
@@ -166,19 +200,32 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="sm" className="relative">
-            <div className="relative">
-              <div className="w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">
-                2
-              </div>
-              <Badge variant="destructive" className="absolute -top-1 -right-1 w-2 h-2 p-0" />
-            </div>
+          {/* Notification Dropdown */}
+          <NotificationDropdown
+            notifications={notifications}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDeleteNotification={deleteNotification}
+            onClearAll={clearAll}
+          />
+
+          {/* Settings Button */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleSettingsClick}
+            title={isSettingsRotated ? "Go Back" : "Settings"}
+            className="transition-all duration-200 hover:bg-gray-100"
+          >
+            <Settings 
+              size={18} 
+              className={`transition-transform duration-300 ${
+                isSettingsRotated ? 'rotate-180' : 'rotate-0'
+              }`} 
+            />
           </Button>
 
-          <Button variant="ghost" size="sm">
-            <Settings size={18} />
-          </Button>
-
+          {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2 px-3">

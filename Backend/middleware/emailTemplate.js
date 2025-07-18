@@ -23,7 +23,7 @@ function emailtemplateforemailverify ({ recipientName, companyName, verification
     <div class="container">
       <div class="header">
         <!-- Company Logo -->
-        <img src="https://res.cloudinary.com/dil5grmjc/image/upload/v1749882469/yexfqmu85j42bz7pif1j.png" alt="Company Logo" style="width:80px; height:80px; display:block; margin:0 auto;" />
+        <img src='https://res.cloudinary.com/dil5grmjc/image/upload/v1749882469/yexfqmu85j42bz7pif1j.png' alt="Company Logo" style="width:80px; height:80px; display:block; margin:0 auto;" />
         <h1 class="title">Verify Your Email Address</h1>
       </div>
       <div class="body">

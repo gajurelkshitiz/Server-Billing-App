@@ -1,144 +1,107 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
-import TableH from "./TableH";
-import TableB from "./TableB";
-import { processDataDates } from "@/utils/dateUtils";
-import { filterData, sortData, addSerialNumbers, handleSortLogic } from "@/utils/tableUtils";
+// import React, { useState } from "react";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Badge } from "@/components/ui/badge";
+// import {
+//   Search,
+//   Plus,
+//   Edit,
+//   Trash2,
+//   ChevronUp,
+//   ChevronDown,
+// } from "lucide-react";
+// import TableH from "./TableH";
+// import TableB from "./TableB";
+// import { processDataDates } from "@/utils/dateUtils";
+// import { filterData, sortData, addSerialNumbers, handleSortLogic } from "@/utils/tableUtils";
 
-interface Column {
-  key: string;
-  label: string;
-  sortable?: boolean;
-  render?: (value: any, row: any) => React.ReactNode;
-}
+// interface Column {
+//   key: string;
+//   label: string;
+//   sortable?: boolean;
+//   render?: (value: any, row: any) => React.ReactNode;
+// }
 
-interface DataTableProps {
-  data: any[];
-  columns: Column[];
-  loading?: boolean;
-}
+// interface DataTableProps {
+//   data: any[];
+//   columns: Column[];
+//   loading?: boolean;
+//   loadingTitle: string;
+//   handleEdit: (row: any) => void;
+//   handleDelete: (row: any) => void;
+// }
 
-const DataTable = ({
-  data,
-  columns,
-  loading,
-}: DataTableProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+// const DataTable = ({
+//   data,
+//   columns,
+//   loading,
+//   loadingTitle,
+//   handleEdit,
+//   handleDelete
+// }: DataTableProps) => {
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [sortField, setSortField] = useState("");
+//   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const handleSort = (field: string) => {
-    handleSortLogic(sortField, field, sortDirection, setSortField, setSortDirection);
-  };
+//   // Process data through utility functions
+//   const processedData = processDataDates(data);
+//   const filteredData = filterData(processedData, searchTerm);
+//   const sortedData = sortData(filteredData, sortField, sortDirection);
+//   const dataWithSerialNumbers = addSerialNumbers(sortedData);
 
-  // Process data through utility functions
-  const processedData = processDataDates(data);
-  const filteredData = filterData(processedData, searchTerm);
-  const sortedData = sortData(filteredData, sortField, sortDirection);
-  const dataWithSerialNumbers = addSerialNumbers(sortedData);
 
-  // // Format date function
-  // const formatDate = (dateString: string) => {
-  //   if (!dateString) return '';
-  //   return dateString.split('T')[0]; // Gets "2025-05-29" from "2025-05-29T00:00:00.000Z"
-  // };
-
-  // // Process data to format dates
-  // const processedData = data.map(row => ({
-  //   ...row,
-  //   date: row.date ? formatDate(row.date) : row.date
-  // }));
-
-  // const handleSort = (field: string) => {
-  //   if (sortField === field) {
-  //     setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-  //   } else {
-  //     setSortField(field);
-  //     setSortDirection("asc");
-  //   }
-  // };
-
-  // const filteredData = processedData.filter((row) =>
-  //   Object.values(row).some((value) =>
-  //     String(value).toLowerCase().includes(searchTerm.toLowerCase())
-  //   )
-  // );
-
-  // const sortedData = sortField
-  //   ? [...filteredData].sort((a, b) => {
-  //       const aVal = a[sortField];
-  //       const bVal = b[sortField];
-  //       if (sortDirection === "asc") {
-  //         return aVal > bVal ? 1 : -1;
-  //       }
-  //       return aVal < bVal ? 1 : -1;
-  //     })
-  //   : filteredData;
-
-  // just for checking purpose
-  // console.log('Filtered and sorted data:', sortedData
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="relative max-w-sm">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            size={16}
-          />
-          <Input
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600">
-              Loding...
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <TableH
-                columns={columns}
-                setSortField={setSortField}
-                setSortDirection={setSortDirection}
-                sortDirection={sortDirection}
-                sortField={sortField}
-              />
+//   return (
+//     <Card className="relative" >
+//       <CardHeader className="overflow-y-visible">
+//         <div className="relative max-w-sm">
+//           <Search
+//             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+//             size={16}
+//           />
+//           <Input
+//             placeholder="Search..."
+//             value={searchTerm}
+//             onChange={(e) => setSearchTerm(e.target.value)}
+//             className="pl-10"
+//           />
+//         </div>
+//       </CardHeader>
+//       <CardContent className="relative overflow-y-visible z-3">
+//         {loading ? (
+//           <div className="flex items-center justify-center min-h-[400px]">
+//             <div className="flex flex-col items-center space-y-4">
+//               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+//               <p className="text-gray-600">Loading {loadingTitle}...</p>
+//             </div>
+//           </div>
+//         ) : (
+//           <div className="overflow-x-auto">
+//             <table className="relative w-full">
+//               <TableH
+//                 columns={columns}
+//                 setSortField={setSortField}
+//                 setSortDirection={setSortDirection}
+//                 sortDirection={sortDirection}
+//                 sortField={sortField}
+//               />
     
-              <TableB 
-                sortedData={dataWithSerialNumbers}
-                columns={columns}
-              />
-            </table>
+//               <TableB 
+//                 sortedData={dataWithSerialNumbers}
+//                 columns={columns}
+//               />
+//             </table>
 
-            {dataWithSerialNumbers.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No data found
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+//             {dataWithSerialNumbers.length === 0 && (
+//               <div className="text-center py-8 text-gray-500">
+//                 No data found
+//               </div>
+//             )}
+//           </div>
+//         )}
+//       </CardContent>
+//     </Card>
+//   );
+// };
 
-export default DataTable;
+// export default DataTable;

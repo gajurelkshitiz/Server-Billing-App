@@ -9,8 +9,8 @@ const ObjectId = mongoose.Types.ObjectId;
 
 // Customer Payment Entry
 const createCustomerPayment = async (req, res) => {
-    const {customerID, customerName, companyID, amountPaid, paymentMode, remarks} = req.body;
-    if (!customerID || !customerName || !companyID || !amountPaid || !paymentMode || !remarks){
+    const {customerID, customerName, companyID, amountPaid, paymentMode} = req.body;
+    if (!customerID || !customerName || !companyID || !amountPaid || !paymentMode){
         throw new BadRequestError("Please provide all values");
     }
     const customerPaymentList = await CustomerPayment.create({...req.body})

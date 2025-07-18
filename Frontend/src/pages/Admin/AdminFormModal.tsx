@@ -19,6 +19,7 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSubscriptions } from "../DataFetchingFunctions/fetchSubscriptions"; // Adjust path as needed
+import ImagePreview from "@/components/common/ImagePreview";
 
 interface Subscription {
   _id: string;
@@ -318,25 +319,14 @@ const AdminFormModal = ({
       </DialogContent>
 
       {/* Full Size Image Preview Dialog */}
-      <Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] p-0">
-          <DialogHeader className="p-4">
-            <DialogTitle>Profile Preview</DialogTitle>
-          </DialogHeader>
-          <div
-            className="flex justify-center items-center p-4"
-            style={{ height: "60vh" }}
-          >
-            {imagePreview && (
-              <img
-                src={imagePreview}
-                alt="Full Size Photo"
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Use the separate ImagePreview component */}
+      <ImagePreview
+        isOpen={openImageDialog}
+        onOpenChange={setOpenImageDialog}
+        imageUrl={imagePreview}
+        title="Profile Preview"
+        altText="Full Size Photo"
+      />
     </Dialog>
   );
 };

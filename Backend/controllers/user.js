@@ -1,20 +1,16 @@
 const User = require("../models/user");
-const { 
-    BadRequestError, 
-    notFoundError 
-} = require("../errors");
+const { BadRequestError, notFoundError } = require("../errors");
 const { StatusCodes } = require("http-status-codes");
-const genertateToken = require("../middleware/generateToken");
 const crypto = require('crypto');
-const { sendVerificationEmail }  = require('../middleware/email')
+const { sendVerificationEmail } = require('../middleware/email');
 const Company = require("../models/company");
-const uploadOnCloudinary = require("../utils/cloudinary");
+const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathHelper");
 const { sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
 
 //  functionalities done by Admin:
 
 const createUser = async (req, res) => {
-  console.log(req.body);
+  console.log('inside create user', req.body);
   const { name, email, phoneNo, companyID, departmentNo } = req.body;
   if (!name || !email || !phoneNo || !companyID || !departmentNo) {
     throw new BadRequestError("Please provide all values");
@@ -26,68 +22,69 @@ const createUser = async (req, res) => {
     adminID: req.user.tokenID,
   });
 
-  console.log('company object in user', company);
-
   if (!company) {
-    throw new UnauthenticatedError("Company not found");
+    throw new BadRequestError("Company not found or not authorized");
   }
 
-  req.body.adminID = req.user.tokenID;
   req.body.companyName = company.name;
-
-  // Optional profile image upload
-  if (req.file && req.file.path) {
-    const uploaded = await uploadOnCloudinary(
-      req.file.path,
-      `${Date.now()}-${req.file.originalname}`,
-      "BILL APP/USER PROFILES"
-    );
-    if (uploaded && uploaded.url) {
-      req.body.profileImage = uploaded.url;
-    }
-  }
 
   // Generate verification token
   const emailVerificationToken = crypto.randomBytes(64).toString('hex');
   const emailVerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
-  try {
-    // Send verification email and WhatsApp first
-    const emailResult = await sendVerificationEmail(email, name, emailVerificationToken, "user");
-    const whatsappResult = await sendCustomTemplateWhatsappMessage(phoneNo, name);
+  // Create user first
+  const user = await User.create({
+    ...req.body,
+    adminID: req.user.tokenID,
+    companyID: company._id,
+    emailVerificationToken,
+    emailVerificationTokenExpiresAt,
+    isVerified: false
+  });
 
-    const emailSuccess = emailResult && (emailResult.status === "success" || emailResult.status === 200);
-    const whatsappSuccess = whatsappResult && (whatsappResult.status === "success" || whatsappResult.status === 200);
-
-    if (emailSuccess && whatsappSuccess) {
-      // Only create user if both notifications succeeded
-      const user = await User.create({
-        ...req.body,
-        emailVerificationToken,
-        emailVerificationTokenExpiresAt,
-        isVerified: false
-      });
-
-      res.status(StatusCodes.CREATED).json({
-        status: "success",
-        message: "User created, email and WhatsApp sent.",
-        emailResult,
-        whatsappResult,
-        user,
-      });
-    } else {
-      res.status(500).json({
-        status: "error",
-        message: `User not created. Email: ${emailSuccess ? "success" : "error"}, WhatsApp: ${whatsappSuccess ? "success" : "error"}`,
-        emailResult,
-        whatsappResult,
-      });
+  // Handle profile image upload after user creation
+  if (req.file) {
+    try {
+      const profileImagePath = await moveFileToFinalLocation(
+        req.file.path,
+        req.user.tokenID,
+        req.user.name,
+        'users',
+        req.file.filename,
+        company._id,
+        company.name,
+        user.name,     // ← Pass user name as entity name
+        user._id       // ← Pass user ID as entity ID
+      );
+      
+      user.profileImage = profileImagePath;
+      await user.save();
+    } catch (error) {
+      console.error('Error moving user profile image:', error);
+      cleanupTempFile(req.file.path);
     }
+  }
+
+  try {
+    const emailResult = await sendVerificationEmail(user.email, user.name, emailVerificationToken, "user");
+    const whatsappResult = await sendCustomTemplateWhatsappMessage(user.phoneNo, user.name);
+
+    const emailSuccess = emailResult && emailResult.status === "success";
+    const whatsappSuccess = whatsappResult && whatsappResult.status === "success";
+
+    res.status(StatusCodes.CREATED).json({
+      status: emailSuccess && whatsappSuccess ? "success" : "partial_success",
+      message: `User created successfully. Email: ${emailSuccess ? "sent" : "failed"}, WhatsApp: ${whatsappSuccess ? "sent" : "failed"}`,
+      user,
+      emailResult,
+      whatsappResult
+    });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "An unexpected error occurred while sending notifications.",
-      error: error.message || error,
+    res.status(StatusCodes.CREATED).json({
+      status: "user_created_notification_failed",
+      message: "User created but notifications failed",
+      user,
+      error: error.message
     });
   }
 };
@@ -133,15 +130,18 @@ const updateUser = async (req, res) => {
   }
 
   // Optional profile image upload
+  // if (req.file && req.file.path) {
+  //   const uploaded = await uploadOnCloudinary(
+  //     req.file.path,
+  //     `${Date.now()}-${req.file.originalname}`,
+  //     "BILL APP/USER PROFILES"
+  //   );
+  //   if (uploaded && uploaded.url) {
+  //     req.body.profileImage = uploaded.url;
+  //   }
+  // }
   if (req.file && req.file.path) {
-    const uploaded = await uploadOnCloudinary(
-      req.file.path,
-      `${Date.now()}-${req.file.originalname}`,
-      "BILL APP/USER PROFILES"
-    );
-    if (uploaded && uploaded.url) {
-      req.body.profileImage = uploaded.url;
-    }
+    req.body.profileImage = `${process.env.BACKEND_URL}/uploads/profiles/Users/${req.file.filename}`;
   }
 
   const user = await User.findOneAndUpdate(

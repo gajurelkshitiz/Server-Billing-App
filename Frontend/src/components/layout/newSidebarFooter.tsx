@@ -155,6 +155,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ role }) => {
 
   // Admin: show select
   if (role === "admin") {
+    console.log('Admin Company Array data: ', company);
     return (
       <div className="flex flex-col gap-2 p-4 border-t border-gray-200 mt-auto">
         <Select value={state.companyID} onValueChange={handleChange}>

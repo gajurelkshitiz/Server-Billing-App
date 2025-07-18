@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/Subscription/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { Subscription } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -25,7 +25,7 @@ type SubscriptionPageProps = {
   loading: boolean;
   handleAdd: () => void;
   handleEdit: (subscription: Subscription) => void;
-  // handleDelete: (subscription: Subscription) => void;
+  handleDelete: (subscription: Subscription) => void;
 };
 
 export default function SubscriptionTable({
@@ -33,7 +33,8 @@ export default function SubscriptionTable({
   loading,
   handleAdd,
   handleEdit,
-}: // handleDelete,
+  handleDelete,
+}: 
 SubscriptionPageProps) {
   return (
     <>
@@ -53,8 +54,11 @@ SubscriptionPageProps) {
         data={data}
         columns={columns}
         handleEdit={handleEdit}
-        // handleDelete={handleDelete}
+        handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Subscriptions'
+        previewTitle=''
+        previewAltText=""
       />
     </>
   );

@@ -49,17 +49,6 @@ const CompanyFormModal = ({
   // --- Add local loading state for submit button ---
   const [localLoading, setLocalLoading] = useState(false);
 
-  // const validateForm = () => {
-  //   if (!formData.name?.trim()) return "Company Name";
-  //   if (!formData.email?.trim()) return "Email";
-  //   if (!formData.address?.trim()) return "Address";
-  //   if (!formData.vat?.trim()) return "Vat";
-  //   if (!formData.industrytype?.trim()) return "Industry";
-  //   if (!formData.phoneNo || !isValidPhoneNumber(formData.phoneNo)) {
-  //     return "Phone Number";
-  //   }
-  //   return null;
-  // };
 
   const handleImageFileChange = (name: string, file: File | null) => {
     if (!file) {

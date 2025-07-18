@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/SalesEntry/Table/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { SalesEntry } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -42,7 +42,7 @@ type SalesEntryPageProps = {
   loading: boolean;
   handleAdd: () => void;
   handleEdit: (salesEntry: SalesEntry) => void;
-  // handleDelete: (subscription: Subscription) => void;
+  handleDelete: (subscription: SalesEntry) => void;
 };
 
 export default function SalesEntryTable({
@@ -50,7 +50,7 @@ export default function SalesEntryTable({
   loading,
   handleAdd,
   handleEdit,
-  // handleDelete,
+  handleDelete,
 }: SalesEntryPageProps) {
   return (
     // <>
@@ -71,8 +71,11 @@ export default function SalesEntryTable({
         data={data}
         columns={columns}
         handleEdit={handleEdit}
-        // handleDelete={handleDelete}
+        handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Sales Entries'
+        previewTitle="Bill Preview"
+        previewAltText="Full Size Bill"
       />
     </>
   );

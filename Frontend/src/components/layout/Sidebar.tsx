@@ -30,13 +30,6 @@ interface SidebarProps {
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
-interface CompanyContext {
-    state?: {
-        companyID: string,
-    };
-    dispatch?: (value: { type: "SET_COMPANYID", payload: any }) =>  void;
-}
-
 const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,33 +38,35 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   const [fiscalYear, setFiscalYear] = useState<string>("");
   const [groupMenu, setGroupMenu] = useState<object>();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [fiscalYearRefetch, setFiscalYearRefetch] = useState(0);
 
-  const {state, dispatch}: CompanyContext = useCompanyStateGlobal()
-  
+  const { state } = useCompanyStateGlobal();
+
   let selectedCompany;
-  if (role === 'admin'){
-    selectedCompany = state?.companyID || 'all';
-  }
-  else {
-    selectedCompany = ''
+  if (role === "admin") {
+    selectedCompany = state?.companyID || "all";
+  } else {
+    selectedCompany = "";
   }
 
   const getMenuItems = () => {
     const role = localStorage.getItem("role");
     let allowedRoutes = roleRoutes[role as keyof typeof roleRoutes] || [];
-    
+
     // Filter menu items based on allowed routes
     let filteredMenuItems = allMenuItems.filter((item) => {
       if (item.isParent && item.children) {
         // For parent items, check if any child is allowed
-        const hasAllowedChild = item.children.some((child: any) => allowedRoutes.includes(child.path));
+        const hasAllowedChild = item.children.some((child: any) =>
+          allowedRoutes.includes(child.path)
+        );
         return hasAllowedChild;
       }
       return allowedRoutes.includes(item.path);
     });
 
     // Additional filtering for admin when selectedCompany is 'all'
-    if (selectedCompany && selectedCompany === "all" && role === 'admin') {
+    if (selectedCompany && selectedCompany === "all" && role === "admin") {
       filteredMenuItems = filteredMenuItems.filter(
         (item) => item.title !== "Purchase Module" && item.title !== "Sales Module"
       );
@@ -81,9 +76,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   };
 
   const toggleExpand = (itemTitle: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemTitle) 
-        ? prev.filter(item => item !== itemTitle)
+    setExpandedItems((prev) =>
+      prev.includes(itemTitle)
+        ? prev.filter((item) => item !== itemTitle)
         : [...prev, itemTitle]
     );
   };
@@ -101,11 +96,13 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   // Auto-expand if current path is within a parent's children
   useEffect(() => {
     const menuItems = getMenuItems();
-    menuItems.forEach(item => {
+    menuItems.forEach((item) => {
       if (item.isParent && item.children) {
-        const hasActiveChild = item.children.some((child: any) => child.path === location.pathname);
+        const hasActiveChild = item.children.some(
+          (child: any) => child.path === location.pathname
+        );
         if (hasActiveChild && !expandedItems.includes(item.title)) {
-          setExpandedItems(prev => [...prev, item.title]);
+          setExpandedItems((prev) => [...prev, item.title]);
         }
       }
     });
@@ -113,11 +110,14 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
 
   useEffect(() => {
     const menuItems = getMenuItems();
-    const groupedMenuItems = menuItems.reduce((acc, item) => {
-      if (!acc[item.section]) acc[item.section] = [];
-      acc[item.section].push(item);
-      return acc;
-    }, {} as Record<string, typeof menuItems>);
+    const groupedMenuItems = menuItems.reduce(
+      (acc, item) => {
+        if (!acc[item.section]) acc[item.section] = [];
+        acc[item.section].push(item);
+        return acc;
+      },
+      {} as Record<string, typeof menuItems>
+    );
 
     setGroupMenu(groupedMenuItems);
   }, [selectedCompany]);
@@ -140,19 +140,33 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           : null;
         if (activeFY) {
           setFiscalYear(activeFY.name);
-          localStorage.setItem('fiscalYear', activeFY.name);
+          localStorage.setItem("fiscalYear", activeFY.name);
         }
       } catch (err) {
         setFiscalYear("");
       }
     };
     fetchFiscalYear();
+  }, [fiscalYearRefetch]);
+
+  // Listen for custom events to trigger refetch
+  useEffect(() => {
+    const handleFiscalYearUpdate = () => {
+      setFiscalYearRefetch((prev) => prev + 1);
+    };
+
+    window.addEventListener("fiscalYearUpdated", handleFiscalYearUpdate);
+    return () => {
+      window.removeEventListener("fiscalYearUpdated", handleFiscalYearUpdate);
+    };
   }, []);
 
   const renderMenuItem = (item: any) => {
     const Icon = item.icon;
     const isExpanded = expandedItems.includes(item.title);
-    const hasActiveChild = item.children?.some((child: any) => child.path === location.pathname);
+    const hasActiveChild = item.children?.some(
+      (child: any) => child.path === location.pathname
+    );
     const isActive = location.pathname === item.path;
 
     if (item.isParent && item.children) {
@@ -173,17 +187,21 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
             {!isCollapsed && (
               <>
                 <span className="ml-3 flex-1 text-left">{item.title}</span>
-                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {isExpanded ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronRight size={16} />
+                )}
               </>
             )}
           </Button>
-          
+
           {!isCollapsed && isExpanded && (
             <div className="ml-6 space-y-1 mt-1">
               {item.children.map((child: any) => {
                 const ChildIcon = child.icon;
                 const isChildActive = location.pathname === child.path;
-                
+
                 return (
                   <Link key={child.path} to={child.path}>
                     <Button
@@ -221,9 +239,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           }`}
         >
           <Icon size={18} />
-          {!isCollapsed && (
-            <span className="ml-3">{item.title}</span>
-          )}
+          {!isCollapsed && <span className="ml-3">{item.title}</span>}
         </Button>
       </Link>
     );
@@ -244,14 +260,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                 style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
                 onClick={() => navigate("/dashboard")}
               >
-                <span className="bg-gradient-to-r from-blue-600 via-blue-400 to-blue-300 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-blue-400 to-blue-300 bg-clip-text text-transparent animate-pulse">
                   Billing
                 </span>{" "}
                 <span className="text-gray-900">System</span>
               </h2>
               {fiscalYear && (
                 <span className="text-sm mt-1">
-                  CURRENT FY: <span className="font-semibold">{fiscalYear}</span>
+                  CURRENT FY:{" "}
+                  <span className="font-semibold">{fiscalYear}</span>
                 </span>
               )}
             </div>
@@ -298,12 +315,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         isLogoutDialogOpen={isLogoutDialogOpen}
         setIsLogoutDialogOpen={setIsLogoutDialogOpen}
       />
-      
-      {role !== 'superadmin' && (
-        <NewSidebarFooter 
-          role={role}
-        />
-      )}
+
+      {role !== "superadmin" && <NewSidebarFooter role={role} />}
     </div>
   );
 };

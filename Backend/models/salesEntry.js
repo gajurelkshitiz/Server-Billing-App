@@ -43,7 +43,6 @@ const salesEntrySchema = new mongoose.Schema({
   },
   billAttachment: {
     type: String,
-    required: [true, "Please provide a bill attachment"],
   },
   fiscalYear: {
     type: String,

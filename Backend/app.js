@@ -11,6 +11,7 @@ const express = require("express");
 const app = express();
 
 const bodyParser = require('body-parser');   
+const path = require('path');
 
 // connect db
 const connectDB = require("./db/connect");
@@ -39,6 +40,9 @@ const superadminCountRouter = require('./routes/Dashboard Counts/superadminDashb
 const salesSummaryRouter = require('./routes/salesSummary');
 const purchaseSummaryRouter = require('./routes/purchaseSummary');
 
+//database Export
+const fullDatabaseExportRouter = require('./routes/superadminDatabaseExport')
+
 
 // importing error handling middlewares
 const notFoundMiddleware = require("./middleware/not-found");
@@ -59,14 +63,25 @@ app.use(
 app.use(logger);    
 // app.use(bodyParser.json());  
 app.use(express.json()); 
-app.use(express.static("./public"));
-app.use(helmet());
-// app.use(cors(
-//   { 
-//     origin: ['http://localhost:8080' , "http://127.0.0.1:8080", "http://202.51.3.168:5001"]
-//   }
-// ));
-app.use(cors());
+
+// Static file serving for uploads with hierarchical structure
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add specific route for uploads
+// app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+app.use(cors(
+  { 
+    origin: [
+      'http://localhost:8080' , 
+      "http://127.0.0.1:8080", 
+      "http://202.51.3.168:5001",
+      'https://localhost:8080',  // Add HTTPS variant
+      'https://127.0.0.1:8080'   // Add HTTPS variant
+    ]
+  }
+));
+// app.use(cors());
 app.use(xss());
 
 // routes
@@ -89,6 +104,36 @@ app.use('/api/v1/superadminCount', authenticationMiddleware, superadminCountRout
 
 app.use('/api/v1/sales', authenticationMiddleware, salesSummaryRouter)
 app.use('/api/v1/purchase', authenticationMiddleware, purchaseSummaryRouter)
+
+app.use('/api/v1/databaseExport', authenticationMiddleware, fullDatabaseExportRouter)
+
+
+// for client's real IP:
+app.get('/api/v1/client-ip', (req, res) => {
+  let clientIP = req.headers['x-forwarded-for'] || 
+                 req.headers['x-real-ip'] || 
+                 req.connection.remoteAddress || 
+                 req.socket.remoteAddress ||
+                 req.ip;
+  
+  // Convert IPv6 loopback to IPv4
+  if (clientIP === '::1') {
+    clientIP = '127.0.0.1';
+  }
+  
+  // Remove IPv6 prefix if present
+  if (clientIP && clientIP.startsWith('::ffff:')) {
+    clientIP = clientIP.substring(7);
+  }
+  
+  console.log('Client IP:', clientIP);
+  res.json({ ip: clientIP });
+});
+
+
+app.get('/api/v1/test', (req, res) => {
+  res.send('this is a test route');
+})
 
 
 app.use(errorHandlerMiddleware); // error handler

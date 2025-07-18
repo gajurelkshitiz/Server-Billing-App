@@ -10,6 +10,8 @@ const DATE_FIELDS = [
   'lastPaymentDate', 
   'createdAt', 
   'updatedAt',
+  'startDate',
+  'endDate'
 ];
 
 export const processDataDates = (data: any[]) => {

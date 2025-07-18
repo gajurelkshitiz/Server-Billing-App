@@ -1,16 +1,13 @@
 const Admin = require("../models/admin");
+const excelJS = require("exceljs");
 const { StatusCodes } = require("http-status-codes");
-const {
-  BadRequestError,
-  UnauthenticatedError,
-  notFoundError,
-} = require("../errors");
+const { BadRequestError, UnauthenticatedError, notFoundError } = require("../errors");
 const path = require("path");
 const fs = require("fs");
-const { sendVerificationEmail, sendWelcomeEmail } = require("../middleware/email");
+const { sendVerificationEmail } = require("../middleware/email");
 const crypto = require('crypto');
-const { sendTemplateWhatsappMessage, sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
-const uploadOnCloudinary = require("../utils/cloudinary");
+const { sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
+const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathHelper");
 
 const createAdmin = async (req, res) => {
   console.log(req.body);
@@ -26,43 +23,49 @@ const createAdmin = async (req, res) => {
     subscriptionDict = JSON.parse(fs.readFileSync(dictPath, "utf-8"));
   }
 
-  // Map subsName to subsID
   const subsID = subscriptionDict[subsName];
   if (!subsID) {
     throw new BadRequestError("Invalid subscription name provided");
   }
 
-  // Optional profile image upload
-  let profileImageUrl = undefined;
-  if (req.file && req.file.path) {
-    const uploaded = await uploadOnCloudinary(
-      req.file.path,
-      `${Date.now()}-${req.file.originalname}`,
-      "BILL APP/ADMIN PROFILES"
-    );
-    if (uploaded && uploaded.url) {
-      req.body.profileImage = uploaded.url;
-    }
-  }
-
-  // Generate verification token
   const emailVerificationToken = crypto.randomBytes(64).toString('hex');
-  const emailVerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;  
-  // yeslai paxi env variable banayera halnu chha.
+  const emailVerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
-  
-
+  // Create admin first
   const admin = await Admin.create({ 
-    ...req.body, 
+    name,
+    email,
+    phoneNo,
+    subsName,
     subsID,
     emailVerificationToken,
     emailVerificationTokenExpiresAt,
-    isVerified: false 
+    isVerified: false,
+    superadminID: req.user.tokenID
   });
 
-  console.log('to check how phone no would look like')
-  console.log(admin.phoneNo)
-
+  // Handle profile image upload after admin creation
+  if (req.file) {
+    try {
+      const profileImagePath = await moveFileToFinalLocation(
+        req.file.path,
+        admin._id,
+        admin.name,
+        'admin_profile',
+        req.file.filename,
+        null,
+        null,
+        admin.name,    // ← Pass admin name as entity name
+        admin._id      // ← Pass admin ID as entity ID
+      );
+      
+      admin.profileImage = profileImagePath;
+      await admin.save();
+    } catch (error) {
+      console.error('Error moving profile image:', error);
+      cleanupTempFile(req.file.path);
+    }
+  }
 
   try {
     const emailResult = await sendVerificationEmail(admin.email, admin.name, emailVerificationToken, "admin");
@@ -70,11 +73,10 @@ const createAdmin = async (req, res) => {
 
     const emailSuccess = emailResult && emailResult.status === "success";
     const whatsappSuccess = whatsappResult && whatsappResult.status === "success";
-    const allSuccess = emailSuccess && whatsappSuccess;
 
     res.status(200).json({
-      status: allSuccess ? "success" : "partial_error",
-      message: allSuccess
+      status: emailSuccess && whatsappSuccess ? "success" : "partial_error",
+      message: emailSuccess && whatsappSuccess
         ? "Admin created, email and WhatsApp sent."
         : `Admin created. Email: ${emailSuccess ? "success" : "error"}, WhatsApp: ${whatsappSuccess ? "success" : "error"}`,
       emailResult,
@@ -88,9 +90,7 @@ const createAdmin = async (req, res) => {
       error: error.message || error,
     });
   }
-  
 };
-
 
 const getAllAdmins = async (req, res) => {
   const admins = await Admin.find({}).sort("createdAt");
@@ -99,6 +99,81 @@ const getAllAdmins = async (req, res) => {
   }
   res.status(StatusCodes.OK).json({ admins, count: admins.length });
 };
+
+
+//Export the admins data via Excel export
+const exportAdmins = async (req, res) => {
+  console.log("Inside the export admins");
+
+
+  const workbook = new excelJS.Workbook();  // Create a new workbook  
+  const worksheet = workbook.addWorksheet("My Admins"); // New Worksheet  
+  const path = "./files";  // Path to download excel  
+  
+  // Column for data in excel. key must match data key
+  worksheet.columns = [    
+    { header: "S.N.", key: "s_no", width: 10 },
+    { header: "ID", key: "_id", width: 10 },
+    { header: "Full Name", key: "name", width: 20 },
+    { header: "Profile Picture", key: "profileImage", width: 10 },
+    { header: "Email", key: "email", width: 20 },
+    { header: "Password", key: "password", width: 10 },
+    { header: "Phone Number", key: "phoneNo", width: 20 },
+    { header: "Subscription ID", key: "subsID", width: 10 },
+    { header: "Subscription Name", key: "subsName", width: 10 },
+    // { header: "SuperAdmin ID", key: "superadminID", width: 10 },
+    { header: "Role", key: "role", width: 10 },
+    { header: "Last Login", key: "lastLogin", width: 10 },
+    { header: "Is Verified", key: "isVerified", width: 10 },
+    // { header: "SuperAdmin ID", key: "superadminID", width: 10 },
+    { header: "Email Verification Token", key: "emailVerificationToken", width: 10 },
+    { header: "Email Verification Token Expires At", key: "emailVerificationTokenExpiresAt", width: 10 },
+    { header: "Country", key: "country", width: 10 },
+    // { header: "Status", key: "status", width: 10 },
+    // { header: "City", key: "city", width: 10 },
+    // { header: "Province", key: "province", width: 10 },
+    // { header: "Address", key: "address", width: 10 },
+  ];
+  
+  
+  // Looping through User data
+  let counter = 1;
+
+  // fetch admin
+  const adminData = await Admin.find({}).sort("createdAt");
+  
+  adminData.forEach((admin) => {  
+        admin.s_no = counter;  
+        worksheet.addRow(admin); // Add data in worksheet  
+        counter++;
+      });
+      
+  // Making first line in excel bold
+  worksheet.getRow(1).eachCell((cell) => {  
+      cell.font = { bold: true };
+  });
+      
+   try {
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename=users.xlsx`);
+
+    return workbook.xlsx.write(res)
+      .then(() => {
+        res.status(200);
+    });
+  } catch (err) {
+    res.send({
+      status: "error",
+      message: "Something went wrong",
+    });
+  }
+
+}
+
+
 
 
 
@@ -131,19 +206,12 @@ const updateAdmin = async (req, res) => {
     throw new BadRequestError("All fields cannot be empty");
   }
 
-  // Optional profile image upload
-  let profileImageUrl = undefined;
+  // Handle profile image upload
   if (req.file && req.file.path) {
-    const uploaded = await uploadOnCloudinary(
-      req.file.path,
-      `${Date.now()}-${req.file.originalname}`,
-      "BILL APP/ADMIN PROFILES"
-    );
-    if (uploaded && uploaded.url) {
-      req.body.profileImage = uploaded.url;
-    }
+    // Temporarily set tokenID for file path generation
+    req.user = { tokenID: adminID };
+    req.body.profileImage = getFilePathFromRequest(req, 'admin_profile');
   }
-
 
   const admin = await Admin.findOneAndUpdate({ _id: adminID }, req.body, {
     new: true,
@@ -183,23 +251,16 @@ const getOwnProfile = async (req, res) => {
 
 
 const updateOwnProfile = async (req, res) => {
-  // Define fields that should NOT be changed
   const disallowedFields = [
     "_id", "subsID", "isVerified", "createdAt", "updatedAt"
   ];
-  // "emailVerificationToken", "emailVerificationTokenExpiresAt", "__v"
 
-  // Collect updates from body
   let updates = Object.keys(req.body);
 
-  console.log(req.body);
-
-  // If a file is uploaded, treat profileImage as an update
   if (req.file && req.file.path && !updates.includes("profileImage")) {
     updates.push("profileImage");
   }
 
-  // Validate updates: none of the updates should be in disallowedFields
   const isValidOperation = updates.every((update) =>
     !disallowedFields.includes(update)
   );
@@ -214,21 +275,12 @@ const updateOwnProfile = async (req, res) => {
 
   // Handle profile image upload
   if (req.file && req.file.path) {
-    const uploaded = await uploadOnCloudinary(
-      req.file.path,
-      `${Date.now()}-${req.file.originalname}`,
-      "BILL APP/ADMIN PROFILES"
-    );
-    if (uploaded && uploaded.url) {
-      req.body.profileImage = uploaded.url;
-    }
+    req.body.profileImage = getFilePathFromRequest(req, 'admin_profile');
   }
 
   // Update fields
   updates.forEach((update) => {
-    if (update === "profileImage" && req.body.profileImage) {
-      admin.profileImage = req.body.profileImage;
-    } else if (req.body[update] !== undefined) {
+    if (req.body[update] !== undefined) {
       admin[update] = req.body[update];
     }
   });
@@ -274,6 +326,7 @@ async function notifyAdmin(admin) {
 module.exports = {
   createAdmin,
   getAllAdmins,
+  exportAdmins,
   getAdmin,
   updateAdmin,
   deleteAdmin,

@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/FiscalYear/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { FiscalYear } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -24,7 +24,7 @@ type FiscalYearPageProps = {
   loading: boolean;
   handleAdd: () => void;
   handleEdit: (subscription: FiscalYear) => void;
-  // handleDelete: (subscription: FiscalYear) => void;
+  handleDelete: (subscription: FiscalYear) => void;
 };
 
 export default function FiscalYearTable({
@@ -32,7 +32,8 @@ export default function FiscalYearTable({
   loading,
   handleAdd,
   handleEdit,
-}: // handleDelete,
+  handleDelete,
+}: 
 FiscalYearPageProps) {
   return (
     <>
@@ -52,8 +53,11 @@ FiscalYearPageProps) {
         data={data}
         columns={columns}
         handleEdit={handleEdit}
-        // handleDelete={handleDelete}
+        handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='fiscal years'
+        previewTitle=""
+        previewAltText=""
       />
     </>
   );

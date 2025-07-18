@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/Admin/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { Admin } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -50,6 +50,9 @@ export default function AdminTable({
         handleEdit={handleEdit}
         handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Customers'
+        previewTitle='Profile Preview'
+        previewAltText='Full Size Profile'
       />
     </>
   );

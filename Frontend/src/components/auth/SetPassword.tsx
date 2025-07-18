@@ -27,6 +27,11 @@ const SetPassword = () => {
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log('Before handleSetPassword: token, role & password are: ');
+    console.log('token: ', token);
+    console.log('role: ', role);
+    console.log('password: ', password);
+
     try {
       const response = await fetch(
         `${import.meta.env.REACT_APP_API_URL}/auth/set-password`,

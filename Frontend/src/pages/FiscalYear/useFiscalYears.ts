@@ -10,12 +10,6 @@ export function useFiscalYear() {
 
   const { toast } = useToast();
 
-  // const getAuthHeaders = () => ({
-  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //   "Content-Type": "application/json",
-  //   "X-Role": localStorage.getItem("role") || "",
-  // });
-
   const fetchFiscalYears = async () => {
     setLoading(true);
     try {
@@ -64,7 +58,10 @@ export function useFiscalYear() {
         });
         fetchFiscalYears();
         setFormData({})
-        // TODO: close the model
+        
+        // Trigger sidebar refetch
+        window.dispatchEvent(new CustomEvent('fiscalYearUpdated'));
+
         return true;
       } else {
         toast({
@@ -110,6 +107,10 @@ export function useFiscalYear() {
       });
       fetchFiscalYears();
       setFormData({});
+
+      // Trigger sidebar refetch
+      window.dispatchEvent(new CustomEvent('fiscalYearUpdated'));
+      
       return true;
       } else {
       toast({
@@ -129,39 +130,39 @@ export function useFiscalYear() {
     }
   };
 
-  // const deleteAdmin = async (fiscalYear: FiscalYear) => {
-  //   try {
-  //     const response = await fetch(
-  //       `${import.meta.env.REACT_APP_API_URL}/admin/${fiscalYear._id}`,
-  //       {
-  //         method: "DELETE",
-  //         headers: getAuthHeaders(),
-  //       }
-  //     );
-  //     if (response.ok) {
-  //       toast({ title: "Success", description: "Admin deleted successfully" });
-  //       fetchAdmins();
-  //     } else {
-  //       toast({
-  //         title: "Error",
-  //         description: "Failed to delete admin",
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   } catch {
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to connect to server",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
+  const deleteFiscalYear = async (fiscalYear: FiscalYear) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.REACT_APP_API_URL}/fiscalYear/${fiscalYear._id}`,
+        {
+          method: "DELETE",
+          headers: getAuthHeaders(),
+        }
+      );
+      if (response.ok) {
+        toast({ title: "Success", description: "Admin deleted successfully" });
+        fetchFiscalYears();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete admin",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
+    }
+  };
 
   return {
     fiscalYears,
     loading,
     updateFiscalYearHandler,
-    // deleteAdmin,
+    deleteFiscalYear,
     addNewFiscalYearHandler,
     formData,
     setFormData

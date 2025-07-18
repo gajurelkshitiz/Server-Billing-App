@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/PurchaseEntry/Table/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { PurchaseEntry } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -9,6 +9,7 @@ import DateNepali from "../../components/common/DatePicker";
 
 
 const columns = [
+  { key: "sn", label: "S.N.", sortable: true},
   { key: "date", label: "Bill Date", sortable: true },
   { key: "amount", label: "Total Amount", sortable: true },
   { key: "itemDescription", label: "Item Description"},
@@ -35,7 +36,7 @@ type PurchaseEntryPageProps = {
   loading: boolean;
   handleAdd: () => void;
   handleEdit: (purchaseEntry: PurchaseEntry) => void;
-  // handleDelete: (subscription: Subscription) => void;
+  handleDelete: (subscription: PurchaseEntry) => void;
 };
 
 export default function PurchaseEntryTable({
@@ -43,7 +44,7 @@ export default function PurchaseEntryTable({
   loading,
   handleAdd,
   handleEdit,
-  // handleDelete,
+  handleDelete,
 }: PurchaseEntryPageProps) {
   return (
     <>
@@ -61,8 +62,11 @@ export default function PurchaseEntryTable({
         data={data}
         columns={columns}
         handleEdit={handleEdit}
-        // handleDelete={handleDelete}
+        handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Purchase Entries'
+        previewTitle="Bill Preview"
+        previewAltText="Full Size Bill"
       />
     </>
   );

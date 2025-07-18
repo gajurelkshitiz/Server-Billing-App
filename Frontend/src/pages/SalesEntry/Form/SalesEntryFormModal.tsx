@@ -18,6 +18,7 @@ import {
 import { useCustomers } from "@/pages/Customer/useCustomers";
 import { Customer } from "../../Customer/types";
 import NepaliDate from "../../../components/common/DatePicker";
+import ImagePreview from "../../../components/common/ImagePreview";
 
 // Extend the Window interface to include the '$' property for jQuery
 declare global {
@@ -254,8 +255,15 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
               <Input
                 id="amount"
                 type="number"
+                step="1"
                 value={formData["amount"] || ""}
-                onChange={(e) => handleInputChange("amount", e.target.value)}
+                onChange={(e) => {
+                  // Only allow integer values
+                  const value = e.target.value;
+                  if (value === "" || /^\d+$/.test(value)) {
+                    handleInputChange("amount", value);
+                  }
+                }}
                 placeholder="Enter total amount"
                 required
               />
@@ -357,7 +365,8 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
             <div>
               <Label htmlFor="billAttachment">
                 Bill Photo
-                <span className="text-red-500 ml-1">*</span>
+                {/* <span className="text-red-500 ml-1">*</span> */}
+                <span className="text-red-500 ml-1">[Optional]</span>
               </Label>
               <Input
                 id="billAttachment"
@@ -369,7 +378,7 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
                     e.target.files?.[0] || null
                   )
                 }
-                required
+                // required
               />
             </div>
             {imagePreview && (
@@ -393,8 +402,6 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
                 </div>
               </div>
             )}
-
-            
 
             <div className="flex space-x-3 pt-4">
               <Button
@@ -424,28 +431,16 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
             </div>
           </form>
         </DialogContent>
-
-        {/* Full Size Image Preview Dialog */}
-        <Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
-          <DialogContent className="max-w-4xl max-h-[80vh] p-0">
-            <DialogHeader className="p-4">
-              <DialogTitle>Bill Preview</DialogTitle>
-            </DialogHeader>
-            <div
-              className="flex justify-center items-center p-4"
-              style={{ height: "60vh" }}
-            >
-              {imagePreview && (
-                <img
-                  src={imagePreview}
-                  alt="Full Size Bill"
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
       </Dialog>
+
+      {/* Use the separate ImagePreview component */}
+      {/* <ImagePreview
+        isOpen={openImageDialog}
+        onOpenChange={setOpenImageDialog}
+        imageUrl={imagePreview}
+        title="Bill Preview"
+        altText="Full Size Bill"
+      /> */}
     </>
   );
 };

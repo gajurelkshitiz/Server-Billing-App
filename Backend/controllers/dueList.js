@@ -126,9 +126,14 @@ const getSalesDuesSummary = async (req, res) => {
 
 
 
-const getCustomerCompleteData = async (req, res) => {
+const getSingleCustomerCompleteData = async (req, res) => {
   try {
     const { customerID, companyID } = req.query;
+
+    // Validate ObjectIds
+    if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
+      return res.status(400).json({ message: 'Invalid customerID or companyID' });
+    }
 
     const result = await Customer.aggregate([
       // Match the specific customer
@@ -142,7 +147,7 @@ const getCustomerCompleteData = async (req, res) => {
       // Lookup sales entries
       {
         $lookup: {
-          from: 'salesentries', // Collection name (MongoDB converts SalesEntry to salesentries)
+          from: 'salesentries',
           localField: '_id',
           foreignField: 'customerID',
           as: 'salesEntries'
@@ -152,7 +157,7 @@ const getCustomerCompleteData = async (req, res) => {
       // Lookup payments
       {
         $lookup: {
-          from: 'customerpayments', // Collection name
+          from: 'customerpayments',
           localField: '_id',
           foreignField: 'customerID',
           as: 'payments'
@@ -164,7 +169,13 @@ const getCustomerCompleteData = async (req, res) => {
         $addFields: {
           totalSalesAmount: { $sum: '$salesEntries.netTotalAmount' },
           totalPayments: { $sum: '$payments.amountPaid' },
-          totalDue: {
+          thisYearDue: {
+            $subtract: [
+              { $sum: '$salesEntries.netTotalAmount' },
+              { $sum: '$payments.amountPaid' }
+            ]
+          },
+          netTotalDue: {
             $subtract: [
               { $add: ['$prevClosingBalance', { $sum: '$salesEntries.netTotalAmount' }] },
               { $sum: '$payments.amountPaid' }
@@ -173,12 +184,65 @@ const getCustomerCompleteData = async (req, res) => {
           lastSaleDate: { $max: '$salesEntries.date' },
           lastPaymentDate: { $max: '$payments.createdAt' }
         }
+      },
+      
+      // Project only the fields you want to send to frontend
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          phoneNo: 1,
+          address: 1,
+          prevClosingBalance: 1,
+          totalSalesAmount: 1,
+          totalPayments: 1,
+          netTotalDue: 1,
+          thisYearDue: 1,
+          lastSaleDate: 1,
+          lastPaymentDate: 1,
+          // Add any other customer fields you need
+        }
       }
     ]);
 
-    res.json(result[0] || null);
+    if (!result || result.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Customer not found' 
+      });
+    }
+
+    const customer = result[0];
+    
+    // Remap the output for frontend (similar to getAllCustomersCompleteData)
+    const customerData = {
+      customerID: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phoneNo,
+      address: customer.address,
+      prevClosingBalance: customer.prevClosingBalance || 0,
+      totalSales: customer.totalSalesAmount || 0,
+      totalPayments: customer.totalPayments || 0,
+      totalDue: customer.netTotalDue || 0,
+      currentDue: customer.thisYearDue || 0,
+      lastSaleDate: customer.lastSaleDate,
+      lastPaymentDate: customer.lastPaymentDate,
+      status: customer.netTotalDue > 0 ? 'due' : 'paid'
+    };
+
+    res.json({
+      success: true,
+      customer: customerData
+    });
+
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching customer data', error });
+    console.error('Error fetching customer data:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching customer data', 
+      error: error.message 
+    });
   }
 };
 
@@ -280,7 +344,7 @@ const getAllCustomersCompleteData = async (req, res) => {
       currentDue: customer.thisYearDue || 0,
       lastSaleDate: customer.lastSaleDate,
       lastPaymentDate: customer.lastPaymentDate,
-      status: customer.netTotalDue > 0 ? 'Due' : 'Paid'
+      status: customer.netTotalDue > 0 ? 'due' : 'paid'
     }));
 
     res.json({
@@ -304,6 +368,6 @@ module.exports = {
     getPurchaseDuesSummary,
     getSalesDuesList,
     getSalesDuesSummary,
-    getCustomerCompleteData,
-    getAllCustomersCompleteData // Add this new function
+    getSingleCustomerCompleteData,
+    getAllCustomersCompleteData
 };

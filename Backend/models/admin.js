@@ -56,9 +56,12 @@ const adminSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  emailVerificationToken:String,
-  // emailVerificationTokenExpiresAt:Date,
-  emailVerificationTokenExpiresAt: String,
+  emailVerificationToken: {
+    type: String,
+  },
+  emailVerificationTokenExpiresAt: {
+    type: String,
+  },
   country: {
     type: String,
     default: "Nepal"

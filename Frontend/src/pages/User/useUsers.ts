@@ -11,12 +11,6 @@ export function useUsers() {
 
   const { toast } = useToast();
 
-  // const getAuthHeaders = () => ({
-  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //   "Content-Type": "application/json",
-  //   "X-Role": localStorage.getItem("role") || "",
-  // });
-
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -50,7 +44,10 @@ export function useUsers() {
   }, []);
 
   const addNewUserHandler = async () => {
-    const url = `${import.meta.env.REACT_APP_API_URL}/user/`;  
+    const companyID = formData.companyID; // Get companyID from formData
+    console.log('inside useUsers -> addNewUserHandler companyID is: ', companyID);
+    const url = `${import.meta.env.REACT_APP_API_URL}/user/?companyID=${companyID}`;  
+    
     try {
       const form = new FormData();
       // Append all fields to FormData
@@ -64,7 +61,6 @@ export function useUsers() {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "X-Role": localStorage.getItem("role") || "",
-          // Do NOT set Content-Type, browser will set it for FormData
         },
         body: form,
       });

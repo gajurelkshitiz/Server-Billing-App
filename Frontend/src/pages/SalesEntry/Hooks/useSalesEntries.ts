@@ -120,43 +120,59 @@ export function useSalesEntry() {
       console.log(`After updateHandler Call`)
       console.log(formData);
       if (!formData._id) {
-      toast({
-        title: "Error",
-        description: "No sales entry selected for update",
-        variant: "destructive",
-      });
-      return false;
+        toast({
+          title: "Error",
+          description: "No sales entry selected for update",
+          variant: "destructive",
+        });
+        return false;
       }
+
+      // Create FormData for file upload (same as in addNewSalesEntryHandler)
+      const form = new FormData();
+      // Append all fields to FormData
+      for (const key in formData) {
+        if (formData[key] !== undefined && formData[key] !== null && key !== '_id') {
+          form.append(key, formData[key]);
+        }
+      }
+
+      console.log('filled form for update', form);
+
       const response = await fetch(
-      `${import.meta.env.REACT_APP_API_URL}/salesEntry/${formData._id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(formData),
-      }
+        `${import.meta.env.REACT_APP_API_URL}/salesEntry/${formData._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "X-Role": localStorage.getItem("role") || "",
+            // Do NOT set Content-Type, browser will set it for FormData
+          },
+          body: form, // Use FormData instead of JSON.stringify
+        }
       );
       const res_data = await response.json();
       if (response.ok) {
-      toast({
-        title: "Success",
-        description: "Sales Entry updated successfully",
-      });
-      fetchSalesEntries();
-      setFormData({});
-      return true;
+        toast({
+          title: "Success",
+          description: "Sales Entry updated successfully",
+        });
+        fetchSalesEntries();
+        setFormData({});
+        return true;
       } else {
-      toast({
-        title: "Error",
-        description: `Failed to update sales entry: ${res_data.msg}`,
-        variant: "destructive",
-      });
-      return false;
+        toast({
+          title: "Error",
+          description: `Failed to update sales entry: ${res_data.msg}`,
+          variant: "destructive",
+        });
+        return false;
       }
     } catch (error) {
       toast({
-      title: "Error",
-      description: "Failed to update sales entry",
-      variant: "destructive",
+        title: "Error",
+        description: "Failed to update sales entry",
+        variant: "destructive",
       });
       return false;
     }

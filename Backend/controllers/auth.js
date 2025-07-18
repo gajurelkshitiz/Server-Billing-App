@@ -158,48 +158,64 @@ const login = async (req, res) => {
 // Set password after email verification
 const setPassword = async (req, res) => {
   const { token, role, password } = req.body;
+  console.log(req.body);
   if (!token || !role || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
   let userOrAdmin;
-  if (role === "user") {
-    userOrAdmin = await User.findOne({ emailVerificationToken: token });
-  } else if (role === "admin") {
-    userOrAdmin = await Admin.findOne({ emailVerificationToken: token });
-  } else {
-    return res.status(400).json({ message: "Invalid role" });
+  try {
+    if (role === "user") {
+      userOrAdmin = await User.findOne({ emailVerificationToken: token });
+    } else if (role === "admin") {
+      userOrAdmin = await Admin.findOne({ emailVerificationToken: token });
+      console.log('admin found inside setPassword', userOrAdmin);
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    // Token not found or already used
+    if (!userOrAdmin) {
+      return res.status(410).json({ message: "This link has already been used or is invalid. Please login." });
+    }
+
+    // Check if token is expired
+    if (
+      userOrAdmin.emailVerificationTokenExpiresAt &&
+      userOrAdmin.emailVerificationTokenExpiresAt < new Date()
+    ) {
+      return res.status(410).json({ message: "This link has expired. Please request a new verification email." });
+    }
+
+    // Hash and set new password
+    const salt = await bcrypt.genSalt(10);
+    userOrAdmin.password = await bcrypt.hash(password, salt);
+
+    console.log('Hashed password:', userOrAdmin.password);
+
+    userOrAdmin.isVerified = true;
+    userOrAdmin.emailVerificationToken = null;
+    userOrAdmin.emailVerificationTokenExpiresAt = null;
+
+    console.log('Updated instance of userOrAdmin before save:', userOrAdmin);
+    
+    // Add error handling for save operation
+    const savedUser = await userOrAdmin.save();
+    console.log('User saved successfully:', savedUser);
+
+    // Send welcome email here
+    await sendWelcomeEmail(userOrAdmin.email, userOrAdmin.name);
+    console.log('Welcome Message Sent Successfully');
+
+    res.status(200).json({ message: "Password set successfully. Please login to continue." });
+
+  } catch (error) {
+    console.error('Error in setPassword:', error);
+    res.status(500).json({ 
+      message: "An error occurred while setting password", 
+      error: error.message 
+    });
   }
-
-  // Token not found or already used
-  if (!userOrAdmin) {
-    return res.status(410).json({ message: "This link has already been used or is invalid. Please login." });
-  }
-
-  // Check if token is expired
-  if (
-    userOrAdmin.emailVerificationTokenExpiresAt &&
-    userOrAdmin.emailVerificationTokenExpiresAt < new Date()
-  ) {
-    return res.status(410).json({ message: "This link has expired. Please request a new verification email." });
-  }
-
-  // Hash and set new password
-  const salt = await bcrypt.genSalt(10);
-  userOrAdmin.password = await bcrypt.hash(password, salt);
-
-  userOrAdmin.isVerified = true;
-  userOrAdmin.emailVerificationToken = null;
-  userOrAdmin.emailVerificationTokenExpiresAt = null;
-  await userOrAdmin.save();
-
-  // Send welcome email here
-  await sendWelcomeEmail(userOrAdmin.email, userOrAdmin.name);
-  console.log('Welcome Message Sent Successfully')
-
-
-
-  res.status(200).json({ message: "Password set successfully. Please login to continue." });
 };
 
 module.exports = {

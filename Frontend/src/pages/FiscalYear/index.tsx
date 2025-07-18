@@ -12,7 +12,7 @@ const FiscalYearPage = () => {
     fiscalYears,
     loading,
     updateFiscalYearHandler,
-    // deleteFiscalYear,
+    deleteFiscalYear,
     addNewFiscalYearHandler,
     formData,
     setFormData,
@@ -33,11 +33,11 @@ const FiscalYearPage = () => {
     setIsModalOpen(true);
   };
 
-  // const handleDelete = async (fiscalYear: FiscalYear) => {
-  //   if (window.confirm("Are you sure you want to delete this FiscalYear?")) {
-  //     await deleteFiscalYear(fiscalYear);
-  //   }
-  // };
+  const handleDelete = async (fiscalYear: FiscalYear) => {
+    if (window.confirm("Are you sure you want to delete this FiscalYear?")) {
+      await deleteFiscalYear(fiscalYear);
+    }
+  };
 
   const handleInputChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -72,7 +72,7 @@ const FiscalYearPage = () => {
         loading={loading}
         handleAdd={handleAdd}
         handleEdit={handleEdit}
-        // handleDelete={handleDelete}
+        handleDelete={handleDelete}
       />
       <FiscalYearFormModal
         isModalOpen={isModalOpen}

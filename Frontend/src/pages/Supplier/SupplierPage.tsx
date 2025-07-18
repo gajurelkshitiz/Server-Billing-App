@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/Supplier/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { Supplier } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -57,6 +57,9 @@ export default function SupplierTable({
         handleEdit={handleEdit}
         handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Suppliers'
+        previewTitle=""
+        previewAltText=""
       />
     </>
   );

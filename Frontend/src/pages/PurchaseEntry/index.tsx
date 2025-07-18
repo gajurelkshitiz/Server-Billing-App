@@ -5,17 +5,9 @@ import PurchaseEntryFormModal from "./Form/PurchaseEntryFormModal";
 import { usePurchaseEntry } from "./Hooks/usePurchaseEntries";
 import { PurchaseEntry } from "./types";
 import PurchaseEntryTable from "./PurchaseEntryPage";
-import { useCompanyStateGlobal } from "@/provider/companyState";
+import { CompanyContextType, useCompanyStateGlobal } from "@/provider/companyState";
 import { useNavigate } from "react-router-dom";
 
-
-interface CompanyContext {
-    state?: {
-        companyID: string,
-    };
-    dispatch?: (value: { type: "SET_COMPANYID", payload: any }) =>  void;
-
-}
 
 const PurchaseEntryPage = () => {
   const navigate = useNavigate();
@@ -30,7 +22,7 @@ const PurchaseEntryPage = () => {
     setFormData,
   } = usePurchaseEntry();
 
-  const {state, dispatch}:CompanyContext = useCompanyStateGlobal()
+  const {state, dispatch}:CompanyContextType = useCompanyStateGlobal()
   const role = localStorage.getItem('role')
 
   

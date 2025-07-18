@@ -1,21 +1,34 @@
 import React from "react";
-import DataTable from "@/pages/Customer/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { Customer } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui/statusBatch";
+import { Link } from "react-router-dom";
 
 const columns = [
   { key: 'sn', label: "S.N.", sortable: true},
-  { key: "name", label: "Full Name", sortable: true },
+  { 
+    key: "name", 
+    label: "Full Name", 
+    sortable: true,
+    render: (name: string, rowData: any) => (
+      <Link 
+        to={`/customerInfo/${rowData.companyID}/${rowData._id}`}
+        className="hover:text-blue-800 cursor-pointer"
+      >
+        {name}
+      </Link>
+    )
+  },
   { key: "email", label: "Email", sortable: true },
   { key: "prevClosingBalance", label: "Prev Year Closing Amt", sortable: true},
   { key: "address", label: "Address", sortable: true },
   { key: "phoneNo", label: "Phone", sortable: true },
   { key: "panNo", label: "PAN", sortable: true},
 
-  { key: "companyName", label: "Company", sortable: true },
+  // { key: "companyName", label: "Company", sortable: true },
   {
       key: "status",
       label: "Status",
@@ -60,6 +73,9 @@ export default function CustomerTable({
         handleEdit={handleEdit}
         handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Customers'
+        previewTitle="Customer Profile"
+        previewAltText="Full Customer Photo"
       />
     </>
   );

@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from "react";
-import SupplierSearch from "./components/CustomerSearch";
-import DueSummary from "./components/DueSummary";
 import { getAuthHeaders } from "@/utils/auth";
-import DataTable from "./components/Table/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { useToast } from "@/hooks/use-toast";
-import { FaArrowLeft } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useCompanyStateGlobal, CompanyContextType } from "@/provider/companyState";
-// import { sortData } from "@/utils/tableUtils";
+import { useNavigate, Link } from "react-router-dom";
+import { useCompanyStateGlobal } from "@/provider/companyState";
 import PaymentStatusBadge from "@/components/ui/paymentStatusBadge";
 import OptionsDropdown from "./components/OptionsDropdown";
 import PaymentProcessModal from "./components/PaymentProcessModal";
@@ -15,69 +11,67 @@ import FollowUpModal from "./components/FollowUpModal";
 
 const SalesDueListPage = () => {
   const [customerData, setCustomerData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Set initial loading to true
   const [selectedAction, setSelectedAction] = useState<'pay' | 'followup' | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   
-  const {state, dispatch}:CompanyContextType = useCompanyStateGlobal() 
+  const { state } = useCompanyStateGlobal();
   const companyID = localStorage.getItem('companyID');
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Handle Pay action
   const handlePay = (customerData: any) => {
     setSelectedCustomer(customerData);
     setSelectedAction('pay');
-    console.log('Pay action triggered for customer:', customerData);
-    toast({
-      title: "Payment",
-      description: `Initiating payment for ${customerData.name}`,
-    });
   };
 
-  // Handle Follow Up action
   const handleFollowUp = (customerData: any) => {
     setSelectedCustomer(customerData);
     setSelectedAction('followup');
-    console.log('Follow up action triggered for customer:', customerData);
-    toast({
-      title: "Follow Up",
-      description: `Follow up scheduled for ${customerData.name}`,
-      variant: "default",
-    });
   };
 
-  // Handle Process Payment
-  const handleProcessPayment = () => {
-    // Add your payment processing logic here
-    console.log('Processing payment for:', selectedCustomer);
+  const handlePaymentSuccess = () => {
+    fetchCustomerCompleteData();
+  };
+
+  const handleScheduleFollowUp = (followUpData: any) => {
+    // Handle follow-up scheduling logic here
     toast({
       title: "Success",
-      description: `Payment processed for ${selectedCustomer.name}`,
+      description: "Follow-up scheduled successfully",
     });
-    setSelectedAction(null);
+    handleModalClose();
   };
 
-  // Handle Schedule Follow Up
-  const handleScheduleFollowUp = (followUpData: { type: string; notes: string }) => {
-    // Add your follow up scheduling logic here
-    console.log('Scheduling follow up for:', selectedCustomer, followUpData);
-    toast({
-      title: "Follow Up Scheduled",
-      description: `${followUpData.type} follow up scheduled for ${selectedCustomer.name}`,
-    });
-    setSelectedAction(null);
-  };
-
-  // Handle modal close
   const handleModalClose = () => {
     setSelectedAction(null);
     setSelectedCustomer(null);
   };
 
+
+  const handleDelete = () => {
+    return
+  }
+
+  const handleEdit = () => {
+    return
+  }
+
   const customerDataColumns = [
     { key: "sn", label: "S.N."},
-    { key: "name", label: "Customer Name", sortable: true },
+    { 
+      key: "name", 
+      label: "Customer Name", 
+      sortable: true,
+      render: (name: string, rowData: any) => (
+        <Link 
+          to={`/customerInfo/${companyID}/${rowData.customerID}`}
+          className="hover:text-blue-800 cursor-pointer"
+        >
+          {name}
+        </Link>
+      )
+    },
     { key: "prevClosingBalance", label: "Prev Year Closing Amt", sortable: true },
     { key: "totalSales", label: "Total Sales", sortable: true},
     { key: "totalPayments", label: "Total Payment", sortable: true},
@@ -103,16 +97,6 @@ const SalesDueListPage = () => {
     }
   ];
 
-  useEffect(() => {
-    if (state.companyID === 'all' && state.companyID) {
-      navigate('/dashboard');
-    }
-  }, [state.companyID]);
-  
-  // TODO: State.companyID is not getting companyID value during initial render. Please fix this error
-  console.log('company ID from the companyID',state.companyID); 
-
-  // Fetch customer complete data function
   const fetchCustomerCompleteData = async () => {
     setLoading(true);
     try {
@@ -124,9 +108,7 @@ const SalesDueListPage = () => {
       );
       if (!response.ok) throw new Error("Failed to fetch customer Data");
       const data = await response.json();
-      console.log('getAllCustomersData', data);
       setCustomerData(data.customers);
-      
     } catch (error) {
       toast({
         title: "Error",
@@ -139,30 +121,39 @@ const SalesDueListPage = () => {
   };
 
   useEffect(() => {
+    if (state.companyID === 'all') {
+      navigate('/dashboard');
+    }
+  }, [state.companyID]);
+
+  useEffect(() => {
     fetchCustomerCompleteData();
   }, []);
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Sales Due List Management</h1>
       
-      {/* Table Container */}
-      <div className="relative overflow-visible">
+      <div className="relative">
         <DataTable
           data={customerData}
           columns={customerDataColumns}
+          loading={loading}
+          loadingTitle='Sales Due list'
+          handleDelete={handleDelete}
+          handleEdit={handleEdit}
+          previewTitle="Bill Preview"
+          previewAltText="Full Size Bill"
         />
 
-        {/* Payment Process Modal */}
         {selectedAction === 'pay' && selectedCustomer && (
           <PaymentProcessModal
             selectedCustomer={selectedCustomer}
             onClose={handleModalClose}
-            onProcessPayment={handleProcessPayment}
+            onSuccess={handlePaymentSuccess}
           />
         )}
 
-        {/* Follow Up Modal */}
         {selectedAction === 'followup' && selectedCustomer && (
           <FollowUpModal
             selectedCustomer={selectedCustomer}
@@ -171,6 +162,7 @@ const SalesDueListPage = () => {
           />
         )}
       </div>
+
     </div>
   );
 };

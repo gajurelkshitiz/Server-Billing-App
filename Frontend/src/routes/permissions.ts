@@ -5,11 +5,11 @@ export const roleRoutes = {
   admin: [
     '/dashboard', '/user', '/company', '/customer', '/supplier', '/purchaseEntry', 
     '/salesEntry', '/purchasedueList', '/salesdueList', '/salespaymentList', '/purchasepaymentList', 
-    '/paymentList', '/fiscalYear', '/permission', '/settings'
+    '/paymentList', 'customerInfo', '/fiscalYear', '/permission', '/settings'
   ],
   user: [
     '/dashboard', '/purchaseEntry', '/salesEntry', '/customer', '/supplier', '/purchasedueList', 
-    '/salesdueList', '/salespaymentList', '/purchasepaymentList', 'paymentList', '/permission', 
+    '/salesdueList', '/salespaymentList', '/purchasepaymentList', 'paymentList', 'customerInfo', '/permission', 
     '/settings'
   ]
 };

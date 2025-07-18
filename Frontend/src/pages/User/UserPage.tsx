@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "@/pages/User/DataTable";
+import DataTable from "@/components/shared/Table/DataTable";
 import { User } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -51,6 +51,9 @@ export default function UserTable({
         handleEdit={handleEdit}
         handleDelete={handleDelete}
         loading={loading}
+        loadingTitle='Users'
+        previewTitle="Profile Preview"
+        previewAltText="Full Size User Profile"
       />
     </>
   );

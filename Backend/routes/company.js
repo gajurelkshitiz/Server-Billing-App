@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const storage = require('../middleware/multer');
-const upload = multer({ storage: storage });
+// Update to use the new multer configuration
+const upload = require('../middleware/multer');
 
 const { getCompaniesbyAdmin } = require("../controllers/companyController");
 const authentication = require("../middleware/authentication");
@@ -14,6 +13,7 @@ const {
   getCompany,
   updateCompany,
   deleteCompany,
+  importCompaniesFromExcel,
 } = require("../controllers/company");
 
 
@@ -26,7 +26,9 @@ router.route("/:id")
     .patch(authorizeRoles(["admin"]), upload.single('logo'), updateCompany)
     .delete(authorizeRoles(["admin"]), deleteCompany);
 
-// yo chai future ma companies name ko dropdown ma use garna ko lagi ho
+router.route("/import/excel")
+    .post(authorizeRoles(["admin"]), upload.single('file'), importCompaniesFromExcel);
+
 router.get("/", authentication, getCompaniesbyAdmin);
 
 module.exports = router;

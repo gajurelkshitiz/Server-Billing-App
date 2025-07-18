@@ -18,6 +18,7 @@ import {
 import { fetchSuppliers } from "../../DataFetchingFunctions/fetchSuppliers";
 import { Supplier } from "../../Supplier/types";
 import NepaliDate from "../../../components/common/DatePicker"
+import ImagePreview from "@/components/common/ImagePreview";
 
 
 // Extend the Window interface to include the '$' property for jQuery
@@ -338,7 +339,8 @@ const PurchaseEntryFormModal = ({
             </div>
           </form>
         </DialogContent>
-        {/* Full Size Image Preview Dialog */}
+
+        {/* Full Size Image Preview Dialog
         <Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
           <DialogContent className="max-w-4xl max-h-[80vh] p-0">
             <DialogHeader className="p-4">
@@ -357,7 +359,16 @@ const PurchaseEntryFormModal = ({
               )}
             </div>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
+
+        {/* Use the separate ImagePreview component */}
+        <ImagePreview
+          isOpen={openImageDialog}
+          onOpenChange={setOpenImageDialog}
+          imageUrl={imagePreview}
+          title="Bill Preview"
+          altText="Full Size Bill"
+        />
       </Dialog>
     </>
   );

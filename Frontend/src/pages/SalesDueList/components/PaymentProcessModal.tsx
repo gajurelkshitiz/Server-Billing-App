@@ -1,76 +1,48 @@
 import React, { useState } from 'react';
-import { useCompanyStateGlobal, CompanyContextType } from "@/provider/companyState";
+import { useCompanyStateGlobal } from "@/provider/companyState";
 import { getAuthHeaders } from "@/utils/auth";
+import { useToast } from "@/hooks/use-toast";
+import PaymentModeDropdown from "@/components/customUI/PaymentModeDropdown";
 
 interface PaymentProcessModalProps {
   selectedCustomer: any;
   onClose: () => void;
-  onProcessPayment: (paymentData: PaymentData) => void;
-}
-
-interface PaymentData {
-  amountPaid: number;
-  paymentMode: string;
-  remarks: string;
+  onSuccess: () => void;
 }
 
 const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
   selectedCustomer,
   onClose,
-  onProcessPayment
+  onSuccess
 }) => {
-  const { state, dispatch }: CompanyContextType = useCompanyStateGlobal();
+  const { state } = useCompanyStateGlobal();
+  const { toast } = useToast();
   
-  const [formData, setFormData] = useState<PaymentData>({
-    amountPaid: 0,
-    paymentMode: '',
-    remarks: ''
-  });
-  
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [amountPaid, setAmountPaid] = useState(0);
+  const [paymentMode, setPaymentMode] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const paymentModes = [
-    { value: 'cash', label: 'Cash', icon: '💵' },
-    { value: 'cheque', label: 'Cheque', icon: '🏦' },
-    { value: 'bank', label: 'Bank Transfer', icon: '🏛️' },
-    { value: 'wallet', label: 'Digital Wallet', icon: '📱' },
-    { value: 'other', label: 'Other', icon: '💳' }
-  ];
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-    
-    if (!formData.amountPaid || formData.amountPaid <= 0) {
-      newErrors.amountPaid = 'Amount must be greater than 0';
-    } else if (formData.amountPaid > selectedCustomer.totalDue) {
-      newErrors.amountPaid = 'Amount cannot be greater than total due';
+  const handleSubmit = async () => {
+    // Basic validation
+    if (!amountPaid || amountPaid <= 0 || !paymentMode) {
+      toast({
+        title: "Error",
+        description: "Please fill all required fields",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    if (!formData.paymentMode) {
-      newErrors.paymentMode = 'Please select a payment mode';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
-  const handleInputChange = (field: keyof PaymentData, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+    if (amountPaid > selectedCustomer.totalDue) {
+      toast({
+        title: "Error",
+        description: "Amount cannot be greater than total due",
+        variant: "destructive",
+      });
+      return;
     }
-  };
 
-  const addNewPaymentHandler = async (paymentData: PaymentData) => {
     try {
       setIsLoading(true);
       const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/payment/customer`, {
@@ -79,35 +51,31 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
         body: JSON.stringify({
           customerID: selectedCustomer.customerID,
           customerName: selectedCustomer.name,
-          companyID: state.companyID, // Assuming you have companyId in state
-          amountPaid: paymentData.amountPaid,
-          paymentMode: paymentData.paymentMode,
-          remarks: paymentData.remarks,
+          companyID: state.companyID,
+          amountPaid,
+          paymentMode,
+          remarks,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to process payment');
-      }
+      if (!response.ok) throw new Error('Failed to process payment');
 
-      const result = await response.json();
-      console.log('Payment processed successfully:', result);
+      toast({
+        title: "Success",
+        description: `Payment of Rs.${amountPaid} processed successfully`,
+      });
       
-      // Call the parent component's callback
-      onProcessPayment(paymentData);
+      onSuccess();
+      onClose();
       
     } catch (error) {
-      console.error('Error processing payment:', error);
-      // You might want to show an error message to the user
-      alert('Failed to process payment. Please try again.');
+      toast({
+        title: "Error",
+        description: "Failed to process payment",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (validateForm()) {
-      await addNewPaymentHandler(formData);
     }
   };
 
@@ -137,92 +105,53 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
             </p>
             <p className="text-gray-700">
               <span className="font-medium">Total Due:</span> 
-              <span className="text-red-600 font-semibold"> ${selectedCustomer.totalDue}</span>
+              <span className="text-red-600 font-semibold"> Rs.{selectedCustomer.totalDue}</span>
             </p>
           </div>
 
-          {/* Payment Form */}
-          <div className="space-y-4">
-            {/* Amount to Pay */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount to Pay <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  value={formData.amountPaid || ''}
-                  onChange={(e) => handleInputChange('amountPaid', parseFloat(e.target.value) || 0)}
-                  className={`w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.amountPaid ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  max={selectedCustomer.totalDue}
-                />
-              </div>
-              {errors.amountPaid && (
-                <p className="text-red-500 text-xs mt-1">{errors.amountPaid}</p>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Maximum: ${selectedCustomer.totalDue}
-              </p>
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Amount *</label>
+            <input
+              type="number"
+              value={amountPaid || ''}
+              onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
+              max={selectedCustomer.totalDue}
+            />
+          </div>
 
-            {/* Payment Mode */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Payment Mode <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.paymentMode}
-                onChange={(e) => handleInputChange('paymentMode', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.paymentMode ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">Select payment mode</option>
-                {paymentModes.map((mode) => (
-                  <option key={mode.value} value={mode.value}>
-                    {mode.icon} {mode.label}
-                  </option>
-                ))}
-              </select>
-              {errors.paymentMode && (
-                <p className="text-red-500 text-xs mt-1">{errors.paymentMode}</p>
-              )}
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Payment Mode *</label>
+            <PaymentModeDropdown 
+              value={paymentMode}
+              onChange={setPaymentMode}
+            />
+          </div>
 
-            {/* Remarks */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Remarks
-              </label>
-              <textarea
-                value={formData.remarks}
-                onChange={(e) => handleInputChange('remarks', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                rows={3}
-                placeholder="Additional notes (optional)"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Remarks</label>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              rows={2}
+              placeholder="Optional notes"
+            />
           </div>
           
-          {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <button 
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               disabled={isLoading}
             >
               Cancel
             </button>
             <button 
               onClick={handleSubmit}
-              disabled={!formData.amountPaid || !formData.paymentMode || isLoading}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
             >
               {isLoading ? 'Processing...' : 'Process Payment'}
             </button>

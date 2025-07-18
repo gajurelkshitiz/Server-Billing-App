@@ -63,25 +63,26 @@ const CustomerPage = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
-      <CustomerTable
-        data={customers}
-        // TODO: Loading related kaam garna baki chha
-        loading={loading}
-        handleAdd={handleAdd}
-        handleEdit={handleEdit}
-        handleDelete={handleDelete}
-      />
-      <CustomerFormModal
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        // addNewCustomerHandler={addNewCustomerHandler}
-        // updateCustomerHandler={updateCustomerHandler}
-        editingCustomer={editingCustomer}
-        title={editingCustomer ? "Edit Customer" : "Add New Customer"}
-      />
+      
+        <div className="relative">
+          <CustomerTable
+            data={customers}
+            loading={loading}
+            handleAdd={handleAdd}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+          />
+          
+          <CustomerFormModal
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            editingCustomer={editingCustomer}
+            title={editingCustomer ? "Edit Customer" : "Add New Customer"}
+          />
+        </div>
     </div>
   );
 };

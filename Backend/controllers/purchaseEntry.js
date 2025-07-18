@@ -1,49 +1,32 @@
 const PurchaseEntry = require('../models/PurchaseEntry');
 const { BadRequestError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
-const  uploadOnCloudinary  = require('../utils/cloudinary')
+const { getFilePathFromRequest } = require("../utils/filePathHelper");
 
 // Create a new purchase entry
 const createPurchaseEntry = async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
   const { date, amount, itemDescription, supplierID, paid, dueAmount } = req.body;
   if (!date || !amount || !itemDescription || !supplierID || paid === undefined || dueAmount === undefined) {
     throw new BadRequestError('Please provide all values');
   }
-  // const { date, amount, itemDescription, paid, dueAmount } = req.body;
-  // if (!date || !amount || !itemDescription || !paid  || dueAmount === undefined) {
-  //   throw new BadRequestError('Please provide all values');
-  // }
   
-  const billAttachmentPath  = req.file.path
-  if (!billAttachmentPath) {
-    throw new BadRequestError("Bill file is missing")
+  if (!req.file || !req.file.path) {
+    throw new BadRequestError("Bill file is missing");
   }
 
-  const billAttachment = await uploadOnCloudinary(
-    billAttachmentPath,
-    `${Date.now()}-${req.file.originalname}`, // or any custom name you want
-    "BILL APP/BILL IMAGES/PurchaseEntries"
-  )
-
-  if (!billAttachment.url) {
-    throw new BadRequestError('Error while uploading on bill')
-  }
+  // Generate file path using helper
+  req.body.billAttachment = getFilePathFromRequest(req, 'purchase');
 
   let companyID;
-  // for user, companyID from token:
   companyID = req.user.companyID;
-
-  // for admin, where companyID comes from param
-  if (!companyID && req.query.companyID){
+  if (!companyID && req.query.companyID) {
     companyID = req.query.companyID;
   }
 
-  req.body.billAttachment = billAttachment.url
   req.body.createdBy = req.user.tokenID;
   req.body.adminID = req.user.adminID;
   req.body.companyID = companyID;
-
 
   const purchaseEntry = await PurchaseEntry.create({ ...req.body });
   res.status(StatusCodes.CREATED).json({ purchaseEntry });

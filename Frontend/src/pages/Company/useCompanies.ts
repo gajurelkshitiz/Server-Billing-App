@@ -58,6 +58,7 @@ export function useCompany() {
           form.append(key, formData[key]);
         }
       }
+      console.log('inside add new company handler formData is: ', form);
 
       const response = await fetch(url, {
         method: "POST",

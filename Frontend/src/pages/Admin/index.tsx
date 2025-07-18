@@ -6,6 +6,9 @@ import AdminFormModal from "./AdminFormModal";
 import { useAdmins } from "./useAdmins";
 import { Admin } from "./types";
 import ConfirmDialog from "@/components/common/ConfirmDialog"; // <-- import
+import { Button } from '@/components/ui/button';
+import { Download, Printer } from "lucide-react";
+import { getAuthHeaders } from "@/utils/auth";
 
 const AdminPage = () => {
   
@@ -24,6 +27,7 @@ const AdminPage = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState<Admin | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
 
   const handleAdd = () => {
     setEditingAdmin(null);
@@ -73,9 +77,63 @@ const AdminPage = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/admin/export/excel`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      // Create blob from response
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `admins-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: "Admin data exported successfully",
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to export admin data",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
+        
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm">
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
+        </div>
+      </div>
+
       <AdminTable
         data={admins}
         // TODO: Loading related kaam garna baki chha
