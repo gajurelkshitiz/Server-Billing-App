@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/context/NotificationContext";
 import { SalesEntry } from "./../types";
 import { getAuthHeaders } from "@/utils/auth";
 
@@ -9,6 +10,7 @@ export function useSalesEntry() {
   const [formData, setFormData] = useState<Partial<SalesEntry>>({});
 
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   const fetchSalesEntries = async () => {
     setLoading(true);
@@ -94,6 +96,14 @@ export function useSalesEntry() {
           title: "Success",
           description: `Sales Entry Created Successfully.`,
         });
+
+        // Add notification for successful sales entry creation
+        addNotification({
+          title: 'New Sale Recorded',
+          message: `Sales entry has been successfully created and saved to the system.`,
+          type: 'success'
+        });
+
         fetchSalesEntries();
         setFormData({});
         return true;

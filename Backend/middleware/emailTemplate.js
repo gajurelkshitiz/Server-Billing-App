@@ -1,4 +1,4 @@
-function emailtemplateforemailverify ({ recipientName, companyName, verificationLink, teamName, year, email }) {
+function emailtemplateforeemailverify ({ recipientName, companyName, verificationLink, teamName, year, email }) {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -53,93 +53,77 @@ function emailtemplateforemailverify ({ recipientName, companyName, verification
 `
 }
 
-
-
-// let forgotverify = `
-// <!DOCTYPE html>
-// <html>
-// <head>
-//     <style>
-//         body {
-//             font-family: Arial, sans-serif;
-//             line-height: 1.5;
-//             margin: 0;
-//             padding: 0;
-//         }
-//         a{
-//             color: white!important;
-//         }
-//         .container {
-//             max-width: 600px;
-//             margin: 0 auto;
-//             padding: 20px;
-//         }
-
-//         .logo {
-//             text-align: center;
-//             margin-bottom: 20px;
-//         }
-
-//         .logo img {
-//             max-width: 150px;
-//         }
-
-//         .content {
-//             background-color: #f8f8f8;
-//             padding: 20px;
-//             border-radius: 5px;
-//         }
-
-//         .instructions {
-//             margin-bottom: 20px;
-//         }
-
-//         .button {
-//             display: inline-block;
-//             padding: 10px 20px;
-//             background-color: #3366cc;
-//             color: #ffffff;
-//             text-decoration: none;
-//             border-radius: 5px;
-//         }
-
-//         .button:hover {
-//             background-color: #254785;
-//         }
-
-//         .footer {
-//             margin-top: 20px;
-//             font-size: 12px;
-//             text-align: center;
-//         }
-//     </style>
-// </head>
-// <body>
-//     <div class="container">
-//         <div class="content">
-//             <h2>Reset Your Rappitnepal Password</h2>
-//             <p>We received a request to reset the password for your Rappit account. To regain access to your account, please follow the instructions below:</p>
-//             <div class="instructions">
-//                 <ol>
-//                     <li>Click on the following link to reset your password:</li>
-//                 </ol>
-//                 <Span><a class="button" href="https://rappitnepal.netlify.app/resetPassword/***emailtoken***/***role***">Reset Password</a></Span>
-//                 <p>If the link doesn't work, Please contact with us</p>
-//                 <a href="https://www.facebook.com/rn.sharma.16568548"><p>Facebook</p></a>
-//             </div>
-//             <p>Please note that this password reset link will expire after 10 mins, so we recommend completing the process promptly.</p>
-//             <p>If you did not initiate this password reset request, please ignore this email or contact our support team rappit777@example.com immediately for assistance. We take the security of your account seriously and will investigate any unauthorized access attempts.</p>
-//         </div>
-//         <div class="footer">
-//             <p>Thank you for being a valued Rappitnepal user. If you have any further questions or need assistance, feel free to reach out to our support team.</p>
-//             <p>rabindra sharma<br>founder<br>Rappit Team</p>
-//         </div>
-//     </div>
-// </body>
-// </html>
-// `
-
-
+function emailTemplateForReVerification ({ recipientName, companyName, verificationLink, teamName, year, email, message }) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Re-verify Your Email</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body { background-color: #f4f8fb; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+      .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08); overflow: hidden; border: 2px solid #fef2f2; }
+      .header { background: linear-gradient(90deg, #dc2626 0%, #f87171 100%); padding: 32px 24px 24px 24px; text-align: center; }
+      .title { color: #fff; font-size: 26px; font-weight: 700; margin: 0; }
+      .body { padding: 32px 24px; color: #1e293b; font-size: 16px; line-height: 1.7; }
+      .alert-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 4px; }
+      .alert-text { color: #991b1b; font-weight: 500; margin: 0; }
+      .button { display: inline-block; margin: 24px 0; padding: 12px 32px; background: #dc2626; color: #fff !important; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12); transition: background 0.2s; }
+      .button:hover { background: #b91c1c; }
+      .footer { background: #f1f5f9; padding: 20px 24px; text-align: center; color: #64748b; font-size: 14px; }
+      .signature { margin-top: 32px; font-style: italic; color: #dc2626; font-weight: 500; }
+      .expiry-note { background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 6px; margin: 16px 0; color: #92400e; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <!-- Company Logo -->
+        <img src='https://res.cloudinary.com/dil5grmjc/image/upload/v1749882469/yexfqmu85j42bz7pif1j.png' alt="Company Logo" style="width:80px; height:80px; display:block; margin:0 auto;" />
+        <h1 class="title">🔄 Re-verify Your Email</h1>
+      </div>
+      <div class="body">
+        <p>Dear <strong>${recipientName}</strong>,</p>
+        
+        <div class="alert-box">
+          <p class="alert-text">⚠️ Previous verification link has expired</p>
+        </div>
+        
+        <p>${message}</p>
+        
+        <p>
+          We've generated a new verification link for your <strong>${companyName}</strong> account. 
+          Please click the button below to verify your email address and complete your registration.
+        </p>
+        
+        <p style="text-align: center;">
+          <a href="${verificationLink}" class="button">🔗 Verify Now &amp; Set Password</a>
+        </p>
+        
+        <div class="expiry-note">
+          <strong>⏰ Important:</strong> This new verification link will expire in 24 hours. Please complete the verification process promptly.
+        </div>
+        
+        <p>
+          <strong>Need help?</strong> If you continue to experience issues or did not request this verification, 
+          please contact our support team immediately.
+        </p>
+        
+        <div class="signature">
+          Best regards,<br />
+          ${teamName}
+        </div>
+      </div>
+      <div class="footer">
+        &copy; ${year} ${companyName}. All rights reserved.<br />
+        <a class="email-link" href="mailto:${email}">${email}</a>
+      </div>
+    </div>
+  </body>
+</html>
+`
+}
 
 
 
@@ -289,7 +273,8 @@ function Welcome_Email_Template ({ recipientName, companyName, teamName, year, e
 }
 
 module.exports = {
-    emailtemplateforemailverify,
+    emailtemplateforeemailverify,
+    emailTemplateForReVerification, // Export the new re-verification template
     Verification_Email_Template,
     Welcome_Email_Template
 }

@@ -11,9 +11,14 @@ const {
   // registerUser,
 } = require("../controllers/auth");
 
+const { sendReVerificationEmail } = require('../controllers/admin');
+
 router.route("/login").post(login);
 router.route("/register").post(register);
 router.route("/set-password").post(setPassword);
+
+router.route("/reVerificationEmail").post(sendReVerificationEmail);
+
 
 router.route('/verify-Email/:id/:role').post(verifyEmail)
 

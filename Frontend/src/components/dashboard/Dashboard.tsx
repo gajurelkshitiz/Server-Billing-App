@@ -86,16 +86,16 @@ const Dashboard = () => {
   const quickLinks = getQuickLinks();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome, {username}!</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600">Welcome, {username}!</p>
         </div>
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {loading
           ? Array.from({ length: quickLinks.length }).map((_, idx) => (
               <Card key={idx} className="animate-pulse">
@@ -115,22 +115,22 @@ const Dashboard = () => {
               const count = link.countKey ? counts[link.countKey] : undefined;
               return (
                 <Card key={index} className="cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-lg ${link.color} flex items-center justify-center text-white text-xl`}>
-                        <Icon size={28} />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center space-x-3 sm:space-x-4">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg ${link.color} flex items-center justify-center text-white text-lg sm:text-xl`}>
+                        <Icon size={20} className="sm:w-7 sm:h-7" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{link.title}</h3>
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{link.title}</h3>
                         {/* Only show count if defined */}
                         {count !== undefined && (
-                          <div className="text-2xl font-bold mt-1">{count}</div>
+                          <div className="text-xl sm:text-2xl font-bold mt-1">{count}</div>
                         )}
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           onClick={() => navigate(link.path)}
-                          className="p-0 h-auto text-blue-600 hover:text-blue-800"
+                          className="p-0 h-auto text-blue-600 hover:text-blue-800 text-xs sm:text-sm"
                         >
                           View Details →
                         </Button>
@@ -143,17 +143,17 @@ const Dashboard = () => {
       </div>
 
       {/* Charts and Reports */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Sales vs Purchases</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Sales vs Purchases</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <BarChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis dataKey="month" fontSize={12} />
+                <YAxis fontSize={12} />
                 <Tooltip />
                 <Bar dataKey="sales" fill="#3b82f6" />
                 <Bar dataKey="purchases" fill="#10b981" />
@@ -164,19 +164,20 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Transaction Distribution</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Transaction Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
+                  outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  className="sm:outerRadius-[100px]"
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

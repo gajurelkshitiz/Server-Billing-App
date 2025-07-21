@@ -28,9 +28,12 @@ import NewSidebarFooter from "./newSidebarFooter";
 interface SidebarProps {
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
+  isMobile?: boolean;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
-const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
+const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpen }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
@@ -84,7 +87,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   };
 
   const handleParentClick = (item: any) => {
-    if (isCollapsed) {
+    if (isMobile) {
+      // On mobile, always navigate to the path and close menu
+      navigate(item.path);
+      setIsMobileMenuOpen?.(false);
+    } else if (isCollapsed) {
       // If collapsed, navigate to default path
       navigate(item.path);
     } else {
@@ -175,7 +182,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           <Button
             variant={hasActiveChild ? "secondary" : "ghost"}
             className={`w-full justify-start ${
-              isCollapsed ? "px-2" : "px-3"
+              (isCollapsed && !isMobile) ? "px-2" : "px-3"
             } ${
               hasActiveChild
                 ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
@@ -184,19 +191,19 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
             onClick={() => handleParentClick(item)}
           >
             <Icon size={18} />
-            {!isCollapsed && (
+            {(!isCollapsed || isMobile) && (
               <>
                 <span className="ml-3 flex-1 text-left">{item.title}</span>
-                {isExpanded ? (
+                {!isMobile && (isExpanded ? (
                   <ChevronDown size={16} />
                 ) : (
                   <ChevronRight size={16} />
-                )}
+                ))}
               </>
             )}
           </Button>
 
-          {!isCollapsed && isExpanded && (
+          {(!isCollapsed || isMobile) && (isMobile || isExpanded) && (
             <div className="ml-6 space-y-1 mt-1">
               {item.children.map((child: any) => {
                 const ChildIcon = child.icon;
@@ -212,6 +219,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
                           ? "bg-blue-100 text-blue-800"
                           : "text-gray-600 hover:text-gray-900"
                       }`}
+                      onClick={() => {
+                        if (isMobile) setIsMobileMenuOpen?.(false);
+                      }}
                     >
                       <ChildIcon size={16} />
                       <span className="ml-3">{child.title}</span>
@@ -231,15 +241,18 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         <Button
           variant={isActive ? "secondary" : "ghost"}
           className={`w-full justify-start ${
-            isCollapsed ? "px-2" : "px-3"
+            (isCollapsed && !isMobile) ? "px-2" : "px-3"
           } ${
             isActive
               ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
               : "text-gray-700"
           }`}
+          onClick={() => {
+            if (isMobile) setIsMobileMenuOpen?.(false);
+          }}
         >
           <Icon size={18} />
-          {!isCollapsed && <span className="ml-3">{item.title}</span>}
+          {(!isCollapsed || isMobile) && <span className="ml-3">{item.title}</span>}
         </Button>
       </Link>
     );
@@ -248,17 +261,20 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   return (
     <div
       className={`bg-white border-r border-gray-200 transition-all duration-300 ${
-        isCollapsed ? "w-16" : "w-64"
-      } h-screen flex flex-col`}
+        isMobile ? 'w-64' : isCollapsed ? "w-16" : "w-64"
+      } h-screen flex flex-col ${isMobile ? 'shadow-lg' : ''}`}
     >
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
+          {(!isCollapsed || isMobile) && (
             <div className="flex flex-col ml-3">
               <h2
                 className="text-xl font-extrabold cursor-pointer"
                 style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
-                onClick={() => navigate("/dashboard")}
+                onClick={() => {
+                  navigate("/dashboard");
+                  if (isMobile) setIsMobileMenuOpen?.(false);
+                }}
               >
                 <span className="bg-gradient-to-r from-blue-600 via-blue-400 to-blue-300 bg-clip-text text-transparent animate-pulse">
                   Billing
@@ -273,14 +289,26 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
               )}
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2"
-          >
-            <Menu size={18} />
-          </Button>
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-2"
+            >
+              <Menu size={18} />
+            </Button>
+          )}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMobileMenuOpen?.(false)}
+              className="p-2"
+            >
+              <Menu size={18} />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -290,7 +318,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
             Object.entries(groupMenu)?.map(([section, items]) => (
               <div key={section} className="mb-4">
                 <div className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {!isCollapsed && section}
+                  {(!isCollapsed || isMobile) && section}
                 </div>
                 {items?.map((item) => renderMenuItem(item))}
               </div>
@@ -303,11 +331,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
           variant="ghost"
           onClick={() => setIsLogoutDialogOpen(true)}
           className={`w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 ${
-            isCollapsed ? "px-2" : "px-3"
+            (isCollapsed && !isMobile) ? "px-2" : "px-3"
           }`}
         >
           <LogOut size={18} />
-          {!isCollapsed && <span className="ml-3">Logout</span>}
+          {(!isCollapsed || isMobile) && <span className="ml-3">Logout</span>}
         </Button>
       </div>
 

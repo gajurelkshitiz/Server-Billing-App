@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,16 @@ const CompanyFormModal = ({
   // --- Add local loading state for submit button ---
   const [localLoading, setLocalLoading] = useState(false);
 
+  useEffect(() => {
+    if (isModalOpen) {
+      // Set image preview for existing company when editing
+      if (editingCompany && formData.logo) {
+        setImagePreview(formData.logo);
+      } else {
+        setImagePreview(null);
+      }
+    }
+  }, [isModalOpen, editingCompany, formData.logo]);
 
   const handleImageFileChange = (name: string, file: File | null) => {
     if (!file) {
@@ -127,11 +137,11 @@ const CompanyFormModal = ({
             />
           </div>
 
-          {imagePreview && (
+          {(imagePreview || (editingCompany && formData.logo)) && (
             <div className="mt-2">
               <span className="text-sm font-medium">Preview:</span>
               <img
-                src={imagePreview}
+                src={imagePreview || `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}`}
                 alt="Logo Preview"
                 className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setOpenImageDialog(true)}

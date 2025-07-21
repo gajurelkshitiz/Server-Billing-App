@@ -4,7 +4,7 @@ const fs = require('fs');
 const Company = require("../models/company");
 
 const generateFilePath = async (adminID, adminUsername, category, filename, currentCompanyID) => {
-    const baseUrl = process.env.BACKEND_URL;
+    // Remove the baseUrl from here - store only relative path
     const adminUsernameAfterFormat = adminUsername.replace(/[^a-zA-Z0-9]/g, '_');
     
     if (currentCompanyID) {
@@ -20,9 +20,9 @@ const generateFilePath = async (adminID, adminUsername, category, filename, curr
             console.error('Error fetching company name:', error);
         }
         
-        return `${baseUrl}/uploads/${adminUsernameAfterFormat}_${adminID}/${companyName}_${currentCompanyID}/${category}/${filename}`;
+        return `/uploads/${adminUsernameAfterFormat}_${adminID}/${companyName}_${currentCompanyID}/${category}/${filename}`;
     } else {
-        return `${baseUrl}/uploads/${adminUsernameAfterFormat}_${adminID}/${category}/${filename}`;
+        return `/uploads/${adminUsernameAfterFormat}_${adminID}/${category}/${filename}`;
     }
 };
 
@@ -43,7 +43,7 @@ const getFilePathFromRequest = async (req, category) => {
 };
 
 const moveFileToFinalLocation = async (tempFilePath, adminID, adminName, category, originalFilename, companyID = null, companyName = null, entityName = null, entityID = null) => {
-  const baseUrl = process.env.BACKEND_URL;
+  // Remove baseUrl from return - store only relative path
   const cleanAdminName = adminName.replace(/[^a-zA-Z0-9]/g, '_');
   
   let finalDir;
@@ -84,12 +84,12 @@ const moveFileToFinalLocation = async (tempFilePath, adminID, adminName, categor
   // Move file from temp to final location
   fs.renameSync(tempFilePath, finalPath);
   
-  // Generate URL
+  // Return only relative path without baseUrl
   if (companyID && companyName) {
     const cleanCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
-    return `${baseUrl}/uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}/${category}/${finalFilename}`;
+    return `/uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}/${category}/${finalFilename}`;
   } else {
-    return `${baseUrl}/uploads/${cleanAdminName}_${adminID}/${category}/${finalFilename}`;
+    return `/uploads/${cleanAdminName}_${adminID}/${category}/${finalFilename}`;
   }
 };
 

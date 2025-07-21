@@ -20,6 +20,8 @@ const AdminPage = () => {
     addNewAdminHandler,
     formData,
     setFormData,
+    handleSendVerification,
+    verificationLoading, // Make sure this is destructured
   } = useAdmins();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<boolean>(false);
@@ -36,6 +38,7 @@ const AdminPage = () => {
   };
 
   const handleEdit = (admin: Admin) => {
+    console.log('Inside admin profileimage is: ', formData.profileImage);
     setEditingAdmin(true); // recently change the value inside from admin to true
     setFormData(admin);
     setIsModalOpen(true);
@@ -141,6 +144,8 @@ const AdminPage = () => {
         handleAdd={handleAdd}
         handleEdit={handleEdit}
         handleDelete={handleDelete}
+        handleSendVerification={handleSendVerification}
+        verificationLoading={verificationLoading} // Make sure this is passed
       />
       <AdminFormModal
         isModalOpen={isModalOpen}

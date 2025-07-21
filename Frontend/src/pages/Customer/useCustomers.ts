@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/context/NotificationContext";
 import { Customer } from "./types";
 import { format } from "path";
 import { getAuthHeaders } from "@/utils/auth";
@@ -10,6 +11,7 @@ export function useCustomers() {
   const [formData, setFormData] = useState<Partial<Customer>>({});
 
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -72,6 +74,14 @@ export function useCustomers() {
           title: "Success",
           description: `Customer Created Successfully.`,
         });
+
+        // Add notification for successful customer creation
+        addNotification({
+          title: 'Customer Added',
+          message: `Customer "${formData.name}" has been successfully created.`,
+          type: 'success'
+        });
+
         fetchCustomers();
         setFormData({})
         // TODO: close the model
@@ -120,6 +130,14 @@ export function useCustomers() {
         title: "Success",
         description: "Customer updated successfully",
       });
+
+      // Add notification for successful customer update
+      addNotification({
+        title: 'Customer Updated',
+        message: `Customer "${formData.name}" has been successfully updated.`,
+        type: 'success'
+      });
+
       fetchCustomers();
       setFormData({});
       return true;
@@ -152,6 +170,14 @@ export function useCustomers() {
       );
       if (response.ok) {
         toast({ title: "Success", description: "Customer deleted successfully" });
+        
+        // Add notification for successful customer deletion
+        addNotification({
+          title: 'Customer Removed',
+          message: `Customer "${customer.name}" has been successfully deleted.`,
+          type: 'info'
+        });
+
         fetchCustomers();
       } else {
         toast({

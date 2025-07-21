@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/context/NotificationContext";
 import { Supplier } from "./types";
 import { format } from "path";
 import { getAuthHeaders } from "@/utils/auth";
@@ -10,6 +11,7 @@ export function useSuppliers() {
   const [formData, setFormData] = useState<Partial<Supplier>>({});
 
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   // const getAuthHeaders = () => {
   //   const token = localStorage.getItem("token");
@@ -74,6 +76,14 @@ export function useSuppliers() {
           title: "Success",
           description: `Supplier Created Successfully.`,
         });
+
+        // Add notification for successful supplier creation
+        addNotification({
+          title: 'Supplier Added',
+          message: `Supplier "${formData.name}" has been successfully created.`,
+          type: 'success'
+        });
+
         fetchSuppliers();
         setFormData({})
         // TODO: close the model

@@ -50,6 +50,9 @@ const CustomerFormModal = ({
   const { state, dispatch }: CompanyContextType = useCompanyStateGlobal();
   const role = localStorage.getItem('role');
 
+  // --- Add local loading state for submit button ---
+  const [localLoading, setLocalLoading] = useState(false);
+
   // Add more detailed logging
   // console.log(`Using as a role: ${role} and global company context value is: ${state?.companyID} and company Name is: ${state?.companyName}`);
 
@@ -78,9 +81,15 @@ const CustomerFormModal = ({
   // };
 
 
-  const handleFormSubmit = (e: any) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleSubmit(e);
+    setLocalLoading(true);
+
+    try {
+      await handleSubmit(e);
+    } finally {
+      setLocalLoading(false);
+    }
   };
 
 
@@ -248,17 +257,21 @@ const CustomerFormModal = ({
               variant="outline"
               onClick={() => setIsModalOpen(false)}
               className="flex-1"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
-              {loading
-                ? "Processing..."
+              {(loading || localLoading)
+                ? (
+                  <>
+                    <span className="loader mr-2"></span> Processing...
+                  </>
+                )
                 : editingCustomer
                 ? "Update"
                 : "Create"}

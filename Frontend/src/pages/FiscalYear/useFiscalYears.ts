@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/context/NotificationContext";
 import { FiscalYear } from "./types";
 import { getAuthHeaders } from "@/utils/auth";
 
@@ -9,6 +10,7 @@ export function useFiscalYear() {
   const [formData, setFormData] = useState<Partial<FiscalYear>>({});
 
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   const fetchFiscalYears = async () => {
     setLoading(true);
@@ -56,6 +58,14 @@ export function useFiscalYear() {
           title: "Success",
           description: `FiscalYear Created Successfully.`,
         });
+
+        // Add notification for successful fiscal year creation
+        addNotification({
+          title: 'New Fiscal Year Created',
+          message: `Fiscal Year "${formData.name}" has been successfully created and activated.`,
+          type: 'success'
+        });
+
         fetchFiscalYears();
         setFormData({})
         

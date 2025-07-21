@@ -38,9 +38,9 @@ FiscalYearPageProps) {
   return (
     <>
       {/* TODO: UI milau add button */}
-      <div className="flex justify-between p-2 border-2 items-center">
-        <CardTitle>Fiscal year</CardTitle>
-        <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 border-2">
+        <CardTitle className="text-lg sm:text-xl">Fiscal year</CardTitle>
+        <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
           <Plus size={16} className="mr-2" />
           Add New
         </Button>

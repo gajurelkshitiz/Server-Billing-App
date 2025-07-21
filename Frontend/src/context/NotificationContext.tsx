@@ -30,33 +30,7 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    // Sample notifications for demonstration
-    {
-      id: '1',
-      title: 'New Fiscal Year Created',
-      message: 'Fiscal Year 2024-2025 has been successfully created and activated.',
-      type: 'success',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-      read: false
-    },
-    {
-      id: '2',
-      title: 'System Maintenance',
-      message: 'Scheduled maintenance will occur tonight from 2:00 AM to 4:00 AM.',
-      type: 'warning',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      read: false
-    },
-    {
-      id: '3',
-      title: 'Profile Updated',
-      message: 'Your profile information has been successfully updated.',
-      type: 'info',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      read: true
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {

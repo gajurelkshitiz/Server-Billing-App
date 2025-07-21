@@ -83,11 +83,31 @@ const updateCompany = async (req, res) => {
     throw new BadRequestError("All fields cannot be empty");
   }
 
+  // Get existing company for file handling
+  const existingCompany = await Company.findOne({ _id: companyId, adminID: tokenID });
+  if (!existingCompany) {
+    throw new NotFoundError(`No Company with id: ${companyId}`);
+  }
+
   // Handle logo update
   if (req.file && req.file.path) {
-    // Temporarily set companyID in user object for file path generation
-    req.user.companyID = companyId;
-    req.body.logo = await getFilePathFromRequest(req, 'company_assets');
+    try {
+      const logoPath = await moveFileToFinalLocation(
+        req.file.path,
+        tokenID,
+        req.user.name,
+        'company_assets',
+        req.file.filename,
+        companyId,
+        existingCompany.name,
+        req.body.name || existingCompany.name,  // Use updated name if provided
+        companyId
+      );
+      req.body.logo = logoPath;
+    } catch (error) {
+      console.error('Error moving company logo:', error);
+      cleanupTempFile(req.file.path);
+    }
   }
 
   const company = await Company.findOneAndUpdate(
@@ -95,10 +115,6 @@ const updateCompany = async (req, res) => {
     req.body,
     { new: true, runValidators: true }
   );
-
-  if (!company) {
-    throw new NotFoundError(`No Company with id: ${companyId}`);
-  }
 
   res.status(StatusCodes.OK).json({ company });
 };

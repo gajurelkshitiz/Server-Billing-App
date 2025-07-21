@@ -1,21 +1,15 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Admin } from "./types";
-import { format } from "path";
 import { getAuthHeaders } from "@/utils/auth";
 
 export function useAdmins() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Admin>>({});
+  const [verificationLoading, setVerificationLoading] = useState<Set<string | number>>(new Set()); // Add this
 
   const { toast } = useToast();
-
-  // const getAuthHeaders = () => ({
-  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //   "Content-Type": "application/json",
-  //   "X-Role": localStorage.getItem("role") || "",
-  // });
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -189,6 +183,81 @@ export function useAdmins() {
     }
   };
 
+  const handleSendVerification = async (admin: Admin) => {
+    const adminId = admin._id || admin.email; // Make sure this matches what you use in TableB
+    
+    console.log("Starting verification for admin:", adminId); // Debug log
+    
+    // Add admin to loading set
+    setVerificationLoading(prev => {
+      const newSet = new Set(prev);
+      newSet.add(adminId);
+      console.log("Loading set after adding:", newSet); // Debug log
+      return newSet;
+    });
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.REACT_APP_API_URL}/auth/reVerificationEmail`,
+        {
+          method: "POST",
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: admin.email,
+          }),
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        if (responseData.status === "success") {
+          toast({
+            title: "Success",
+            description: responseData.message || "Verification email sent successfully",
+          });
+        } else if (responseData.status === "info") {
+          toast({
+            title: "Info",
+            description: responseData.message || "Verification token is still valid",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Warning",
+            description: responseData.message || "Unexpected response",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: responseData.message || "Failed to send verification email",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
+    } finally {
+      // Remove admin from loading set
+      console.log("Removing from loading set:", adminId); // Debug log
+      setVerificationLoading(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(adminId);
+        console.log("Loading set after removing:", newSet); // Debug log
+        return newSet;
+      });
+    }
+  };
+
   return {
     admins,
     loading,
@@ -196,6 +265,8 @@ export function useAdmins() {
     deleteAdmin,
     addNewAdminHandler,
     formData,
-    setFormData
+    setFormData,
+    handleSendVerification,
+    verificationLoading, // Export this
   };
 }

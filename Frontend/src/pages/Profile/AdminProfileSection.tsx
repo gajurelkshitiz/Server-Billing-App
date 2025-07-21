@@ -53,7 +53,7 @@ const AdminProfileSection: React.FC<AdminProfileSectionProps> = ({
               />
             ) : profile.profileImage ? (
               <img
-                src={profile.profileImage}
+                src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${profile.profileImage}`}
                 alt="Profile"
                 style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
               />

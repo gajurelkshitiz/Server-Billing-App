@@ -18,6 +18,7 @@ const {
   deleteAdmin,
   getOwnProfile,
   updateOwnProfile,
+  sendReVerificationEmail,
 } = require("../controllers/admin");
  
 

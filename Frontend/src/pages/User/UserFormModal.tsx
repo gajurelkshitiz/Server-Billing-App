@@ -20,6 +20,7 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { Company } from "src/pages/Company/types";
 import { fetchCompanies } from "../DataFetchingFunctions/fetchCompanies";
+import { useCompanyStateGlobal, CompanyContextType } from "../../provider/companyState";
 
 interface UserFormModalProps {
   isModalOpen: boolean;
@@ -48,6 +49,9 @@ const UserFormModal = ({
 }: UserFormModalProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const { toast } = useToast();
+  const { state, dispatch }: CompanyContextType = useCompanyStateGlobal();
+  const role = localStorage.getItem('role');
 
   // --- State for image preview and dialog for full-size image ---
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -58,9 +62,23 @@ const UserFormModal = ({
   
   useEffect(() => {
     if (isModalOpen) {
-      loadCompanies();
+      // If no specific company is selected in global state (or 'all' is selected), load all companies
+      if (!state?.companyID || state?.companyID === 'all') {
+        loadCompanies();
+      } else {
+        // If a specific company is selected, auto-fill it
+        if (!formData.companyID) {
+          handleInputChange("companyID", state.companyID);
+        }
+      }
+      // Set image preview for existing user when editing
+      if (editingUser && formData.profileImage) {
+        setImagePreview(formData.profileImage);
+      } else {
+        setImagePreview(null);
+      }
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, state?.companyID, editingUser, formData.profileImage]);
 
   const loadCompanies = async () => {
     setLoadingCompanies(true);
@@ -186,38 +204,50 @@ const UserFormModal = ({
             )}
           </div>
 
-          {/* Company (dynamic select) */}
+          {/* Company - conditional rendering based on global state */}
           <div>
             <Label htmlFor="companyID">
               Company<span className="text-red-500 ml-1">*</span>
             </Label>
-            <Select
-              value={formData["companyID"] || ""}
-              onValueChange={(value) => handleInputChange("companyID", value)}
-              disabled={loadingCompanies || editingUser}
-              required
-            >
-              <SelectTrigger id="companyID" className="mt-1">
-                <SelectValue placeholder={loadingCompanies ? "Loading..." : "Select Company"} />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingCompanies ? (
-                  <SelectItem value="__loading__" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : companies.length === 0 ? (
-                  <SelectItem value="__none__" disabled>
-                    No companies found
-                  </SelectItem>
-                ) : (
-                  companies.map((company) => (
-                    <SelectItem key={company._id} value={company._id}>
-                      {company.name}
+            {state?.companyID && state?.companyID !== 'all' ? (
+              // If a specific company is selected in global state, show it as disabled input
+              <Input
+                id="companyID"
+                type="text"
+                value={state?.companyName || "No company selected"}
+                disabled
+                className="mt-1 bg-gray-50 text-gray-1000 cursor-not-allowed"
+              />
+            ) : (
+              // If no specific company is selected or 'all' is selected, show dropdown with all companies
+              <Select
+                value={formData["companyID"] || ""}
+                onValueChange={(value) => handleInputChange("companyID", value)}
+                disabled={loadingCompanies || editingUser}
+                required
+              >
+                <SelectTrigger id="companyID" className="mt-1">
+                  <SelectValue placeholder={loadingCompanies ? "Loading..." : "Select Company"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingCompanies ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
                     </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  ) : companies.length === 0 ? (
+                    <SelectItem value="__none__" disabled>
+                      No companies found
+                    </SelectItem>
+                  ) : (
+                    companies.map((company) => (
+                      <SelectItem key={company._id} value={company._id}>
+                        {company.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Department */}

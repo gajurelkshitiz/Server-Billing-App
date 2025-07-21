@@ -101,8 +101,11 @@ const SupplierFormModal = ({
   loading = false,
 }: SupplierFormModalProps) => {
   // State for dynamic options
-  const [companies, setCompanies] = useState<Company[]>([]); // Rename from suppliers
-  const [loadingCompanies, setLoadingCompanies] = useState(false); // Rename from loadingSuppliers
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+
+  // --- Add local loading state for submit button ---
+  const [localLoading, setLocalLoading] = useState(false);
 
   // Load companies when modal opens
   useEffect(() => {
@@ -160,23 +163,27 @@ const SupplierFormModal = ({
 
   const { toast } = useToast();
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const missing = validateForm();
-    if (missing) {
-      toast({
-        title: "Warn",
-        description: `Please fill the ${missing} feild`,
-        variant: "destructive",
-      });
-      // toast.error(`Please fill the ${missing} feild`);
-      return;
+    setLocalLoading(true);
+
+    try {
+      const missing = validateForm();
+      if (missing) {
+        toast({
+          title: "Warn",
+          description: `Please fill the ${missing} field`,
+          variant: "destructive",
+        });
+        return;
+      }
+      await handleSubmit(e);
+    } finally {
+      setLocalLoading(false);
     }
-    handleSubmit(e);
   };
 
   return (
-    // TODO: yaha pani modal close gara
     <Dialog open={isModalOpen} onOpenChange={() => setIsModalOpen(false)}>
       <DialogContent className="max-w-md h-[500px] flex flex-col">
         <DialogHeader>
@@ -338,27 +345,25 @@ const SupplierFormModal = ({
               variant="outline"
               onClick={() => setIsModalOpen(false)}
               className="flex-1"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
               Cancel
             </Button>
-            {editingSupplier ? (
-              <Button
-                type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                disabled={loading}
-              >
-                {loading ? "Processing..." : "Update"}
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                disabled={loading}
-              >
-                {loading ? "Processing..." : "Create"}
-              </Button>
-            )}
+            <Button
+              type="submit"
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={loading || localLoading}
+            >
+              {(loading || localLoading)
+                ? (
+                  <>
+                    <span className="loader mr-2"></span> Processing...
+                  </>
+                )
+                : editingSupplier
+                ? "Update"
+                : "Create"}
+            </Button>
           </div>
         </form>
       </DialogContent>

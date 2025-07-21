@@ -4,6 +4,7 @@ import { Admin } from "./types";
 import { CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 
 const columns = [
   { key: 'sn', label: "S.N.", sortable: true},
@@ -12,6 +13,12 @@ const columns = [
   { key: "email", label: "Email", sortable: true },
   { key: "phoneNo", label: "Phone", sortable: true },
   { key: "subsName", label: "Subscription", sortable: true },
+  { 
+    key: "isVerified", 
+    label: "Verified", 
+    sortable: true,
+    render: (value: boolean) => <VerifiedBadge isVerified={value} />
+  },
 ];
 
 type AdminTableProps = {
@@ -20,6 +27,8 @@ type AdminTableProps = {
   handleAdd: () => void;
   handleEdit: (admin: Admin) => void;
   handleDelete: (admin: Admin) => void;
+  handleSendVerification?: (admin: Admin) => Promise<void>;
+  verificationLoading?: Set<string | number>; // Add this
 };
 
 export default function AdminTable({
@@ -28,21 +37,26 @@ export default function AdminTable({
   handleAdd,
   handleEdit,
   handleDelete,
+  handleSendVerification,
+  verificationLoading = new Set() // Add this
 }: AdminTableProps) {
+
+  const handleSendVerificationLink = async (admin: Admin) => {
+    console.log("Sending verification link to:", admin.email);
+    if (handleSendVerification) {
+      await handleSendVerification(admin);
+    }
+  };
+
   return (
-    // <>
     <>
-    {/* TODO: UI milau add button */}
-      <div className="flex justify-between p-2 border-2 items-center">
-        <CardTitle>Admins</CardTitle>
-        <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 border-2">
+        <CardTitle className="text-lg sm:text-xl">Admins</CardTitle>
+        <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
           <Plus size={16} className="mr-2" />
           Add New
         </Button>
       </div>
-
-      {/* input: onChange
-      button: onClick */}
 
       <DataTable
         data={data}
@@ -53,6 +67,9 @@ export default function AdminTable({
         loadingTitle='Customers'
         previewTitle='Profile Preview'
         previewAltText='Full Size Profile'
+        showVerificationAction={true}
+        handleSendVerification={handleSendVerificationLink}
+        verificationLoading={verificationLoading} // Pass this
       />
     </>
   );

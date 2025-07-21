@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/context/NotificationContext";
 import { Company } from "./types";
 import { useCompanyContext } from "@/context/CompanyContext";
 import { getAuthHeaders } from "@/utils/auth";
@@ -11,6 +12,7 @@ export function useCompany() {
   const { company, setCompany } = useCompanyContext(); // context only
 
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   // const getAuthHeaders = () => ({
   //   Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -76,6 +78,14 @@ export function useCompany() {
           title: "Success",
           description: `Company Created Successfully.`,
         });
+
+        // Add notification for successful company creation
+        addNotification({
+          title: 'Company Created',
+          message: `Company "${formData.name}" has been successfully created and is ready for use.`,
+          type: 'success'
+        });
+
         setFormData({})
         // Refresh companies list after successful creation
         await fetchCompanies();

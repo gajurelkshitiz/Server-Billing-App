@@ -126,7 +126,7 @@ app.get('/api/v1/client-ip', (req, res) => {
     clientIP = clientIP.substring(7);
   }
   
-  console.log('Client IP:', clientIP);
+  // console.log('Client IP:', clientIP);
   res.json({ ip: clientIP });
 });
 

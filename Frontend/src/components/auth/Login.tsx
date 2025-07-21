@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile } from "@/context/ProfileContext";
+import { useNotifications } from "@/context/NotificationContext";
 
 
 const Login = () => {
@@ -15,6 +16,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setProfile } = useProfile(); // <-- add this
+  const { addNotification } = useNotifications();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +43,13 @@ const Login = () => {
           title: "Login Successful",
           description: `Welcome back, ${data.user.name}!`,
         });
+
+        // Add notification for successful login
+        addNotification({
+          title: 'Welcome Back!',
+          message: `Successfully logged in as ${data.user.name}`,
+          type: 'success'
+        });
         
         setProfile(null); // <-- Reset context after login
 
@@ -52,11 +61,25 @@ const Login = () => {
           description: data.msg || "Please verify your email before logging in.",
           variant: "destructive",
         });
+
+        // Add notification for unauthorized access
+        addNotification({
+          title: 'Login Failed',
+          message: 'Email verification required. Please check your email.',
+          type: 'warning'
+        });
       } else {
         toast({
           title: "Login Failed",
           description: data.message || "Invalid credentials",
           variant: "destructive",
+        });
+
+        // Add notification for login failure
+        addNotification({
+          title: 'Authentication Error',
+          message: 'Invalid email or password. Please try again.',
+          type: 'error'
         });
       }
     } catch (error) {

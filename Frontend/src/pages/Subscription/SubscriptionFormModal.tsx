@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,20 @@ const SubscriptionFormModal = ({
   title,
   loading = false,
 }: SubscriptionFormModalProps) => {
+  // --- Add local loading state for submit button ---
+  const [localLoading, setLocalLoading] = useState(false);
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLocalLoading(true);
+
+    try {
+      await handleSubmit(e);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
   return (
     <Dialog open={isModalOpen} onOpenChange={() => setIsModalOpen(false)}>
       <DialogContent className="max-w-md h-[500px] flex flex-col">
@@ -45,7 +59,7 @@ const SubscriptionFormModal = ({
         </DialogHeader>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleFormSubmit}
           className="space-y-4 flex-1 overflow-y-auto p-2"
           style={{ minHeight: 0 }}
         >
@@ -149,17 +163,21 @@ const SubscriptionFormModal = ({
               variant="outline"
               onClick={() => setIsModalOpen(false)}
               className="flex-1"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
+              disabled={loading || localLoading}
             >
-              {loading
-                ? "Processing..."
+              {(loading || localLoading)
+                ? (
+                  <>
+                    <span className="loader mr-2"></span> Processing...
+                  </>
+                )
                 : editingSubscription
                 ? "Update"
                 : "Create"}

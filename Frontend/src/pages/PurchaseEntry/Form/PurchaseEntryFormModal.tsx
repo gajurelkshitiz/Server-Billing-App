@@ -66,8 +66,14 @@ const PurchaseEntryFormModal = ({
   useEffect(() => {
     if (isModalOpen) {
       loadSuppliers();
+      // Set image preview for existing purchase entry when editing
+      if (editingPurchaseEntry && formData.billAttachment) {
+        setImagePreview(formData.billAttachment);
+      } else {
+        setImagePreview(null);
+      }
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, editingPurchaseEntry, formData.billAttachment]);
 
   // --- Fetch supplier data from API ---
   const loadSuppliers = async () => {

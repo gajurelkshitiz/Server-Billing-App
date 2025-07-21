@@ -129,19 +129,34 @@ const updateUser = async (req, res) => {
     throw new BadRequestError("All fields are required");
   }
 
-  // Optional profile image upload
-  // if (req.file && req.file.path) {
-  //   const uploaded = await uploadOnCloudinary(
-  //     req.file.path,
-  //     `${Date.now()}-${req.file.originalname}`,
-  //     "BILL APP/USER PROFILES"
-  //   );
-  //   if (uploaded && uploaded.url) {
-  //     req.body.profileImage = uploaded.url;
-  //   }
-  // }
+  // Get existing user for file handling
+  const existingUser = await User.findOne({ _id: userID, adminID: tokenID });
+  if (!existingUser) {
+    throw new notFoundError(`No User Found with id: ${userID}`);
+  }
+
+  // Handle profile image upload
   if (req.file && req.file.path) {
-    req.body.profileImage = `${process.env.BACKEND_URL}/uploads/profiles/Users/${req.file.filename}`;
+    try {
+      const company = await Company.findById(existingUser.companyID);
+      if (company) {
+        const profileImagePath = await moveFileToFinalLocation(
+          req.file.path,
+          tokenID,
+          req.user.name,
+          'users',
+          req.file.filename,
+          company._id,
+          company.name,
+          req.body.name || existingUser.name,  // Use updated name if provided
+          userID
+        );
+        req.body.profileImage = profileImagePath;
+      }
+    } catch (error) {
+      console.error('Error moving user profile image:', error);
+      cleanupTempFile(req.file.path);
+    }
   }
 
   const user = await User.findOneAndUpdate(
@@ -150,9 +165,6 @@ const updateUser = async (req, res) => {
     { new: true, runValidators: true }
   );
 
-  if (!user) {
-    throw new notFoundError(`No User Found with id: ${userID}`);
-  }
   res.status(StatusCodes.OK).json({ user });
 };
 
@@ -187,19 +199,15 @@ const updateOwnProfile = async (req, res) => {
     "_id", "adminID", "companyID", "isVerified", 
      "createdAt", "updatedAt", 
   ];
-  // "__v", "emailVerificationTokenExpiresAt", "emailVerificationToken",
   
-  // Collect updates from body
   let updates = Object.keys(req.body);
 
   console.log(req.body);
 
-  // If a file is uploaded, treat profileImage as an update
   if (req.file && req.file.path && !updates.includes("profileImage")) {
     updates.push("profileImage");
   }
 
-  // Validate updates: none should be in disallowedFields
   const isValidOperation = updates.every((update) =>
     !disallowedFields.includes(update)
   );
@@ -214,21 +222,31 @@ const updateOwnProfile = async (req, res) => {
 
   // Handle profile image upload
   if (req.file && req.file.path) {
-    const uploaded = await uploadOnCloudinary(
-      req.file.path,
-      `${Date.now()}-${req.file.originalname}`,
-      "BILL APP/USER PROFILES"
-    );
-    if (uploaded && uploaded.url) {
-      req.body.profileImage = uploaded.url;
+    try {
+      const company = await Company.findById(user.companyID);
+      if (company) {
+        const profileImagePath = await moveFileToFinalLocation(
+          req.file.path,
+          user.adminID,
+          req.user.name,
+          'users',
+          req.file.filename,
+          company._id,
+          company.name,
+          req.body.name || user.name,  // Use updated name if provided
+          user._id
+        );
+        req.body.profileImage = profileImagePath;
+      }
+    } catch (error) {
+      console.error('Error moving user profile image:', error);
+      cleanupTempFile(req.file.path);
     }
   }
 
   // Update fields
   updates.forEach((update) => {
-    if (update === "profileImage" && req.body.profileImage) {
-      user.profileImage = req.body.profileImage;
-    } else if (req.body[update] !== undefined) {
+    if (req.body[update] !== undefined) {
       user[update] = req.body[update];
     }
   });

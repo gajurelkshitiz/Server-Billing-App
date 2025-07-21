@@ -26,13 +26,15 @@ interface Column {
 interface DataTableProps {
   data: any[];
   columns: Column[];
-  // onAdd: () => void;
   handleEdit: (row: any) => void;
   handleDelete: (row: any) => void;
   loading?: boolean;
   loadingTitle: string;
   previewTitle: string;
   previewAltText: string;
+  showVerificationAction?: boolean;
+  handleSendVerification?: (row: any) => Promise<void>;
+  verificationLoading?: Set<string | number>; // Add this
 }
 
 const DataTable = ({
@@ -43,7 +45,10 @@ const DataTable = ({
   loading,
   loadingTitle,
   previewTitle,
-  previewAltText
+  previewAltText,
+  showVerificationAction = false,
+  handleSendVerification,
+  verificationLoading = new Set() // Add this
 }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("");
@@ -61,22 +66,24 @@ const DataTable = ({
 
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <div className="relative max-w-sm">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            size={16}
-          />
-          <Input
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative w-full sm:max-w-sm">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
+            <Input
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 sm:p-6">
         {loading ? (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex flex-col items-center space-y-4">
@@ -86,7 +93,7 @@ const DataTable = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <TableH
                 columns={columns}
                 setSortField={setSortField}
@@ -102,6 +109,9 @@ const DataTable = ({
                 handleDelete={handleDelete}
                 previewTitle={previewTitle}
                 previewAltText={previewAltText}
+                showVerificationAction={showVerificationAction}
+                handleSendVerification={handleSendVerification}
+                verificationLoading={verificationLoading} // Pass this
               />
             </table>
 

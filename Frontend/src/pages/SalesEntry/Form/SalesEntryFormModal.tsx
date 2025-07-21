@@ -79,8 +79,14 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
   useEffect(() => {
     if (isModalOpen) {
       loadCustomers();
+      // Set image preview for existing sales entry when editing
+      if (editingSalesEntry && formData.billAttachment) {
+        setImagePreview(formData.billAttachment);
+      } else {
+        setImagePreview(null);
+      }
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, editingSalesEntry, formData.billAttachment]);
 
   const loadCustomers = async () => {
     setLoadingCustomers(true);

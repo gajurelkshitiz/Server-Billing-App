@@ -63,8 +63,15 @@ const AdminFormModal = ({
   useEffect(() => {
     if (isModalOpen) {
       loadSubscriptions();
+      // Set image preview for existing admin when editing
+      if (editingAdmin && formData.profileImage) {
+        // setImagePreview(`${import.meta.env.REACT_APP_API_URL}/uploads/${formData.profileImage}`);
+        setImagePreview(formData.profileImage);
+      } else {
+        setImagePreview(null);
+      }
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, editingAdmin, formData.profileImage]);
 
   const loadSubscriptions = async () => {
     setLoadingSubscriptions(true);
@@ -123,12 +130,14 @@ const AdminFormModal = ({
 
     try {
       await handleSubmit(e);
+      // Clear image preview after successful submit (modal will close if successful)
       setImagePreview(null);
     } finally {
       setLocalLoading(false);
     }
   };
 
+  console.log(`For testing of image string: ${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}`);
 
   return (
     <Dialog open={isModalOpen} onOpenChange={() => setIsModalOpen(false)}>
@@ -174,11 +183,11 @@ const AdminFormModal = ({
                 )
               }
             />
-            {imagePreview && (
+            {(imagePreview || (editingAdmin && formData.profileImage)) && (
               <div className="mt-2">
                 <span className="text-sm font-medium">Preview:</span>
                 <img
-                  src={imagePreview}
+                  src={imagePreview || `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}`}
                   alt="Profile Preview"
                   className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setOpenImageDialog(true)}
@@ -323,7 +332,7 @@ const AdminFormModal = ({
       <ImagePreview
         isOpen={openImageDialog}
         onOpenChange={setOpenImageDialog}
-        imageUrl={imagePreview}
+        imageUrl={imagePreview || (editingAdmin && formData.profileImage ? `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}` : null)}
         title="Profile Preview"
         altText="Full Size Photo"
       />

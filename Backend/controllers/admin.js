@@ -4,7 +4,7 @@ const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, UnauthenticatedError, notFoundError } = require("../errors");
 const path = require("path");
 const fs = require("fs");
-const { sendVerificationEmail } = require("../middleware/email");
+const { sendVerificationEmail, sendReVerificationEmail } = require("../middleware/email");
 const crypto = require('crypto');
 const { sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
 const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathHelper");
@@ -206,11 +206,31 @@ const updateAdmin = async (req, res) => {
     throw new BadRequestError("All fields cannot be empty");
   }
 
+  // Get existing admin for file handling
+  const existingAdmin = await Admin.findById(adminID);
+  if (!existingAdmin) {
+    throw new notFoundError(`No Admin Found with id: ${adminID}`);
+  }
+
   // Handle profile image upload
   if (req.file && req.file.path) {
-    // Temporarily set tokenID for file path generation
-    req.user = { tokenID: adminID };
-    req.body.profileImage = getFilePathFromRequest(req, 'admin_profile');
+    try {
+      const profileImagePath = await moveFileToFinalLocation(
+        req.file.path,
+        adminID,
+        existingAdmin.name,
+        'admin_profile',
+        req.file.filename,
+        null,
+        null,
+        req.body.name || existingAdmin.name,  // Use updated name if provided
+        adminID
+      );
+      req.body.profileImage = profileImagePath;
+    } catch (error) {
+      console.error('Error moving profile image:', error);
+      cleanupTempFile(req.file.path);
+    }
   }
 
   const admin = await Admin.findOneAndUpdate({ _id: adminID }, req.body, {
@@ -275,7 +295,23 @@ const updateOwnProfile = async (req, res) => {
 
   // Handle profile image upload
   if (req.file && req.file.path) {
-    req.body.profileImage = getFilePathFromRequest(req, 'admin_profile');
+    try {
+      const profileImagePath = await moveFileToFinalLocation(
+        req.file.path,
+        admin._id,
+        admin.name,
+        'admin_profile',
+        req.file.filename,
+        null,
+        null,
+        req.body.name || admin.name,  // Use updated name if provided
+        admin._id
+      );
+      req.body.profileImage = profileImagePath;
+    } catch (error) {
+      console.error('Error moving profile image:', error);
+      cleanupTempFile(req.file.path);
+    }
   }
 
   // Update fields
@@ -321,7 +357,78 @@ async function notifyAdmin(admin) {
   };
 }
 
+const sendReVerificationEmailController = async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    throw new BadRequestError("Please provide email address");
+  }
 
+  // Find admin by email
+  const admin = await Admin.findOne({ email });
+  if (!admin) {
+    throw new notFoundError("No admin found with this email address");
+  }
+
+  // Check if admin is already verified
+  if (admin.isVerified) {
+    return res.status(StatusCodes.OK).json({
+      status: "success",
+      message: "Admin is already verified. No need for re-verification."
+    });
+  }
+
+  // Check if current token is still valid (not expired)
+  const currentTime = Date.now();
+  const tokenStillValid = admin.emailVerificationToken && 
+                         admin.emailVerificationTokenExpiresAt && 
+                         admin.emailVerificationTokenExpiresAt > currentTime;
+
+  if (tokenStillValid) {
+    return res.status(StatusCodes.OK).json({
+      status: "info",
+      message: "Current verification token is still valid. Please check your email or wait for token to expire before requesting a new one.",
+      tokenExpiresAt: new Date(admin.emailVerificationTokenExpiresAt)
+    });
+  }
+
+  // Generate new verification token since old one is expired/used
+  const newEmailVerificationToken = crypto.randomBytes(64).toString('hex');
+  const newEmailVerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+  // Update admin with new token
+  admin.emailVerificationToken = newEmailVerificationToken;
+  admin.emailVerificationTokenExpiresAt = newEmailVerificationTokenExpiresAt;
+  await admin.save();
+
+  try {
+    // Send new re-verification email using the specific template
+    const emailResult = await sendReVerificationEmail(
+      admin.email, 
+      admin.name, 
+      newEmailVerificationToken, 
+      "admin"
+    );
+
+    const emailSuccess = emailResult && emailResult.status === "success";
+
+    res.status(StatusCodes.OK).json({
+      status: emailSuccess ? "success" : "error",
+      message: emailSuccess 
+        ? "Re-verification email sent successfully. Please check your email."
+        : "Failed to send re-verification email. Please try again.",
+      emailResult,
+      tokenExpiresAt: new Date(newEmailVerificationTokenExpiresAt)
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "An unexpected error occurred while sending re-verification email.",
+      error: error.message || error
+    });
+  }
+};
 
 module.exports = {
   createAdmin,
@@ -332,4 +439,5 @@ module.exports = {
   deleteAdmin,
   getOwnProfile,
   updateOwnProfile,
+  sendReVerificationEmail: sendReVerificationEmailController, // Fixed export name
 };
