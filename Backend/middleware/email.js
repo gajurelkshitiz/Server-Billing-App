@@ -1,6 +1,6 @@
 const transporter = require("./email.config.js");
 const {
-  Verification_Email_Template,
+  // Verification_Email_Template,
   Welcome_Email_Template,
   emailtemplateforemailverify,
   emailTemplateForReVerification, // Import the new template

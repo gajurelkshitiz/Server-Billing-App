@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormField } from "@/components/ui/mobile-form";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -50,6 +52,7 @@ const UserFormModal = ({
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const { state, dispatch }: CompanyContextType = useCompanyStateGlobal();
   const role = localStorage.getItem('role');
 

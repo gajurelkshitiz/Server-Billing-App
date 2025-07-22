@@ -14,6 +14,7 @@ import { NotificationProvider } from '@/context/NotificationContext';
 // importing admin
 import AdminPage from "./pages/Admin";
 import SubscriptionPage from "./pages/Subscription";
+import SubscriptionAvailablePage from "./pages/SubscriptionAvailable";
 import PurchaseEntryPage from "./pages/PurchaseEntry"
 import { Sub } from "@radix-ui/react-dropdown-menu";
 import UserPage from "./pages/User";
@@ -45,6 +46,8 @@ import DropdownComponent from "./DropdownText";
 import { FiscalYearProvider } from "./context/FiscalYearContext";
 import CustomerInfoPage from "./pages/CustomerProfileInfo/CustomerInfoPage";
 import SettingsPage from "./pages/Settings/SettingsPage";
+import { AdminProfilePage } from "./pages/AdminProfile";
+import { UserProfilePage } from "./pages/UserProfile";
 
 
 const queryClient = new QueryClient();
@@ -101,6 +104,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <SubscriptionPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/subscription-available"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SubscriptionAvailablePage />
                   </Layout>
                 </ProtectedRoute>
               }
@@ -212,6 +225,24 @@ const App = () => (
                   <Layout>
                     <ProfilePage />
                   </Layout>
+              }
+            />
+
+            <Route 
+              path="/admin-profile"
+              element={
+                <Layout>
+                  <AdminProfilePage />
+                </Layout>
+              }
+            />
+
+            <Route 
+              path="/user-profile"
+              element={
+                <Layout>
+                  <UserProfilePage />
+                </Layout>
               }
             />
 

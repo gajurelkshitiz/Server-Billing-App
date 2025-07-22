@@ -1,4 +1,4 @@
-function emailtemplateforeemailverify ({ recipientName, companyName, verificationLink, teamName, year, email }) {
+function emailtemplateforemailverify ({ recipientName, companyName, verificationLink, teamName, year, email }) {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -127,7 +127,7 @@ function emailTemplateForReVerification ({ recipientName, companyName, verificat
 
 
 
-const Verification_Email_Template = `
+const verificationEmailTemplate = `
   <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -273,8 +273,8 @@ function Welcome_Email_Template ({ recipientName, companyName, teamName, year, e
 }
 
 module.exports = {
-    emailtemplateforeemailverify,
+    emailtemplateforemailverify,
     emailTemplateForReVerification, // Export the new re-verification template
-    Verification_Email_Template,
+    // Verification_Email_Template,
     Welcome_Email_Template
 }

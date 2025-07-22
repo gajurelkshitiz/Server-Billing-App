@@ -18,6 +18,7 @@ import {
   FaUserCog,
   FaCog,
   FaMoneyCheckAlt,
+  FaGift,
   FaMoneyBillWave,
   FaShoppingBag,
   FaBox,
@@ -57,6 +58,7 @@ export const allMenuItems = [
     color: "bg-emerald-600", // Changed to emerald for subscription/recurring payments
     countKey: "subscriptions",
   },
+
   // Purchase Module with nested items
   {
     section: "OPERATIONS",
@@ -178,5 +180,13 @@ export const allMenuItems = [
     path: "/settings",
     icon: FaCog,
     color: "bg-gray-600" // Darkened gray
+  },
+  {
+    section: "OTHERS",
+    title: "Subcription Plans",
+    path: "/subscription-available",
+    icon: FaGift, // Using gift icon for available subscription plans
+    color: "bg-purple-600", // Purple for promotional/available plans
+    countKey: "availablePlans",
   },
 ];

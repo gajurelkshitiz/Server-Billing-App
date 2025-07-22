@@ -290,7 +290,12 @@ const Header = ({ isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpe
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
+              <DropdownMenuItem 
+                  onClick={() => {
+                    const role = localStorage.getItem('role');
+                    const path = role === 'admin'? '/admin-profile' : '/user-profile';
+                    navigate(path)
+                  }}>
                 <User size={16} className="mr-2" />
                 Profile
               </DropdownMenuItem>

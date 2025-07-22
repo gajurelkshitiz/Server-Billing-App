@@ -139,7 +139,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ role }) => {
       <div className="flex items-center gap-2 p-4 border-t border-gray-200 mt-auto">
         {userCompany.logo ? (
           <img
-            src={userCompany.logo}
+            src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${userCompany.logo}`}
             alt="logo"
             className="h-8 w-8 rounded bg-gray-100 object-cover"
           />
@@ -174,7 +174,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ role }) => {
                     <span className="flex items-center gap-2">
                       {c.logo ? (
                         <img
-                          src={c.logo}
+                          src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${c.logo}`}
                           alt="logo"
                           className="h-5 w-5 rounded bg-gray-100 object-cover"
                         />

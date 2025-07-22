@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MobileForm, FormField, FormGrid } from "@/components/ui/mobile-form";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -41,6 +43,7 @@ const CompanyFormModal = ({
   loading = false,
 }: CompanyFormModalProps) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // --- State for image preview and dialog for full-size image ---
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -92,20 +95,22 @@ const CompanyFormModal = ({
 
   return (
     <Dialog open={isModalOpen} onOpenChange={() => setIsModalOpen(false)}>
-      <DialogContent className="max-w-md h-[500px] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[90vh]' : 'max-w-md h-[500px]'} flex flex-col`}>
+        <DialogHeader className="pb-4">
+          <DialogTitle className={isMobile ? 'text-lg' : ''}>{title}</DialogTitle>
         </DialogHeader>
+        
         <form
           onSubmit={handleFormSubmit}
-          className="space-y-4 flex-1 overflow-y-auto p-2"
+          className="space-y-4 flex-1 overflow-y-auto px-2"
           style={{ minHeight: 0 }}
         >
           {/* Company Name */}
-          <div>
-            <Label htmlFor="name">
-              Company Name<span className="text-red-500 ml-1">*</span>
-            </Label>
+          <FormField 
+            label="Company Name" 
+            required 
+            error={undefined}
+          >
             <Input
               id="name"
               type="text"
@@ -113,29 +118,32 @@ const CompanyFormModal = ({
               onChange={(e) => handleInputChange("name", e.target.value)}
               placeholder="name of your business"
               required
-              className="mt-1"
               disabled={editingCompany}
+              className={isMobile ? 'h-12' : ''}
             />
-          </div>
+          </FormField>
 
           {/* Company Logo Upload */}
-          <div>
-            <Label htmlFor="logo">
-              Company Logo<span className="text-red-500 ml-1"> (optional)</span>
-            </Label>
-            <Input
-              id="logo"
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                handleImageFileChange(
-                  "logo",
-                  e.target.files?.[0] || null
-                )
-              }
-              className="mt-1"
-            />
-          </div>
+          <FormField 
+            label="Company Logo" 
+            error={undefined}
+          >
+            <div className="space-y-2">
+              <Input
+                id="logo"
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  handleImageFileChange(
+                    "logo",
+                    e.target.files?.[0] || null
+                  )
+                }
+                className={isMobile ? 'h-12' : ''}
+              />
+              <span className="text-xs text-gray-500">Optional</span>
+            </div>
+          </FormField>
 
           {(imagePreview || (editingCompany && formData.logo)) && (
             <div className="mt-2">
@@ -160,10 +168,11 @@ const CompanyFormModal = ({
           )}
 
           {/* Email */}
-          <div>
-            <Label htmlFor="email">
-              Email<span className="text-red-500 ml-1">*</span>
-            </Label>
+          <FormField 
+            label="Email" 
+            required 
+            error={undefined}
+          >
             <Input
               id="email"
               type="email"
@@ -171,16 +180,17 @@ const CompanyFormModal = ({
               onChange={(e) => handleInputChange("email", e.target.value)}
               placeholder="email address (e.g. example@gmail.com)"
               required
-              className="mt-1"
               disabled={editingCompany}
+              className={isMobile ? 'h-12' : ''}
             />
-          </div>
+          </FormField>
 
           {/* Address */}
-          <div>
-            <Label htmlFor="address">
-              Address<span className="text-red-500 ml-1">*</span>
-            </Label>
+          <FormField 
+            label="Address" 
+            required 
+            error={undefined}
+          >
             <Input
               id="address"
               type="text"
@@ -188,15 +198,16 @@ const CompanyFormModal = ({
               onChange={(e) => handleInputChange("address", e.target.value)}
               placeholder="your company address"
               required
-              className="mt-1"
+              className={isMobile ? 'h-12' : ''}
             />
-          </div>
+          </FormField>
 
           {/* Vat */}
-          <div>
-            <Label htmlFor="vat">
-              Vat<span className="text-red-500 ml-1">*</span>
-            </Label>
+          <FormField 
+            label="VAT Number" 
+            required 
+            error={undefined}
+          >
             <Input
               id="vat"
               type="text"
@@ -204,23 +215,24 @@ const CompanyFormModal = ({
               onChange={(e) => handleInputChange("vat", e.target.value)}
               placeholder="your vat number"
               required
-              className="mt-1"
               disabled={editingCompany}
+              className={isMobile ? 'h-12' : ''}
             />
-          </div>
+          </FormField>
 
           {/* Industry */}
-          <div>
-            <Label htmlFor="industrytype">
-              Industry<span className="text-red-500 ml-1">*</span>
-            </Label>
+          <FormField 
+            label="Industry" 
+            required 
+            error={undefined}
+          >
             <Select
               value={formData["industrytype"] || ""}
               onValueChange={(value) => handleInputChange("industrytype", value)}
               required
               disabled={editingCompany}
             >
-              <SelectTrigger id="industrytype" className="mt-1">
+              <SelectTrigger className={isMobile ? 'h-12' : ''}>
                 <SelectValue placeholder="Select Industry" />
               </SelectTrigger>
               <SelectContent>
@@ -233,13 +245,14 @@ const CompanyFormModal = ({
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
           {/* Phone Number */}
-          <div>
-            <Label htmlFor="phoneNo">
-              Phone Number<span className="text-red-500 ml-1">*</span>
-            </Label>
+          <FormField 
+            label="Phone Number" 
+            required 
+            error={formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) ? "Invalid phone number" : undefined}
+          >
             <PhoneInput
               id="phoneNo"
               international
@@ -248,33 +261,24 @@ const CompanyFormModal = ({
               value={formData.phoneNo || ""}
               onChange={(value) => handleInputChange("phoneNo", value)}
               inputComponent={Input}
-              className="mt-1"
+              className={isMobile ? 'h-12' : ''}
               required
-              error={
-                formData.phoneNo && !isValidPhoneNumber(formData.phoneNo)
-                  ? "Invalid phone number"
-                  : undefined
-              }
             />
-          </div>
-          {/* for red text to show invalid phone number  */}
-          {formData.phoneNo && !isValidPhoneNumber(formData.phoneNo) && (
-            <p style={{ color: "red" }}>Invalid phone number</p>
-          )}
+          </FormField>
 
-          <div className="flex space-x-3 pt-4">
+          <div className={`flex gap-3 pt-4 ${isMobile ? 'flex-col' : 'flex-row'}`}>
             <Button
               type="button"
               variant="outline"
               onClick={() => setIsModalOpen(false)}
-              className="flex-1"
+              className={`${isMobile ? 'w-full h-12' : 'flex-1'}`}
               disabled={loading || localLoading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className={`${isMobile ? 'w-full h-12' : 'flex-1'} bg-blue-600 hover:bg-blue-700`}
               disabled={loading || localLoading}
             >
               {(loading || localLoading)

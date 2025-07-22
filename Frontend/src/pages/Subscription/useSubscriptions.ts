@@ -49,6 +49,7 @@ export function useSubscription() {
   }, []);
 
   const addNewSubscriptionHandler = async () => {
+    console.log('Before Subscription Creation FormData: ', formData);
     const url = `${import.meta.env.REACT_APP_API_URL}/subscription/`;
     try {
       const response = await fetch(url, {

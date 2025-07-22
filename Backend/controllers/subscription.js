@@ -1,13 +1,34 @@
 const Subscription = require("../models/subscription");
-const { BadRequestError, UnauthenticatedError } = require("../errors");
+const { BadRequestError, UnauthenticatedError, NotFoundError } = require("../errors");
 const { StatusCodes } = require("http-status-codes");
 const fs = require("fs");
 const path = require("path");
 
 const createSubscription = async (req, res) => {
-  const { name, maxCompanies, price, period, status } = req.body;
-  if (!name || !maxCompanies || !price || !period || !status) {
-    throw new BadRequestError("Please provide all values");
+  const { 
+    name, 
+    description,
+    maxCompanies, 
+    price, 
+    originalPrice,
+    discountPercentage,
+    // period,
+    periodInDays,
+    features,
+    isPopular,
+    isBestOffer,
+    isFlashSale,
+    flashSaleEndDate,
+    status 
+  } = req.body;
+
+  if (!name || !description || !maxCompanies || !periodInDays) {
+    throw new BadRequestError("Please provide all required values");
+  }
+
+  // Auto-calculate discount percentage if not provided but originalPrice exists
+  if (originalPrice && !discountPercentage && originalPrice > price) {
+    req.body.discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
   }
 
   req.body.superadminID = req.user.tokenID;
@@ -28,14 +49,59 @@ const createSubscription = async (req, res) => {
   // Write updated dictionary back to file
   fs.writeFileSync(dictPath, JSON.stringify(subscriptionDict, null, 2));
 
-  res.status(StatusCodes.CREATED).json({ subscription, subscriptionDict });
+  res.status(StatusCodes.CREATED).json({ 
+    success: true,
+    message: "Subscription created successfully",
+    subscription, 
+    subscriptionDict 
+  });
 };
 
 const getAllSubscriptions = async (req, res) => {
   const subscriptions = await Subscription.find({}).sort("createdAt");
   res
     .status(StatusCodes.OK)
-    .json({ subscriptions, count: subscriptions.length });
+    .json({ 
+      success: true,
+      subscriptions, 
+      count: subscriptions.length 
+    });
+};
+
+// New endpoint for frontend subscription available page
+const getAvailableSubscriptions = async (req, res) => {
+  try {
+    // Get only active subscriptions and filter out expired flash sales
+    const subscriptions = await Subscription.find({ 
+      status: 'active' 
+    }).sort([
+      ['isFlashSale', -1],  // Flash sales first
+      ['isBestOffer', -1],  // Best offers next
+      ['isPopular', -1],    // Popular plans next
+      ['price', 1]          // Then by price ascending
+    ]);
+
+    // Filter out expired flash sales
+    const activeSubscriptions = subscriptions.filter(sub => {
+      if (sub.isFlashSale && sub.flashSaleEndDate) {
+        return new Date() < sub.flashSaleEndDate;
+      }
+      return true;
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Available subscriptions fetched successfully",
+      data: activeSubscriptions,
+      count: activeSubscriptions.length
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to fetch available subscriptions",
+      error: error.message
+    });
+  }
 };
 
 const getSubscription = async (req, res) => {
@@ -57,12 +123,33 @@ const getSubscription = async (req, res) => {
 const updateSubscription = async (req, res) => {
   const {
     params: { id: subscriptionID },
-    body: { name, maxCompanies, price, period, active },
+    body: { 
+      name, 
+      description,
+      maxCompanies, 
+      price, 
+      originalPrice,
+      discountPercentage,
+      period,
+      periodInDays,
+      features,
+      isPopular,
+      isBestOffer,
+      isFlashSale,
+      flashSaleEndDate,
+      status 
+    },
   } = req;
 
   if (name === "" || maxCompanies === "" || price === "" || period === "") {
-    throw new BadRequestError("All fields cannot be empty");
+    throw new BadRequestError("Required fields cannot be empty");
   }
+
+  // Auto-calculate discount percentage if not provided but originalPrice exists
+  if (originalPrice && !discountPercentage && originalPrice > price) {
+    req.body.discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
+  }
+
   const subscription = await Subscription.findOneAndUpdate(
     { _id: subscriptionID },
     req.body,
@@ -72,7 +159,73 @@ const updateSubscription = async (req, res) => {
   if (!subscription) {
     throw new NotFoundError(`No Subscription Found with id: ${subscriptionID}`);
   }
-  res.status(StatusCodes.OK).json({ subscription });
+  
+  res.status(StatusCodes.OK).json({ 
+    success: true,
+    message: "Subscription updated successfully",
+    subscription 
+  });
+};
+
+// New endpoint for purchasing subscriptions
+const purchaseSubscription = async (req, res) => {
+  try {
+    const { subscriptionId, paymentMethod, companyId } = req.body;
+    
+    if (!subscriptionId || !paymentMethod) {
+      throw new BadRequestError("Subscription ID and payment method are required");
+    }
+
+    // Find the subscription
+    const subscription = await Subscription.findById(subscriptionId);
+    if (!subscription) {
+      throw new NotFoundError("Subscription not found");
+    }
+
+    if (subscription.status !== 'active') {
+      throw new BadRequestError("This subscription is not available for purchase");
+    }
+
+    // Check if flash sale is still valid
+    if (subscription.isFlashSale && subscription.flashSaleEndDate) {
+      if (new Date() > subscription.flashSaleEndDate) {
+        throw new BadRequestError("Flash sale has expired");
+      }
+    }
+
+    // Here you would integrate with your payment processor
+    // For now, we'll simulate a successful purchase
+    
+    // Calculate expiry date based on period
+    const expiryDate = new Date();
+    if (subscription.periodInDays) {
+      expiryDate.setDate(expiryDate.getDate() + subscription.periodInDays);
+    }
+
+    // You would create a purchase record here
+    const purchaseData = {
+      purchaseId: new Date().getTime().toString(), // Generate proper ID
+      subscriptionId: subscription._id,
+      userId: req.user.tokenID,
+      amount: subscription.price,
+      paymentMethod,
+      status: 'completed',
+      purchaseDate: new Date(),
+      expiryDate: expiryDate
+    };
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Subscription purchased successfully",
+      data: purchaseData
+    });
+
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message || "Failed to purchase subscription"
+    });
+  }
 };
 
 // delete subscription huncha ki nai?
@@ -83,6 +236,8 @@ const updateSubscription = async (req, res) => {
 module.exports = {
   createSubscription,
   getAllSubscriptions,
+  getAvailableSubscriptions,
   getSubscription,
   updateSubscription,
+  purchaseSubscription,
 };

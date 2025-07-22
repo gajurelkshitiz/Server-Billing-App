@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Settings, 
   Building, 
@@ -12,8 +13,17 @@ import {
   Database,
   Save,
   RotateCcw,
-  Server
+  Server,
+  ChevronDown,
+  Menu
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Import the modular settings components
 import CompanySettings from '@/components/Settings/CompanySettings';
@@ -138,6 +148,7 @@ interface SettingsData {
 
 const SettingsPage: React.FC = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('company');
@@ -362,20 +373,20 @@ const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-blue-100 rounded-lg">
-            <Settings className="h-6 w-6 text-blue-600" />
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-gray-500">Configure your billing system preferences</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
+            <p className="text-sm sm:text-base text-gray-500">Configure your billing system preferences</p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 w-full sm:w-auto">
           {hasChanges && (
             <>
               <Button
@@ -383,6 +394,7 @@ const SettingsPage: React.FC = () => {
                 onClick={resetSettings}
                 disabled={saving}
                 size="sm"
+                className="flex-1 sm:flex-none"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
@@ -391,6 +403,7 @@ const SettingsPage: React.FC = () => {
                 onClick={saveSettings}
                 disabled={saving}
                 size="sm"
+                className="flex-1 sm:flex-none"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -400,91 +413,179 @@ const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* Sidebar Navigation */}
-        <div className="w-64 space-y-1">
-          <nav className="space-y-1">
-            {settingsTabs.map((tab) => (
-              <Button
-                key={tab.id}
-                variant={activeTab === tab.id ? "secondary" : "ghost"}
-                className={`w-full justify-start ${
-                  activeTab === tab.id
-                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
-                    : "text-gray-700"
-                }`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <tab.icon className="h-4 w-4 mr-3" />
-                {tab.label}
-              </Button>
-            ))}
-          </nav>
-        </div>
+      {isMobile ? (
+        // Mobile Layout
+        <div className="space-y-4">
+          {/* Mobile Tab Selector */}
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {settingsTabs.find(tab => tab.id === activeTab)?.label}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {settingsTabs.map((tab) => (
+                <SelectItem key={tab.id} value={tab.id}>
+                  <div className="flex items-center space-x-2">
+                    <tab.icon className="h-4 w-4" />
+                    <span>{tab.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {/* Main Content */}
-        <div className="flex-1 space-y-6">
-          {activeTab === 'company' && (
-            <CompanySettings
-              settings={settings.company}
-              onChange={(key, value) => handleSettingChange('company', key, value)}
-            />
-          )}
-          
-          {activeTab === 'billing' && (
-            <BillingSettings
-              settings={settings.billing}
-              onChange={(key, value) => handleSettingChange('billing', key, value)}
-            />
-          )}
-          
-          {activeTab === 'financial' && (
-            <FinancialSettings
-              settings={settings.financial}
-              onChange={(key, value) => handleSettingChange('financial', key, value)}
-            />
-          )}
-          
-          {activeTab === 'display' && (
-            <DisplaySettings
-              settings={settings.display}
-              onChange={(key, value) => handleSettingChange('display', key, value)}
-            />
-          )}
-          
-          {activeTab === 'notifications' && (
-            <NotificationSettings
-              settings={settings.notifications}
-              onChange={(key, value) => handleSettingChange('notifications', key, value)}
-            />
-          )}
-          
-          {activeTab === 'security' && (
-            <SecuritySettings
-              settings={settings.security}
-              onChange={(key, value) => handleSettingChange('security', key, value)}
-            />
-          )}
-          
-          {activeTab === 'backup' && (
-            <BackupSettings
-              settings={settings.backup}
-              onChange={(key, value) => handleSettingChange('backup', key, value)}
-              allSettings={settings}
-              onImportSettings={handleImportSettings}
-            />
-          )}
-          
-          {activeTab === 'integrations' && (
-            <IntegrationSettings
-              settings={settings.integrations}
-              onChange={handleNestedSettingChange}
-              showPasswords={showPasswords}
-              togglePasswordVisibility={togglePasswordVisibility}
-            />
-          )}
+          {/* Mobile Content */}
+          <div className="space-y-4">
+            {activeTab === 'company' && (
+              <CompanySettings
+                settings={settings.company}
+                onChange={(key, value) => handleSettingChange('company', key, value)}
+              />
+            )}
+            
+            {activeTab === 'billing' && (
+              <BillingSettings
+                settings={settings.billing}
+                onChange={(key, value) => handleSettingChange('billing', key, value)}
+              />
+            )}
+            
+            {activeTab === 'financial' && (
+              <FinancialSettings
+                settings={settings.financial}
+                onChange={(key, value) => handleSettingChange('financial', key, value)}
+              />
+            )}
+            
+            {activeTab === 'display' && (
+              <DisplaySettings
+                settings={settings.display}
+                onChange={(key, value) => handleSettingChange('display', key, value)}
+              />
+            )}
+            
+            {activeTab === 'notifications' && (
+              <NotificationSettings
+                settings={settings.notifications}
+                onChange={(key, value) => handleSettingChange('notifications', key, value)}
+              />
+            )}
+            
+            {activeTab === 'security' && (
+              <SecuritySettings
+                settings={settings.security}
+                onChange={(key, value) => handleSettingChange('security', key, value)}
+              />
+            )}
+            
+            {activeTab === 'backup' && (
+              <BackupSettings
+                settings={settings.backup}
+                onChange={(key, value) => handleSettingChange('backup', key, value)}
+                allSettings={settings}
+                onImportSettings={handleImportSettings}
+              />
+            )}
+            
+            {activeTab === 'integrations' && (
+              <IntegrationSettings
+                settings={settings.integrations}
+                onChange={handleNestedSettingChange}
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        // Desktop Layout
+        <div className="flex gap-6">
+          {/* Sidebar Navigation */}
+          <div className="w-64 space-y-1">
+            <nav className="space-y-1">
+              {settingsTabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "secondary" : "ghost"}
+                  className={`w-full justify-start ${
+                    activeTab === tab.id
+                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
+                      : "text-gray-700"
+                  }`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <tab.icon className="h-4 w-4 mr-3" />
+                  {tab.label}
+                </Button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 space-y-6">
+            {activeTab === 'company' && (
+              <CompanySettings
+                settings={settings.company}
+                onChange={(key, value) => handleSettingChange('company', key, value)}
+              />
+            )}
+            
+            {activeTab === 'billing' && (
+              <BillingSettings
+                settings={settings.billing}
+                onChange={(key, value) => handleSettingChange('billing', key, value)}
+              />
+            )}
+            
+            {activeTab === 'financial' && (
+              <FinancialSettings
+                settings={settings.financial}
+                onChange={(key, value) => handleSettingChange('financial', key, value)}
+              />
+            )}
+            
+            {activeTab === 'display' && (
+              <DisplaySettings
+                settings={settings.display}
+                onChange={(key, value) => handleSettingChange('display', key, value)}
+              />
+            )}
+            
+            {activeTab === 'notifications' && (
+              <NotificationSettings
+                settings={settings.notifications}
+                onChange={(key, value) => handleSettingChange('notifications', key, value)}
+              />
+            )}
+            
+            {activeTab === 'security' && (
+              <SecuritySettings
+                settings={settings.security}
+                onChange={(key, value) => handleSettingChange('security', key, value)}
+              />
+            )}
+            
+            {activeTab === 'backup' && (
+              <BackupSettings
+                settings={settings.backup}
+                onChange={(key, value) => handleSettingChange('backup', key, value)}
+                allSettings={settings}
+                onImportSettings={handleImportSettings}
+              />
+            )}
+            
+            {activeTab === 'integrations' && (
+              <IntegrationSettings
+                settings={settings.integrations}
+                onChange={handleNestedSettingChange}
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
