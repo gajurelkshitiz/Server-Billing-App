@@ -8,6 +8,11 @@ interface ImportRow {
   errors: string[];
 }
 
+interface ColumnDef {
+  header: string;
+  accessor: (row: ImportRow) => string;
+}
+
 interface ImportPreviewProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,6 +21,7 @@ interface ImportPreviewProps {
   onImportPartial: () => void;
   loading: boolean;
   title: string;
+  columns: ColumnDef[]; // Add this line
 }
 
 const ImportPreview: React.FC<ImportPreviewProps> = ({
@@ -25,7 +31,8 @@ const ImportPreview: React.FC<ImportPreviewProps> = ({
   onImportAll,
   onImportPartial,
   loading,
-  title
+  title,
+  columns
 }) => {
   if (!isOpen) return null;
 
@@ -205,10 +212,12 @@ const ImportPreview: React.FC<ImportPreviewProps> = ({
                     {/* Row Data Preview */}
                     <div className="bg-white rounded p-3 mb-2">
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                        {Object.entries(row.data).map(([key, value]) => (
-                          <div key={key}>
-                            <span className="text-gray-500 capitalize">{key}:</span>
-                            <span className="ml-1 font-medium">{String(value) || 'N/A'}</span>
+                        {columns.map(({ header, accessor }) => (
+                          <div key={header}>
+                            <span className="text-gray-500 capitalize">{header}:</span>
+                            <span className="ml-1 font-medium">
+                              {accessor(row) || 'N/A'}
+                            </span>
                           </div>
                         ))}
                       </div>

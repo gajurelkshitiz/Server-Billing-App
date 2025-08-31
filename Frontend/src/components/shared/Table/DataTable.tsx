@@ -15,6 +15,7 @@ import TableH from "./TableH";
 import TableB from "./TableB"
 import { addSerialNumbers, filterData, sortData } from "@/utils/tableUtils";
 import { processDataDates } from "@/utils/dateUtils";
+import { FaFilter } from "react-icons/fa";
 
 interface Column {
   key: string;
@@ -34,7 +35,12 @@ interface DataTableProps {
   previewAltText: string;
   showVerificationAction?: boolean;
   handleSendVerification?: (row: any) => Promise<void>;
-  verificationLoading?: Set<string | number>; // Add this
+  verificationLoading?: Set<string | number>;
+  filterForm?: React.ReactNode;
+  // Add pagination props
+  currentPage?: number;
+  pageSize?: number;
+  rowActions?: (row: any) => React.ReactNode;
 }
 
 const DataTable = ({
@@ -48,18 +54,23 @@ const DataTable = ({
   previewAltText,
   showVerificationAction = false,
   handleSendVerification,
-  verificationLoading = new Set() // Add this
+  verificationLoading = new Set(),
+  filterForm,
+  currentPage = 1,
+  pageSize = 10,
+  rowActions,
 }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
+  const [showFilter, setShowFilter] = useState(false);
 
   // Process data through utility functions
   const processedData = processDataDates(data);
   const filteredData = filterData(processedData, searchTerm);
   const sortedData = sortData(filteredData, sortField, sortDirection);
-  const dataWithSerialNumbers = addSerialNumbers(sortedData);
+  // Pass pagination parameters to addSerialNumbers
+  const dataWithSerialNumbers = addSerialNumbers(sortedData, currentPage, pageSize);
 
   console.log('Inside of Common DataTable: ', data);
   console.log('Data With Serial Numbers are: ', dataWithSerialNumbers);
@@ -69,7 +80,7 @@ const DataTable = ({
     <Card className="w-full">
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative w-full sm:max-w-sm">
+          <div className="relative w-full sm:max-w-sm flex items-center">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               size={16}
@@ -80,8 +91,25 @@ const DataTable = ({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+            {filterForm && (
+              <Button
+                type="button"
+                variant="outline"
+                className="ml-2 flex items-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold border-gray-300 shadow-sm"
+                onClick={() => setShowFilter((prev) => !prev)}
+                title="Apply Filters"
+              >
+                <FaFilter />
+                Apply Filters
+              </Button>
+            )}
           </div>
         </div>
+        {showFilter && filterForm && (
+          <div className="mt-4 bg-gray-50 p-4 rounded shadow flex flex-wrap gap-4">
+            {filterForm}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="p-0 sm:p-6">
         {loading ? (
@@ -111,7 +139,8 @@ const DataTable = ({
                 previewAltText={previewAltText}
                 showVerificationAction={showVerificationAction}
                 handleSendVerification={handleSendVerification}
-                verificationLoading={verificationLoading} // Pass this
+                verificationLoading={verificationLoading}
+                rowActions={rowActions}
               />
             </table>
 
@@ -128,3 +157,4 @@ const DataTable = ({
 };
 
 export default DataTable;
+

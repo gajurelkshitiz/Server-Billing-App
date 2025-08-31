@@ -16,7 +16,7 @@ const {
 router.route("/")
   .post(authorizeRoles(["admin", "user"]), createCustomer)
   .get(authorizeRoles(["admin", "user"]), getAllCustomers);
-router.route("/getbysearch").get(getCustomersBySearch);
+// router.route("/getbysearch").get(getCustomersBySearch);
 router.route("/:id")
   .get(authorizeRoles(["admin", "user"]), getCustomer)
   .patch(authorizeRoles(["admin", "user"]), updateCustomer)

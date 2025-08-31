@@ -9,7 +9,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Search, Calendar, Settings, User, LogOut, Menu } from 'lucide-react';
+import { Search, Calendar, Settings, User, LogOut, Menu, BellRing } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LogoutDialog from "@/components/common/LogoutDialog";
 import DateTimeDisplay from '../common/DateTimeDisplay';
@@ -20,6 +20,16 @@ import { useNotifications } from "@/context/NotificationContext";
 import { getAuthHeaders } from "@/utils/auth";
 import NotificationDropdown from "@/components/common/NotificationDropdown";
 
+// Define NotificationDropdownType if not imported from elsewhere
+type NotificationDropdownType = {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read?: boolean;
+  createdAt?: string;
+};
+
 interface HeaderProps {
   isMobile?: boolean;
   isMobileMenuOpen?: boolean;
@@ -29,9 +39,10 @@ interface HeaderProps {
 const Header = ({ isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpen }: HeaderProps) => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isSettingsRotated, setIsSettingsRotated] = useState(false);
-  const { profile, setProfile, formData, setFormData } = useProfile();
+  const { profile, setProfile, formData, setFormData, isLoading, setIsLoading } = useProfile();
   const { fiscalYear, setFiscalYear } = useFiscalYear();
-  const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications();
+  const { unreadNotifications, pastNotifications, markAsRead, markAllAsRead } = useNotifications();
+  const [showPast, setShowPast] = useState(false);
   const [loading, setLoading] = useState(true);
   const username = localStorage.getItem('name') || 'User';
   const role = localStorage.getItem('role') || 'user';
@@ -46,7 +57,7 @@ const Header = ({ isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpe
   useEffect(() => {
     setProfile(null); // Always reset before fetching
     const fetchProfile = async () => {
-      setLoading(true);
+      setIsLoading(true); // ← Set loading true
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
@@ -55,17 +66,16 @@ const Header = ({ isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpe
         );
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
-        setProfile(data[role] || null); // Set context
+        setProfile(data[role] || null);
         setFormData(data[role] || {});
       } catch (err) {
         setProfile(null);
-        // setFormData({});
       } finally {
-        setLoading(false);
+        setIsLoading(false); // ← Set loading false
       }
     };
     fetchProfile();
-  }, [role, setProfile]);
+  }, [role, setProfile, setIsLoading]);
 
 
     
@@ -238,11 +248,29 @@ const Header = ({ isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpe
 
           {/* Notification Dropdown */}
           <NotificationDropdown
-            notifications={notifications}
+            notifications={
+              showPast
+                ? [...unreadNotifications, ...pastNotifications].map((n: any) => ({
+                    _id: n._id,
+                    title: n.title,
+                    message: n.message,
+                    type: n.type,
+                    timestamp: n.timestamp ? new Date(n.timestamp) : new Date(),
+                    read: n.readStatus ?? false,
+                    actionable: n.actionable,
+                  }))
+                : unreadNotifications.map((n: any) => ({
+                    _id: n._id,
+                    title: n.title,
+                    message: n.message,
+                    type: n.type,
+                    timestamp: n.timestamp ? new Date(n.timestamp) : new Date(),
+                    read: n.readStatus ?? false,
+                    actionable: n.actionable,
+                  }))
+            }
             onMarkAsRead={markAsRead}
             onMarkAllAsRead={markAllAsRead}
-            onDeleteNotification={deleteNotification}
-            onClearAll={clearAll}
           />
 
           {/* Settings Button - Compact on mobile */}
@@ -298,6 +326,10 @@ const Header = ({ isMobile = false, isMobileMenuOpen = false, setIsMobileMenuOpe
                   }}>
                 <User size={16} className="mr-2" />
                 Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/notifications')}>
+                <BellRing size={16} className="mr-2" />
+                Notifications
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')}>
                 <Settings size={16} className="mr-2" />

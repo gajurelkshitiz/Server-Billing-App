@@ -1,5 +1,5 @@
 const Company = require("../models/company");
-const { BadRequestError, NotFoundError } = require("../errors");
+const { BadRequestError, notFoundError } = require("../errors");
 const { StatusCodes } = require("http-status-codes");
 const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathHelper");
 
@@ -42,6 +42,10 @@ const createCompany = async (req, res) => {
 };
 
 const getAllCompanies = async (req, res) => {
+  // for debugging:
+  console.log('Get all Companies controller called.')
+  // console.log("Inside the getAllCompanies feat: ",req.user);
+
   const { tokenID, companyID } = req.user;
   const companies = await Company.find({
     $or: [
@@ -54,13 +58,16 @@ const getAllCompanies = async (req, res) => {
 };
 
 const getCompany = async (req, res) => {
+  // for debugging:
+  console.log("Inside a single get Company controller. ")
+
   const { tokenID } = req.user;
   const { id: companyId } = req.params;
 
-  const company = await Company.findOne({ _id: companyId, adminID: tokenID });
+  const company = await Company.findOne({ _id: companyId });
 
   if (!company) {
-    throw new NotFoundError(`No Company with id: ${companyId}`);
+    throw new notFoundError(`No Company with id: ${companyId}`);
   }
 
   res.status(StatusCodes.OK).json({ company });
@@ -86,7 +93,7 @@ const updateCompany = async (req, res) => {
   // Get existing company for file handling
   const existingCompany = await Company.findOne({ _id: companyId, adminID: tokenID });
   if (!existingCompany) {
-    throw new NotFoundError(`No Company with id: ${companyId}`);
+    throw new notFoundError(`No Company with id: ${companyId}`);
   }
 
   // Handle logo update
@@ -129,7 +136,7 @@ const deleteCompany = async (req, res) => {
   });
 
   if (!company) {
-    throw new NotFoundError(`No Company with id: ${companyId}`);
+    throw new notFoundError(`No Company with id: ${companyId}`);
   }
 
   res.status(StatusCodes.OK).send();
@@ -229,6 +236,73 @@ const importCompaniesFromExcel = async (req, res) => {
   }
 };
 
+// Get all customers with pagination and filters
+const getAllCustomers = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const startIndex = (page - 1) * limit;
+
+  // CompanyID logic: from token (user) or from query (admin)
+  let companyID = req.user.companyID;
+  if (!companyID && req.query.companyID) {
+    companyID = req.query.companyID;
+  }
+
+  // Build filter dynamically
+  const filter = { companyID };
+
+  const {
+    search,
+    status,
+    minBalance,
+    maxBalance,
+    email,
+  } = req.query;
+
+  // Search by name (case-insensitive)
+  if (search) {
+    filter.name = { $regex: search, $options: 'i' };
+  }
+
+  // Filter by email
+  if (email) {
+    filter.email = { $regex: email, $options: 'i' };
+  }
+
+  // Filter by status
+  if (status !== undefined && status !== '') {
+    filter.status = status === 'true';
+  }
+
+  // Filter by balance range
+  if (minBalance && maxBalance) {
+    filter.prevClosingBalance = { 
+      $gte: parseFloat(minBalance), 
+      $lte: parseFloat(maxBalance) 
+    };
+  } else if (minBalance) {
+    filter.prevClosingBalance = { $gte: parseFloat(minBalance) };
+  } else if (maxBalance) {
+    filter.prevClosingBalance = { $lte: parseFloat(maxBalance) };
+  }
+
+  // Count & query
+  const total = await Customer.countDocuments(filter);
+  const customers = await Customer.find(filter)
+    .sort('createdAt')
+    .skip(startIndex)
+    .limit(limit);
+
+  res.status(StatusCodes.OK).json({
+    page,
+    limit,
+    total,
+    pages: Math.ceil(total / limit),
+    customers,
+    count: customers.length,
+  });
+};
+
 module.exports = {
   createCompany,
   getAllCompanies,
@@ -236,4 +310,5 @@ module.exports = {
   updateCompany,
   deleteCompany,
   importCompaniesFromExcel,
+  getAllCustomers,
 };

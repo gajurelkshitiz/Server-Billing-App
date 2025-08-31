@@ -9,9 +9,16 @@ const customerPaymentSchema = new mongoose.Schema({
     customerName: {
         type: String,
     },
+    date: {
+        type: String,
+    },
     companyID: {
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'Company',
+    },
+    adminID: {
+        type: mongoose.Schema.Types.ObjectId,
+        refPath: 'admin',
     },
     amountPaid: {
         type: Number,

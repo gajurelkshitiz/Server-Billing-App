@@ -65,7 +65,7 @@ const getPurchaseEntry = async (req, res) => {
   const purchaseEntry = await PurchaseEntry.findOne({ _id: purchaseEntryID });
 
   if (!purchaseEntry) {
-    throw new NotFoundError(`No Purchase Entry Found.`);
+    throw new notFoundError(`No Purchase Entry Found.`);
   }
 
   res.status(StatusCodes.OK).json({ purchaseEntry });
@@ -89,7 +89,7 @@ const updatePurchaseEntry = async (req, res) => {
   );
 
   if (!purchaseEntry) {
-    throw new NotFoundError(`No Purchase Entry Found with id: ${purchaseEntryID}`);
+    throw new notFoundError(`No Purchase Entry Found with id: ${purchaseEntryID}`);
   }
   res.status(StatusCodes.OK).json({ purchaseEntry });
 };
@@ -102,7 +102,7 @@ const deletePurchaseEntry = async (req, res) => {
 
   const purchaseEntry = await PurchaseEntry.findOneAndDelete({ _id: purchaseEntryID }); 
   if (!purchaseEntry) {
-    throw new NotFoundError(`No Purchase Entry Found with id: ${purchaseEntryID}`);
+    throw new notFoundError(`No Purchase Entry Found with id: ${purchaseEntryID}`);
   }
   res.status(StatusCodes.OK).send();
 };

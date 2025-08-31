@@ -52,7 +52,7 @@ const AdminFormModal = ({
   // Add state for subscriptions
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
-  
+
   // --- State for image preview and dialog for full-size image ---
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [openImageDialog, setOpenImageDialog] = useState(false);
@@ -90,7 +90,6 @@ const AdminFormModal = ({
     }
   };
 
-  
   const handleImageFileChange = (name: string, file: File | null) => {
     if (!file) {
       setImagePreview(null);
@@ -124,9 +123,9 @@ const AdminFormModal = ({
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLocalLoading(true);
-    
-    console.log('after the form field of admin is filled')
-    console.log(formData)
+
+    console.log("after the form field of admin is filled");
+    console.log(formData);
 
     try {
       await handleSubmit(e);
@@ -137,7 +136,11 @@ const AdminFormModal = ({
     }
   };
 
-  console.log(`For testing of image string: ${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}`);
+  console.log(
+    `For testing of image string: ${
+      import.meta.env.REACT_APP_BACKEND_IMAGE_URL
+    }${formData.profileImage}`
+  );
 
   return (
     <Dialog open={isModalOpen} onOpenChange={() => setIsModalOpen(false)}>
@@ -146,12 +149,11 @@ const AdminFormModal = ({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <form 
-          onSubmit={handleFormSubmit} 
+        <form
+          onSubmit={handleFormSubmit}
           className="space-y-4 flex-1 overflow-y-auto p-2"
           style={{ minHeight: 0 }}
         >
-
           {/* Full Name */}
           <div>
             <Label htmlFor="name">
@@ -170,7 +172,8 @@ const AdminFormModal = ({
           {/* Profile Image Upload */}
           <div>
             <Label htmlFor="profileImage">
-              Profile Image<span className="text-red-500 ml-1"> (optional)</span>
+              Profile Image
+              <span className="text-red-500 ml-1"> (optional)</span>
             </Label>
             <Input
               id="profileImage"
@@ -178,7 +181,7 @@ const AdminFormModal = ({
               accept="image/*"
               onChange={(e) =>
                 handleImageFileChange(
-                  "profileImage", 
+                  "profileImage",
                   e.target.files?.[0] || null
                 )
               }
@@ -187,15 +190,20 @@ const AdminFormModal = ({
               <div className="mt-2">
                 <span className="text-sm font-medium">Preview:</span>
                 <img
-                  src={imagePreview || `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}`}
+                  src={
+                    imagePreview ||
+                    `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${
+                      formData.profileImage
+                    }`
+                  }
                   alt="Profile Preview"
                   className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setOpenImageDialog(true)}
-                    style={{
-                      width: "50%",
-                      maxHeight: "100px",
-                      objectFit: "contain",
-                    }}
+                  style={{
+                    width: "50%",
+                    maxHeight: "100px",
+                    objectFit: "contain",
+                  }}
                 />
                 <div className="mt-1">
                   <span className="text-xs text-gray-500">
@@ -218,7 +226,11 @@ const AdminFormModal = ({
               required
             >
               <SelectTrigger id="subsName">
-                <SelectValue placeholder={loadingSubscriptions ? "Loading..." : "Select Subscription"} />
+                <SelectValue
+                  placeholder={
+                    loadingSubscriptions ? "Loading..." : "Select Subscription"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {loadingSubscriptions ? (
@@ -238,6 +250,35 @@ const AdminFormModal = ({
                 )}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Mode of System Usage [Computerized, Manual] */}
+          <div>
+            <Label>
+              Accounting Mode<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <div className="flex gap-4 mt-1">
+              <label className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={formData["mode"] === "computerized"}
+                  onChange={() => {
+                    handleInputChange("mode", "computerized");
+                  }}
+                />
+                Computerized
+              </label>
+              <label className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={formData["mode"] === "manual"}
+                  onChange={() => {
+                    handleInputChange("mode", "manual");
+                  }}
+                />
+                Manual
+              </label>
+            </div>
           </div>
 
           {/* Email */}
@@ -313,15 +354,15 @@ const AdminFormModal = ({
               className="flex-1 bg-blue-600 hover:bg-blue-700"
               disabled={loading || localLoading}
             >
-              {(loading || localLoading)
-                ? (
-                  <>
-                    <span className="loader mr-2"></span> Processing...
-                  </>
-                )
-                : editingAdmin
-                ? "Update"
-                : "Create"}
+              {loading || localLoading ? (
+                <>
+                  <span className="loader mr-2"></span> Processing...
+                </>
+              ) : editingAdmin ? (
+                "Update"
+              ) : (
+                "Create"
+              )}
             </Button>
           </div>
         </form>
@@ -332,7 +373,14 @@ const AdminFormModal = ({
       <ImagePreview
         isOpen={openImageDialog}
         onOpenChange={setOpenImageDialog}
-        imageUrl={imagePreview || (editingAdmin && formData.profileImage ? `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${formData.profileImage}` : null)}
+        imageUrl={
+          imagePreview ||
+          (editingAdmin && formData.profileImage
+            ? `${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${
+                formData.profileImage
+              }`
+            : null)
+        }
         title="Profile Preview"
         altText="Full Size Photo"
       />

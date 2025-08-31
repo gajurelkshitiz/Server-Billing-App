@@ -1,7 +1,7 @@
 const SalesEntry = require('../models/salesEntry');
 const Customer = require('../models/Customer');
 const FiscalYear = require('../models/FiscalYear');
-const { BadRequestError, NotFoundError } = require('../errors');
+const { BadRequestError, notFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 const XLSX = require('xlsx');
 const fs = require('fs');
@@ -21,6 +21,8 @@ const createSalesEntry = async (req, res) => {
     throw new BadRequestError("Bill file is missing");
   }
 
+
+  console.log('CompanyID: ', req.user.companyID);
   let companyID;
   // for user, companyID from token:
   companyID = req.user.companyID;
@@ -29,6 +31,7 @@ const createSalesEntry = async (req, res) => {
   if (!companyID && req.query.companyID) {
     companyID = req.query.companyID;
   }
+  console.log('After filling from query: ', req.query.companyID);
 
   // Get company info for file handling
   const company = await Company.findById(companyID);
@@ -38,11 +41,15 @@ const createSalesEntry = async (req, res) => {
 
   // put the customer Name here in the database:
   const customerObj = await Customer.findOne({ _id: customerID });
+  console.log('Customer Object: ', customerObj);
   const customerName = customerObj.name;
 
   // save the current fiscal Year value also, for filter by filter year later
   const fiscalYearObj = await FiscalYear.findOne({ status: true });
+  console.log('Fiscal Year : ', fiscalYearObj);
   const fiscalYear = fiscalYearObj.name;
+
+  console.log('before creation of sales Entry');
 
   // Create sales entry first
   const salesEntry = await SalesEntry.create({
@@ -80,21 +87,95 @@ const createSalesEntry = async (req, res) => {
   res.status(StatusCodes.CREATED).json({ salesEntry });
 };
 
-// Get all sales entries
-const getAllSalesEntries = async (req, res) => {
-  let companyID;
-  // for user, companyID from token:
-  companyID = req.user.companyID;
+// // Get all sales entries  ---> This is previous Working Implementation code
+// const getAllSalesEntries = async (req, res) => {
+//   // implementation pagination:
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 10;
 
-  // for admin, where companyID comes from param
+//   const startIndex = (page - 1) * limit;
+//   const total = await SalesEntry.countDocuments();
+
+
+//   // for user, companyID from token:
+//   let companyID;
+//   companyID = req.user.companyID;
+
+//   // for admin, where companyID comes from param
+//   if (!companyID && req.query.companyID) {
+//     companyID = req.query.companyID;
+//   }
+
+
+
+//   const salesEntries = await SalesEntry.find({ companyID: companyID }).sort('createdAt').skip(startIndex).limit(limit);
+
+//   res.status(StatusCodes.OK)
+//      .json({ 
+//         page,
+//         limit,
+//         total,
+//         pages: Math.ceil(total/limit),
+//         salesEntries, 
+//         count: salesEntries.length });
+// };
+
+const getAllSalesEntries = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const startIndex = (page - 1) * limit;
+
+  // CompanyID logic: from token (user) or from query (admin)
+  let companyID = req.user.companyID;
   if (!companyID && req.query.companyID) {
     companyID = req.query.companyID;
   }
 
-  const salesEntries = await SalesEntry.find({ companyID: companyID }).sort('createdAt');
+  // Build filter dynamically
+  const filter = { companyID };
 
-  res.status(StatusCodes.OK).json({ salesEntries, count: salesEntries.length });
+  const {
+    startDate,
+    endDate,
+    customerID, // Add this
+    customerName,
+    minAmount,
+    maxAmount,
+  } = req.query;
+
+  if (startDate && endDate) {
+    filter.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+  }
+
+  if (customerID) {
+    filter.customerID = customerID; // Add this filter
+  }
+
+  if (customerName) {
+    filter.customerName = { $regex: customerName, $options: 'i' };
+  }
+
+  if (minAmount && maxAmount) {
+    filter.amount = { $gte: parseFloat(minAmount), $lte: parseFloat(maxAmount) };
+  }
+
+  // Count & query
+  const total = await SalesEntry.countDocuments(filter);
+  const salesEntries = await SalesEntry.find(filter)
+    .sort('createdAt')
+    .skip(startIndex)
+    .limit(limit);
+
+  res.status(StatusCodes.OK).json({
+    page,
+    limit,
+    total,
+    pages: Math.ceil(total / limit),
+    salesEntries,
+    count: salesEntries.length,
+  });
 };
+
 
 // Get a single sales entry
 const getSalesEntry = async (req, res) => {
@@ -105,7 +186,7 @@ const getSalesEntry = async (req, res) => {
   const salesEntry = await SalesEntry.findOne({ _id: salesEntryID });
 
   if (!salesEntry) {
-    throw new NotFoundError(`No Sales Entry Found.`);
+    throw new notFoundError(`No Sales Entry Found.`);
   }
 
   res.status(StatusCodes.OK).json({ salesEntry });
@@ -122,7 +203,7 @@ const updateSalesEntry = async (req, res) => {
   // Get the existing sales entry to get company info
   const existingSalesEntry = await SalesEntry.findById(salesEntryID);
   if (!existingSalesEntry) {
-    throw new NotFoundError(`No sales entry with id: ${salesEntryID}`);
+    throw new notFoundError(`No sales entry with id: ${salesEntryID}`);
   }
 
   // Handle bill attachment upload if file is provided
@@ -154,7 +235,7 @@ const updateSalesEntry = async (req, res) => {
   );
 
   if (!salesEntry) {
-    throw new NotFoundError(`No sales entry with id: ${salesEntryID}`);
+    throw new notFoundError(`No sales entry with id: ${salesEntryID}`);
   }
 
   res.status(StatusCodes.OK).json({ salesEntry });
@@ -169,61 +250,94 @@ const deleteSalesEntry = async (req, res) => {
   const salesEntry = await SalesEntry.findOneAndDelete({ _id: salesEntryID });
 
   if (!salesEntry) {
-    throw new NotFoundError(`No Sales Entry Found with id: ${salesEntryID}`);
+    throw new notFoundError(`No Sales Entry Found with id: ${salesEntryID}`);
   }
   res.status(StatusCodes.OK).json({ msg: 'Success! Sales Entry removed.' });
 };
 
+
+
+// Helper function to convert Windows path to WSL path
+const convertToWSLPath = (windowsPath) => {
+  try {
+    // Remove any quotes from the path
+    windowsPath = windowsPath.replace(/['"]/g, '');
+    
+    // Check if it's a network path or local path
+    if (windowsPath.startsWith('\\\\')) {
+      // Network path
+      return windowsPath.replace(/\\/g, '/');
+    } else {
+      // Local path: Convert C:\path to /mnt/c/path
+      const match = windowsPath.match(/^([A-Za-z]):\\(.+)$/);
+      if (match) {
+        const [, drive, pathPart] = match;
+        return `/mnt/${drive.toLowerCase()}/${pathPart.replace(/\\/g, '/')}`;
+      }
+    }
+    return windowsPath;
+  } catch (error) {
+    console.error('Error converting path:', error);
+    return null;
+  }
+};
+
+// Modified copyFileToTemp function
+const copyFileToTemp = async (sourcePath) => {
+  try {
+    // Create temp directory if it doesn't exist
+    const tempDir = path.join(__dirname, "../uploads/temp");
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    // Convert Windows path to WSL path
+    const wslPath = convertToWSLPath(sourcePath);
+    console.log('Original Windows path:', sourcePath);
+    console.log('Converted WSL path:', wslPath);
+
+    if (!wslPath || !fs.existsSync(wslPath)) {
+      throw new Error(`File not found at path: ${wslPath}`);
+    }
+
+    // Generate temp filename
+    const ext = path.extname(wslPath);
+    const tempFileName = `temp-${Date.now()}${ext}`;
+    const tempFilePath = path.join(tempDir, tempFileName);
+
+    // Copy file to temp location
+    await fs.promises.copyFile(wslPath, tempFilePath);
+    console.log('File copied to temp location:', tempFilePath);
+    
+    // Return file object similar to multer
+    return {
+      path: tempFilePath,
+      filename: tempFileName,
+      originalname: path.basename(wslPath)
+    };
+  } catch (error) {
+    console.error('Error copying file to temp:', error);
+    throw new Error(`Failed to copy file to temp location: ${error.message}`);
+  }
+};
+
+// Modified importSalesEntriesFromExcel function
 const importSalesEntriesFromExcel = async (req, res) => {
   try {
     if (!req.file || !req.file.path) {
       throw new BadRequestError("Please provide an Excel file");
     }
 
-    const filePath = req.file.path;
-    const { tokenID } = req.user;
+    const { tokenID, adminID, name } = req.user;
+    const currentAdminID = adminID || tokenID;
     const isPreview = req.query.preview === 'true';
     
-    // Get row indexes for partial import
-    const rowIndexes = req.body.rowIndexes ? JSON.parse(req.body.rowIndexes) : null;
-    const isPartialImport = rowIndexes && Array.isArray(rowIndexes);
-
-    console.log(`Excel file ${isPreview ? 'previewed' : 'imported'}: ${req.file.filename} by user: ${tokenID}`);
-    if (isPartialImport) {
-      console.log('Partial import for rows:', rowIndexes);
-    }
-
-    // Read the Excel file
-    const workbook = XLSX.readFile(filePath);
-
-    if (!workbook.SheetNames.includes("SalesEntry")) {
-      throw new BadRequestError("Excel file must contain a sheet named 'SalesEntry'");
-    }
-
-    const sheet = workbook.Sheets["SalesEntry"];
-    const rawData = XLSX.utils.sheet_to_json(sheet);
-
-    if (rawData.length === 0) {
-      throw new BadRequestError("No data found in the SalesEntry sheet");
-    }
-
-    // Filter data for partial import
-    const dataToProcess = isPartialImport 
-      ? rawData.filter((_, index) => rowIndexes.includes(index))
-      : rawData;
-
-    console.log(`Processing ${dataToProcess.length} rows out of ${rawData.length} total rows`);
-
-    let companyID;
-    // for user, companyID from token:
-    companyID = req.user.companyID;
-
-    // for admin, where companyID comes from param
+    // Get company info
+    let companyID = req.user.companyID;
     if (!companyID && req.query.companyID) {
       companyID = req.query.companyID;
     }
 
-    // Get company info for file handling
     const company = await Company.findById(companyID);
     if (!company) {
       throw new BadRequestError("Company not found");
@@ -231,100 +345,127 @@ const importSalesEntriesFromExcel = async (req, res) => {
 
     // Get current fiscal year
     const fiscalYearObj = await FiscalYear.findOne({ status: true });
-    const fiscalYear = fiscalYearObj ? fiscalYearObj.name : null;
+    if (!fiscalYearObj) {
+      throw new BadRequestError('No Fiscal Year Found.');
+    }
+    const fiscalYear = fiscalYearObj?.name;
 
+    // Process Excel file
+    const workbook = XLSX.readFile(req.file.path);
+    if (!workbook.SheetNames.includes("SalesEntry")) {
+      throw new BadRequestError("Excel file must contain a sheet named 'SalesEntry'");
+    }
+
+    const rawData = XLSX.utils.sheet_to_json(workbook.Sheets["SalesEntry"]);
+    if (rawData.length === 0) {
+      throw new BadRequestError("No data found in the SalesEntry sheet");
+    }
+
+    // Arrays to store validation results
     const validatedData = [];
     const errors = [];
+    const processedBillNos = new Set(); // For checking duplicates
 
+    // Check for existing bill numbers in database
+    const existingBillNos = new Set((await SalesEntry.find({ companyID })
+      .select('billNo')
+      .distinct('billNo')));
+
+    let dataToProcess = rawData;
+    // Handle partial import if rowIndexes are provided
+    if (req.body.rowIndexes) {
+      const rowIndexes = JSON.parse(req.body.rowIndexes);
+      dataToProcess = rawData.filter((_, index) => rowIndexes.includes(index));
+      console.log('Processing partial import for rows:', rowIndexes);
+    }
+
+    // Validate each row
     for (let i = 0; i < dataToProcess.length; i++) {
       const row = dataToProcess[i];
-      // For partial import, get original row number for error reporting
-      const originalIndex = isPartialImport ? rowIndexes[i] : i;
-      const rowNumber = originalIndex + 2; // +2 because Excel is 1-based and has header
+      const rowNumber = i + 2; // Excel row number (1-based + header)
+      const rowErrors = [];
 
-      const { CustomerName, Bill_No, Bill_Date, Amount, Item_Description, Net_Total_Amount, Discount, Discount_Type, Bill_Attachment } = row;
+      const { CustomerName, Bill_No, Bill_Date, Amount, Item_Description, Net_Total_Amount, Bill_Attachment } = row;
 
-      console.log('Processing row:', rowNumber, 'Data:', { CustomerName, Bill_No, Bill_Date, Amount, Item_Description, Net_Total_Amount });
-
-      if (!CustomerName || !Bill_No || !Bill_Date || !Amount || !Item_Description || !Net_Total_Amount || !Bill_Attachment) {
-        errors.push(`Row ${rowNumber}: Missing required fields (CustomerName, Bill_No, Date, Amount, Item_Description, Net_Total_Amount, Bill_Attachment)`);
-        continue;
-      }
-
-      // Validate if customer exists based on CustomerName and companyID
-      const customerObj = await Customer.findOne({ 
-        name: CustomerName.toString().trim(),
-        companyID: companyID 
-      });
-      
-      if (!customerObj) {
-        errors.push(`Row ${rowNumber}: Customer with name '${CustomerName}' not found for this company`);
-        continue;
-      }
-
-      const salesEntryData = {
-        customerID: customerObj._id,
-        billNo: Bill_No.toString().trim(),
-        date: Bill_Date.toString().trim(),
-        amount: parseFloat(Amount),
-        itemDescription: Item_Description.toString().trim(),
-        netTotalAmount: parseFloat(Net_Total_Amount),
-        createdBy: tokenID,
-        adminID: req.user.adminID,
-        companyID: companyID,
-        customerName: customerObj.name,
-        fiscalYear: fiscalYear
-      };
-
-      // Handle optional fields
-      if (Discount && Discount_Type) {
-        salesEntryData.discount = parseFloat(Discount);
-        salesEntryData.discountType = Discount_Type.toString().trim();
-      }
-
-      // Handle VAT if present
-      if (row.VAT !== undefined && row.VAT !== null && row.VAT !== '') {
-        salesEntryData.vat = parseFloat(row.VAT);
-      }
-
-      // Handle bill attachment processing for Excel import
-      if (Bill_Attachment) {
-        try {
-          let sourceBillPath = Bill_Attachment.toString().trim();
-          if (sourceBillPath[1] === ':') {
-            sourceBillPath = '/mnt/' + sourceBillPath[0].toLowerCase() + sourceBillPath.slice(2).replace(/\\/g, '/');
-          }
-          
-          const ext = path.extname(sourceBillPath);
-          const uniqueName = `bill-${path.parse(sourceBillPath).name}-${Date.now()}_${originalIndex}${ext}`;
-          
-          // Use the new file helper approach
-          const billAttachmentPath = await moveFileToFinalLocation(
-            sourceBillPath,
-            req.user.adminID || tokenID,
-            req.user.name,
-            'sales',
-            uniqueName,
-            company._id,
-            company.name
-          );
-
-          salesEntryData.billAttachment = billAttachmentPath;
-        } catch (err) {
-          errors.push(`Row ${rowNumber}: Failed to process bill attachment (${err.message})`);
+      // Check required fields
+      const requiredFields = { CustomerName, Bill_No, Bill_Date, Amount, Item_Description, Net_Total_Amount, Bill_Attachment };
+      for (const [field, value] of Object.entries(requiredFields)) {
+        if (!value && value !== 0) {
+          rowErrors.push(`Missing required field: ${field}`);
         }
       }
 
-      validatedData.push(salesEntryData);
+      // Check for duplicate bill numbers in current import
+      if (Bill_No) {
+        if (processedBillNos.has(Bill_No.toString().trim())) {
+          rowErrors.push(`Duplicate bill number in import: ${Bill_No}`);
+        } else if (existingBillNos.has(Bill_No.toString().trim())) {
+          rowErrors.push(`Bill number already exists in database: ${Bill_No}`);
+        }
+        processedBillNos.add(Bill_No.toString().trim());
+      }
+
+      // Validate customer existence
+      let customer = null;
+      if (CustomerName) {
+        customer = await Customer.findOne({ 
+          name: CustomerName.toString().trim(),
+          companyID 
+        });
+        
+        if (!customer) {
+          rowErrors.push(`Customer not found: ${CustomerName}`);
+        }
+      }
+
+      // Validate bill attachment path
+      if (Bill_Attachment) {
+        const wslPath = convertToWSLPath(Bill_Attachment.toString().trim());
+        if (!wslPath || !fs.existsSync(wslPath)) {
+          rowErrors.push(`Bill attachment file not found: ${Bill_Attachment}`);
+        }
+      }
+
+      // Add to backend validation
+      if (Bill_Date) {
+        // Validate Nepali date format (YYYY-MM-DD)
+        // if (!Bill_Date.toString().match(/^\d{4}-\d{2}-\d{2}$/)) {
+        //   rowErrors.push(`Invalid date format for bill ${Bill_No}. Expected: YYYY-MM-DD`);
+        // }
+      }
+
+      // Prepare validated data
+      if (rowErrors.length === 0) {
+        const salesEntryData = {
+          customerID: customer._id,
+          customerName: customer.name,
+          billNo: Bill_No.toString().trim(),
+          date: Bill_Date.toString().trim(),
+          amount: parseFloat(Amount),
+          itemDescription: Item_Description.toString().trim(),
+          netTotalAmount: parseFloat(Net_Total_Amount),
+          createdBy: currentAdminID,
+          adminID: currentAdminID,
+          companyID,
+          fiscalYear,
+          discount: row.Discount ? parseFloat(row.Discount) : 0,
+          discountType: row.Discount_Type || 'percentage',
+          vat: row.VAT ? parseFloat(row.VAT) : 0,
+          billAttachment: Bill_Attachment
+        };
+        validatedData.push({ rowNumber, data: salesEntryData });
+      } else {
+        errors.push(`Row ${rowNumber}: ${rowErrors.join('; ')}`);
+      }
     }
 
-    // If it's preview mode, return data without saving
+    // If preview mode, return validation results
     if (isPreview) {
       return res.status(StatusCodes.OK).json({
         message: 'Preview data processed',
         data: rawData.map((row, index) => ({
           ...row,
-          index,
+          rowNumber: index + 2,
           isValid: !errors.some(error => error.includes(`Row ${index + 2}:`))
         })),
         validRecords: validatedData.length,
@@ -334,77 +475,85 @@ const importSalesEntriesFromExcel = async (req, res) => {
       });
     }
 
-    // If not preview mode, proceed with actual import
+    // If there are validation errors, don't proceed with import
     if (errors.length > 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         message: 'Validation errors found',
         errors,
         validRecords: validatedData.length,
-        totalRows: isPartialImport ? dataToProcess.length : rawData.length,
-        processedRows: isPartialImport ? rowIndexes.length : rawData.length,
-        importedFile: req.file.filename
+        totalRows: rawData.length
       });
     }
 
-    const insertedSalesEntries = await SalesEntry.insertMany(validatedData, {
-      ordered: false
-    });
-
-    // Handle imported file movement
-    if (req.file) {
+    // Process actual import
+    const createdEntries = [];
+    for (const { data } of validatedData) {
       try {
-        const importedFilePath = await moveFileToFinalLocation(
-          req.file.path,
-          req.user.adminID || tokenID,
-          req.user.name,
-          'imported_files',
-          req.file.filename,
-          company._id,
-          company.name
-        );
+        // Create sales entry first
+        const salesEntry = await SalesEntry.create(data);
 
-        res.status(StatusCodes.CREATED).json({
-          message: `Sales entries ${isPartialImport ? 'partially ' : ''}imported successfully`,
-          imported: insertedSalesEntries.length,
-          totalRows: rawData.length,
-          processedRows: isPartialImport ? dataToProcess.length : rawData.length,
-          salesEntries: insertedSalesEntries,
-          importedFile: req.file.filename,
-          importedFilePath,
-          isPartialImport: isPartialImport
-        });
+        // Handle bill attachment if exists
+        if (data.billAttachment) {
+          try {
+            const tempFile = await copyFileToTemp(data.billAttachment);
+            if (tempFile) {
+              const billAttachmentPath = await moveFileToFinalLocation(
+                tempFile.path,
+                currentAdminID,
+                name,
+                'sales',
+                tempFile.filename,
+                company._id,
+                company.name,
+                salesEntry.billNo,
+                salesEntry._id
+              );
+              
+              salesEntry.billAttachment = billAttachmentPath;
+              await salesEntry.save();
+              cleanupTempFile(tempFile.path);
+            }
+          } catch (error) {
+            console.error('Error processing bill attachment:', error);
+          }
+        }
+
+        createdEntries.push(salesEntry);
       } catch (error) {
-        console.error('Error moving imported file:', error);
-        cleanupTempFile(req.file.path);
-        
-        // Still return success for sales entries, but note file upload issue
-        res.status(StatusCodes.CREATED).json({
-          message: `Sales entries ${isPartialImport ? 'partially ' : ''}imported successfully`,
-          imported: insertedSalesEntries.length,
-          totalRows: rawData.length,
-          processedRows: isPartialImport ? dataToProcess.length : rawData.length,
-          salesEntries: insertedSalesEntries,
-          importedFile: req.file.filename,
-          importedFilePath: null,
-          isPartialImport: isPartialImport,
-          note: 'Import successful but file archiving failed'
-        });
+        console.error('Error creating sales entry:', error);
+        errors.push(`Failed to create entry: ${error.message}`);
       }
     }
 
-  } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'BadRequestError') {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: 'Import failed due to validation errors',
-        error: error.message,
-        importedFile: req.file ? req.file.filename : null
-      });
+    // Move the imported Excel file
+    let importedFilePath = null;
+    try {
+      importedFilePath = await moveFileToFinalLocation(
+        req.file.path,
+        currentAdminID,
+        name,
+        'imported_files',
+        req.file.filename,
+        companyID,
+        company.name
+      );
+    } catch (error) {
+      console.error('Error moving imported file:', error);
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: 'Import failed',
-      error: error.message,
-      importedFile: req.file ? req.file.filename : null
+    res.status(StatusCodes.CREATED).json({
+      message: 'Sales entries imported successfully',
+      imported: createdEntries.length,
+      totalRows: rawData.length,
+      errors: errors.length > 0 ? errors : undefined,
+      importedFilePath
+    });
+
+  } catch (error) {
+    console.error('Import error:', error);
+    res.status(StatusCodes.BAD_REQUEST).json({
+      message: 'Import failed', 
+      error: error.message
     });
   }
 };

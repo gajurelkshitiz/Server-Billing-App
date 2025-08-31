@@ -12,7 +12,6 @@ import {
   Bell, 
   BellRing, 
   Check, 
-  X, 
   Settings, 
   User, 
   Calendar, 
@@ -21,9 +20,10 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Notification {
-  id: string;
+  _id: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
@@ -34,21 +34,24 @@ interface Notification {
 
 interface NotificationDropdownProps {
   notifications: Notification[];
-  onMarkAsRead: (id: string) => void;
+  onMarkAsRead: (_id: string) => void;
   onMarkAllAsRead: () => void;
-  onDeleteNotification: (id: string) => void;
-  onClearAll: () => void;
+  showPast?: boolean;
+  onShowPast?: () => void;
+  onHidePast?: () => void;
 }
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   notifications,
   onMarkAsRead,
   onMarkAllAsRead,
-  onDeleteNotification,
-  onClearAll
+  showPast,
+  onShowPast,
+  onHidePast
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
+  const navigate = useNavigate();
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -75,7 +78,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
-      onMarkAsRead(notification.id);
+      onMarkAsRead(notification._id);
     }
   };
 
@@ -122,28 +125,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               </Badge>
             )}
           </div>
-          {notifications.length > 0 && (
-            <div className="flex items-center gap-1">
-              {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onMarkAllAsRead}
-                  className="text-xs h-auto p-1 text-blue-600 hover:text-blue-800"
-                >
-                  <Check size={14} />
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearAll}
-                className="text-xs h-auto p-1 text-red-600 hover:text-red-800"
-              >
-                <X size={14} />
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Notifications List */}
@@ -156,7 +137,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             </div>
           ) : (
             notifications.map((notification, index) => (
-              <div key={notification.id}>
+              <div key={notification._id}>
                 <DropdownMenuItem 
                   className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors ${
                     !notification.read 
@@ -180,17 +161,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                         <span className="text-xs text-gray-500 whitespace-nowrap">
                           {formatTime(notification.timestamp)}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteNotification(notification.id);
-                          }}
-                          className="h-auto p-0.5 text-gray-400 hover:text-red-600"
-                        >
-                          <X size={12} />
-                        </Button>
                       </div>
                     </div>
                     
@@ -214,17 +184,29 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer: Show/Hide Past Notifications */}
         {notifications.length > 0 && (
-          <div className="border-t border-gray-100 p-3">
+          <div className="border-t border-gray-100 p-3 flex flex-col gap-2">
+            {typeof showPast !== 'undefined' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-center text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                onClick={() => {
+                  if (showPast && onHidePast) onHidePast();
+                  else if (!showPast && onShowPast) onShowPast();
+                }}
+              >
+                {showPast ? 'Hide Past Notifications' : 'Show Past Notifications'}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
               className="w-full text-center text-blue-600 hover:text-blue-800 hover:bg-blue-50"
               onClick={() => {
                 setIsOpen(false);
-                // Navigate to notifications page if you have one
-                // navigate('/notifications');
+                navigate('/notifications');
               }}
             >
               View all notifications

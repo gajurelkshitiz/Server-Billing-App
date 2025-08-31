@@ -17,6 +17,17 @@ const customerSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  type: {
+    type: String,
+    enum: ['credit', 'debit'],
+    default: 'debit'
+  },
+  creditLimitAmount: {
+    type: Number,
+  },
+  creditTimePeriodInDays: {
+    type: Number,
+  },
   panNo: {
     type: String,
     required: [true, "Please provide PAN No"]

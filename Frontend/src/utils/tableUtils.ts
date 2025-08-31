@@ -23,10 +23,12 @@ export const sortData = (
   });
 };
 
-export const addSerialNumbers = (data: any[]) => {
+// Updated to support pagination-aware serial numbers
+export const addSerialNumbers = (data: any[], currentPage: number = 1, pageSize: number = 10) => {
+  const startIndex = (currentPage - 1) * pageSize;
   return data.map((row, index) => ({
     ...row,
-    sn: index + 1
+    sn: startIndex + index + 1
   }));
 };
 

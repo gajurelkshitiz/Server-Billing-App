@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
+    mode: {
+      type: String,
+      enum: ['manual', 'computerized'],
+      required: [true, "Please provide Mode of System Usage"],
+    },
     adminID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",

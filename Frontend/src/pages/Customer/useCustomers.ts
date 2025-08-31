@@ -1,31 +1,56 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/context/NotificationContext";
 import { Customer } from "./types";
-import { format } from "path";
 import { getAuthHeaders } from "@/utils/auth";
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Customer>>({});
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "",
+    minBalance: "",
+    maxBalance: "",
+    email: "",
+  });
 
   const { toast } = useToast();
   const { addNotification } = useNotifications();
 
-  const fetchCustomers = async () => {
+  // Fetch customers with filters and pagination
+  const fetchCustomers = async (pageParam = page, limitParam = limit, filterParams = filters) => {
     setLoading(true);
-    const baseUrl = `${import.meta.env.REACT_APP_API_URL}/customer/`
+    const baseUrl = `${import.meta.env.REACT_APP_API_URL}/customer/`;
 
-    // Read role and optionally companyId from formData or another source
+    // Read role and optionally companyId from localStorage
     const role = localStorage.getItem("role");
     const isAdmin = role === "admin";
     const companyID = localStorage.getItem('companyID'); 
 
-    // Build the URL based on role
-    const url = isAdmin && companyID
-      ? `${baseUrl}?companyID=${encodeURIComponent(companyID)}`
-      : baseUrl;
+    // Build query parameters
+    const queryParams = new URLSearchParams({
+      page: pageParam.toString(),
+      limit: limitParam.toString(),
+    });
+
+    // Add company ID
+    if (isAdmin && companyID) {
+      queryParams.append('companyID', companyID);
+    }
+
+    // Add filter parameters
+    if (filterParams.search) queryParams.append('search', filterParams.search);
+    if (filterParams.status) queryParams.append('status', filterParams.status);
+    if (filterParams.email) queryParams.append('email', filterParams.email);
+    if (filterParams.minBalance) queryParams.append('minBalance', filterParams.minBalance);
+    if (filterParams.maxBalance) queryParams.append('maxBalance', filterParams.maxBalance);
+
+    const url = `${baseUrl}?${queryParams.toString()}`;
 
     try {
       const response = await fetch(url, {
@@ -34,7 +59,8 @@ export function useCustomers() {
       if (response.ok) {
         const data = await response.json();
         setCustomers(data.customers || []);
-        return data.customers
+        setTotalPages(data.pages || 1);
+        return data.customers;
       } else {
         toast({
           title: "Error",
@@ -53,9 +79,16 @@ export function useCustomers() {
     }
   };
 
+  // Handle filter changes - memoize this function
+  const handleFilterChange = useCallback((newFilters: any) => {
+    setFilters(newFilters);
+    fetchCustomers(1, limit, newFilters); // Reset to page 1 when filters change
+  }, [limit]);
+
+  // Only fetch on page/limit changes, not on filters (filters are handled by handleFilterChange)
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    fetchCustomers(page, limit, filters);
+  }, [page, limit]);
 
   const addNewCustomerHandler = async () => {
     const url = `${import.meta.env.REACT_APP_API_URL}/customer/`;  
@@ -66,8 +99,6 @@ export function useCustomers() {
         body: JSON.stringify(formData),
       });
       const res_data = await response.json();
-      console.log(`Response Data from server after Customer create: `);
-      console.log(res_data);
 
       if (response.ok) {
         toast({
@@ -83,8 +114,7 @@ export function useCustomers() {
         });
 
         fetchCustomers();
-        setFormData({})
-        // TODO: close the model
+        setFormData({});
         return true;
       } else {
         toast({
@@ -106,54 +136,52 @@ export function useCustomers() {
 
   const updateCustomerHandler = async () => {
     try {
-      console.log(`After updateHandler Call`)
-      console.log(formData);
       if (!formData._id) {
-      toast({
-        title: "Error",
-        description: "No customer selected for update",
-        variant: "destructive",
-      });
-      return false;
+        toast({
+          title: "Error",
+          description: "No customer selected for update",
+          variant: "destructive",
+        });
+        return false;
       }
       const response = await fetch(
-      `${import.meta.env.REACT_APP_API_URL}/customer/${formData._id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(formData),
-      }
+        `${import.meta.env.REACT_APP_API_URL}/customer/${formData._id}`,
+        {
+          method: "PATCH",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(formData),
+        }
       );
       const res_data = await response.json();
       if (response.ok) {
-      toast({
-        title: "Success",
-        description: "Customer updated successfully",
-      });
+        toast({
+          title: "Success",
+          description: "Customer updated successfully",
+        });
 
-      // Add notification for successful customer update
-      addNotification({
-        title: 'Customer Updated',
-        message: `Customer "${formData.name}" has been successfully updated.`,
-        type: 'success'
-      });
+        // Add notification for successful customer update
+        addNotification({
+          title: 'Customer Updated',
+          message: `Customer "${formData.name}" has been successfully updated.`,
+          type: 'success'
+        });
 
-      fetchCustomers();
-      setFormData({});
-      return true;
+        fetchCustomers();
+        setFormData({});
+        return true;
       } else {
-      toast({
-        title: "Error",
-        description: `Failed to update Customer: ${res_data.msg}`,
-        variant: "destructive",
-      });
-      return false;
+        toast({
+          title: "Error",
+          description: `Failed to update Customer: ${res_data.msg}`,
+          variant: "destructive",
+        });
+        return false;
       }
     } catch (error) {
       toast({
-      title: "Error",
-      description: "Failed to update Customer",
-      variant: "destructive",
+        title: "Error",
+        description: "Failed to update Customer",
+        variant: "destructive",
       });
       return false;
     }
@@ -203,6 +231,13 @@ export function useCustomers() {
     deleteCustomer,
     addNewCustomerHandler,
     formData,
-    setFormData
+    setFormData,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    handleFilterChange,
+    filters,
   };
 }

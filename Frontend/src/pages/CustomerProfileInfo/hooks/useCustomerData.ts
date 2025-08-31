@@ -14,6 +14,8 @@ export interface Customer {
   status: 'due' | 'paid' | 'overdue';
   lastSalesDate: string;
   lastPaymentDate: string;
+  creditLimitAmount?: Number;
+  creditTimePeriodInDays?: Number;
 }
 
 export interface PaymentHistory {
@@ -45,9 +47,40 @@ export const useCustomerData = (companyID: string | undefined, customerID: strin
   const [salesHistory, setSalesHistory] = useState<SalesHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingCredit, setUpdatingCredit] = useState(false);
+  const [creditError, setCreditError] = useState<string | null>(null);
+
+  // Update credit limit and time period for customer
+  const updateCustomerCreditLimit = async (creditLimitAmount: number, creditTimePeriodInDays: number) => {
+    if (!customerID) return;
+    setUpdatingCredit(true);
+    setCreditError(null);
+    console.log('Customer ID inside the updateCustomerCreditLimit is: ', customerID);
+    try {
+      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/customer/${customerID}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ creditLimitAmount, creditTimePeriodInDays }),
+      });
+      if (!response.ok) throw new Error('Failed to update credit limit');
+      setCustomer((prev) => prev ? { ...prev, creditLimitAmount, creditTimePeriodInDays } : prev);
+      setUpdatingCredit(false);
+      return true;
+    } catch (err) {
+      setCreditError(err instanceof Error ? err.message : 'An error occurred');
+      setUpdatingCredit(false);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const fetchCustomerData = async () => {
+      // for debugging:
+      console.log("fetch customer data request received.");
+
       if (!companyID || !customerID) {
         setError('Company ID or Customer ID is missing');
         setLoading(false);
@@ -68,6 +101,8 @@ export const useCustomerData = (companyID: string | undefined, customerID: strin
 
         const data = await response.json();
 
+        console.log('After fetching One Customer Data: ', data.customer);
+
         if (data.success && data.customer) {
           const customerData = data.customer;
           setCustomer({
@@ -82,7 +117,9 @@ export const useCustomerData = (companyID: string | undefined, customerID: strin
             prevClosingBalance: customerData.prevClosingBalance,
             status: customerData.status,
             lastSalesDate: customerData.lastSaleDate || '',
-            lastPaymentDate: customerData.lastPaymentDate || ''
+            lastPaymentDate: customerData.lastPaymentDate || '',
+            creditLimitAmount: customerData.creditLimitAmount || null,
+            creditTimePeriodInDays: customerData.creditTimePeriodInDays || null
           });
 
           // Fetch payment and sales data in parallel
@@ -160,5 +197,64 @@ export const useCustomerData = (companyID: string | undefined, customerID: strin
     fetchCustomerData();
   }, [companyID, customerID]);
 
-  return { customer, paymentHistory, salesHistory, loading, error };
+  // const addNewFinacialDocumentHandler = async () => {
+  //   const url = `${import.meta.env.REACT_APP_API_URL}/financial-documents`;  
+  //   try {
+  //     const form = new FormData();
+  //     // Append all fields to FormData
+  //     for (const key in formData) {
+  //       if (formData[key] !== undefined && formData[key] !== null) {
+  //         form.append(key, formData[key]);
+  //       }
+  //     }
+  //     const response = await fetch(url, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         "X-Role": localStorage.getItem("role") || "",
+  //         // Do NOT set Content-Type, browser will set it for FormData
+  //       },
+  //       body: form,
+  //     });
+  //     const res_data = await response.json();
+  //     console.log(`Response Data from server after admin create: `);
+  //     console.log(res_data);
+
+  //     if (response.ok) {
+  //       toast({
+  //         title: "Success",
+  //         description: `Admin Created Successfully.`,
+  //       });
+  //       fetchAdmins();
+  //       setFormData({})
+  //       // TODO: close the model
+  //       return true;
+  //     } else {
+  //       toast({
+  //         title: "Error",
+  //         description: `Failed to create admin: ${res_data.msg}`,
+  //         variant: "destructive",
+  //       });
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to create admin",
+  //       variant: "destructive",
+  //     });
+  //     return false;
+  //   }
+  // };
+
+  return {
+    customer,
+    paymentHistory,
+    salesHistory,
+    loading,
+    error,
+    updateCustomerCreditLimit,
+    updatingCredit,
+    creditError,
+  };
 };

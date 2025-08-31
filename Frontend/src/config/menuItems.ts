@@ -1,3 +1,4 @@
+import { BiSolidBellRing } from "react-icons/bi";
 import {
   FaHome,
   FaUserShield,
@@ -32,6 +33,7 @@ import {
   FaHandHoldingUsd,
   FaCalendarCheck,
   FaShieldAlt,
+  FaSlidersH,
 } from "react-icons/fa";
 
 export const allMenuItems = [
@@ -162,11 +164,43 @@ export const allMenuItems = [
   },
   {
     section: "OPERATIONS",
+    title: "Attachments",
+    path: "/attachments",
+    icon: FaFileContract, // Using document icon for attachments
+    color: "bg-blue-700", // Blue for document management
+    countKey: "attachments",
+  },
+  {
+    section: "OPERATIONS",
+    title: "Item Configuration",
+    path: "/configuration",
+    icon: FaSlidersH, // Using document icon for attachments
+    color: "bg-blue-700", // Blue for document management
+  },
+  {
+    section: "OPERATIONS",
     title: "Fiscal Year",
     path: "/fiscalyear",
     icon: FaCalendarCheck, // Changed from FaCalendarAlt to FaCalendarCheck for fiscal year
     color: "bg-teal-600", // Changed to teal for fiscal/time-based operations
   },
+  {
+    section: "RESOURCES",
+    title: "Excel Templates",
+    path: "/download-templates",
+    icon: FaFileContract, // Changed to document icon for templates
+    color: "bg-blue-600", // Blue for resources/documents
+    countKey: "templates",
+  },
+  {
+    section: "OTHERS",
+    title: "Subcription Plans",
+    path: "/subscription-available",
+    icon: FaGift, // Using gift icon for available subscription plans
+    color: "bg-purple-600", // Purple for promotional/available plans
+    countKey: "availablePlans",
+  },
+
   {
     section: "SYSTEM",
     title: "Permission",
@@ -176,17 +210,16 @@ export const allMenuItems = [
   },
   {
     section: "SYSTEM",
+    title: "Notifications",
+    path: "/notifications",
+    icon: BiSolidBellRing,
+     // Darkened gray
+  },
+  {
+    section: "SYSTEM",
     title: "Settings",
     path: "/settings",
     icon: FaCog,
-    color: "bg-gray-600" // Darkened gray
-  },
-  {
-    section: "OTHERS",
-    title: "Subcription Plans",
-    path: "/subscription-available",
-    icon: FaGift, // Using gift icon for available subscription plans
-    color: "bg-purple-600", // Purple for promotional/available plans
-    countKey: "availablePlans",
+     // Darkened gray
   },
 ];

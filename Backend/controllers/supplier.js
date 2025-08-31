@@ -2,7 +2,7 @@ const Supplier = require('../models/Supplier');
 const Company = require('../models/company');
 const mongoose = require('mongoose');
 const { StatusCodes } = require('http-status-codes');
-const { BadRequestError, NotFoundError } = require('../errors');
+const { BadRequestError, notFoundError } = require('../errors');
 
 // Define supplier-related functions
 const createSupplier = async (req, res) => {
@@ -124,7 +124,7 @@ const getSupplier = async (req, res) => {
   const supplier = await Supplier.findOne({ _id: supplierID });
 
   if (!supplier) {
-    throw new NotFoundError(`No Supplier Found.`);
+    throw new notFoundError(`No Supplier Found.`);
   }
 
   res.status(StatusCodes.OK).json({ supplier });
@@ -148,7 +148,7 @@ const updateSupplier = async (req, res) => {
   );
 
   if (!supplier) {
-    throw new NotFoundError(`No Supplier Found with id: ${supplierID}`);
+    throw new notFoundError(`No Supplier Found with id: ${supplierID}`);
   }
   res.status(StatusCodes.OK).json({ supplier });
 };
@@ -162,7 +162,7 @@ const deleteSupplier = async (req, res) => {
   const supplier = await Supplier.findOneAndDelete({ _id: supplierID });
 
   if (!supplier) {
-    throw new NotFoundError(`No Supplier Found with id: ${supplierID}`);
+    throw new notFoundError(`No Supplier Found with id: ${supplierID}`);
   }
   res.status(StatusCodes.OK).json({ msg: 'Success! Supplier removed.' });
 };

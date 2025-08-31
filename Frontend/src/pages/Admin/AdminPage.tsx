@@ -13,6 +13,30 @@ const columns = [
   { key: "email", label: "Email", sortable: true },
   { key: "phoneNo", label: "Phone", sortable: true },
   { key: "subsName", label: "Subscription", sortable: true },
+  { key: "mode", 
+    label: "Accounting Mode", 
+    sortable: true,
+    render: (value: string) => (
+      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <label>
+          <input
+            type="checkbox"
+            checked={value === "computerized"}
+            readOnly
+          />{" "}
+          Computerized
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={value === "manual"}
+            readOnly
+          />{" "}
+          Manual
+        </label>
+      </div>
+    )
+  },
   { 
     key: "isVerified", 
     label: "Verified", 

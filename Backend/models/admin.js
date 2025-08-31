@@ -40,6 +40,11 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide subscription name"],
   },
+  mode: {
+    type: String,
+    enum: ['manual', 'computerized'],
+    required: [true, "Please provide Mode of System Usage"],
+  },
   superadminID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Superadmin",

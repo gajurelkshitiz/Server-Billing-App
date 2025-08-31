@@ -31,17 +31,28 @@ const customerRouter = require('./routes/customer');
 const supplierRouter = require('./routes/supplier');
 const purchaseEntryRouter = require('./routes/purchaseEntry');
 const salesEntryRouter = require('./routes/salesEntry');
+const computerizedSalesEntryRouter = require('./routes/computerizedSalesEntry');
 const dueRouter = require('./routes/dueList');
 const paymentRouter = require('./routes/paymentList');
 const adminCountRouter = require('./routes/Dashboard Counts/adminDashboardCounts')
 const userCountRouter = require('./routes/Dashboard Counts/userDashboardCounts')
 const superadminCountRouter = require('./routes/Dashboard Counts/superadminDashboardCounts')
+const financialDocumentsRouter = require('./routes/CustomerFinancialDocument')
+const companyAttachmentRoutes = require('./routes/companyAttachment');
+const itemConfigRoutes = require('./routes/itemConfiguration')
 
 const salesSummaryRouter = require('./routes/salesSummary');
 const purchaseSummaryRouter = require('./routes/purchaseSummary');
 
+// ledger creation
+const ledgerCreationRouter = require('./routes/ledgerRoutes');
+
 //database Export
 const fullDatabaseExportRouter = require('./routes/superadminDatabaseExport')
+const adminDatabaseExportRouter = require('./routes/adminDatabaseExport')
+
+// invoice Generate
+const salesInvoiceRoutes = require('./routes/salesInvoice');
 
 
 // importing error handling middlewares
@@ -70,21 +81,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Add specific route for uploads
 // app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-app.use(cors(
-  { 
-    origin: [
-      'http://localhost:8080' , 
-      "http://127.0.0.1:8080", 
-      "http://202.51.3.168:5001",
-      'https://localhost:8080',  // Add HTTPS variant
-      'https://127.0.0.1:8080'   // Add HTTPS variant
-    ]
-  }
-));
-// app.use(cors());
+// app.use(cors(
+//   { 
+//     origin: [
+//       'http://localhost:8080' , 
+//       "http://127.0.0.1:8080", 
+//       "http://202.51.3.168:5001",
+//       'https://localhost:8080',  // Add HTTPS variant
+//       'https://127.0.0.1:8080'   // Add HTTPS variant
+//     ]
+//   }
+// ));
+app.use(cors());
 app.use(xss());
 
 // routes
+const notificationRouter = require('./routes/notification');
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/subscription", authenticationMiddleware, subscriptionRouter);
 app.use("/api/v1/admin", authenticationMiddleware, adminRouter);
@@ -96,16 +108,28 @@ app.use('/api/v1/customer', authenticationMiddleware, customerRouter);
 app.use('/api/v1/supplier', authenticationMiddleware, supplierRouter);
 app.use('/api/v1/purchaseEntry', authenticationMiddleware, purchaseEntryRouter);
 app.use('/api/v1/salesEntry', authenticationMiddleware, salesEntryRouter);
+app.use('/api/v1/computerizedSalesEntry', authenticationMiddleware, computerizedSalesEntryRouter);
 app.use('/api/v1/due', authenticationMiddleware, dueRouter);
 app.use('/api/v1/payment', authenticationMiddleware, paymentRouter);
 app.use('/api/v1/adminCount', authenticationMiddleware, adminCountRouter)
 app.use('/api/v1/userCount', authenticationMiddleware, userCountRouter)
 app.use('/api/v1/superadminCount', authenticationMiddleware, superadminCountRouter)
+app.use('/api/v1/financial-documents', authenticationMiddleware, financialDocumentsRouter);
+app.use('/api/v1/company-attachments', authenticationMiddleware, companyAttachmentRoutes);
+app.use('/api/v1/item-configuration', authenticationMiddleware, itemConfigRoutes);
 
 app.use('/api/v1/sales', authenticationMiddleware, salesSummaryRouter)
 app.use('/api/v1/purchase', authenticationMiddleware, purchaseSummaryRouter)
 
 app.use('/api/v1/databaseExport', authenticationMiddleware, fullDatabaseExportRouter)
+// app.use('/api/v1/admin-database-export', authenticationMiddleware, adminDatabaseExportRouter)
+// app.use('/api/v1/admin-database-export', adminDatabaseExportRouter)
+
+app.use('/api/v1/ledger', ledgerCreationRouter);
+
+app.use('/api/v1/notifications', authenticationMiddleware, notificationRouter);
+
+app.use('/api', salesInvoiceRoutes);
 
 
 // for client's real IP:

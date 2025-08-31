@@ -68,40 +68,43 @@ const DataTable: React.FC<DataTableProps> = ({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/30">
-              <tr className="border-b border-border/40">
-                {columns.map((column) => (
-                  <th 
+        <thead className="bg-muted/30">
+          <tr className="border-b border-border/40">
+            {columns.map((column) => (
+          <th 
+            key={column.key} 
+            className="text-left py-4 px-6 font-semibold text-sm text-muted-foreground uppercase tracking-wide"
+            style={{ width: column.width }}
+          >
+            {column.header}
+          </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/40">
+          {data.map((row, index) => (
+            <tr 
+              key={row._id ? String(row._id) : String(index)} 
+              className="hover:bg-muted/20 transition-colors duration-150"
+            >
+              {columns.map((column) => {
+                const cellValue = row[column.key];
+                return (
+                  <td 
                     key={column.key} 
-                    className="text-left py-4 px-6 font-semibold text-sm text-muted-foreground uppercase tracking-wide"
-                    style={{ width: column.width }}
+                    className={`py-4 px-6 text-sm ${column.className || ''}`}
                   >
-                    {column.header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40">
-              {data.map((row, index) => (
-                <tr 
-                  key={row.id || index} 
-                  className="hover:bg-muted/20 transition-colors duration-150"
-                >
-                  {columns.map((column) => (
-                    <td 
-                      key={column.key} 
-                      className={`py-4 px-6 text-sm ${column.className || ''}`}
-                    >
-                      {column.render ? column.render(row[column.key], row) : (
-                        <span className="text-foreground">
-                          {row[column.key] || '-'}
-                        </span>
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
+                    {column.render ? column.render(cellValue, row) : (
+                      <span className="text-foreground">
+                        {cellValue || '-'}
+                      </span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
           </table>
         </div>
       </CardContent>

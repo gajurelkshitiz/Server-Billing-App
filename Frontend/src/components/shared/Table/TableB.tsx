@@ -15,6 +15,7 @@ type Props = {
   showVerificationAction?: boolean;
   handleSendVerification?: (row: any) => Promise<void>;
   verificationLoading?: Set<string | number>; // Track which rows are loading
+  rowActions?: (row: any) => React.ReactNode;
 };
 
 const TableB = (props: Props) => {
@@ -27,7 +28,8 @@ const TableB = (props: Props) => {
     previewAltText,
     showVerificationAction = false,
     handleSendVerification,
-    verificationLoading = new Set()
+    verificationLoading = new Set(),
+    rowActions,
   } = props;
 
   // Add debug log
@@ -109,33 +111,38 @@ const TableB = (props: Props) => {
                     </Button>
                   )}
 
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      console.log("Edit row:", row);
-                      handleEdit(row);
-                    }}
-                    className="text-blue-600 hover:text-blue-800 w-full sm:w-auto justify-start"
-                  >
-                    <Edit size={16} />
-                  </Button>
+                  {/* Use custom row actions if provided, otherwise show default Edit/Delete */}
+                  {rowActions ? (
+                    rowActions(row)
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          console.log("Edit row:", row);
+                          handleEdit(row);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 w-full sm:w-auto justify-start"
+                      >
+                        <Edit size={16} />
+                      </Button>
 
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          console.log("Delete row:", row);
+                          handleDelete(row);
+                        }}
+                        className="text-red-600 hover:text-red-800 w-full sm:w-auto justify-start"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </>
+                  )}
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      console.log("Delete row:", row);
-                      handleDelete(row);
-                    }}
-                    className="text-red-600 hover:text-red-800 w-full sm:w-auto justify-start"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                  
-                  
+
                 </div>
               </td>
             </tr>

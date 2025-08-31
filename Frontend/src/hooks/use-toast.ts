@@ -8,11 +8,16 @@ import type {
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
+// Add this type definition after the existing imports
+type ToastVariant = "default" | "destructive" | "success" | "warning";
+
+// Update the ToasterToast type to include variant
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: ToastVariant  // Add this line
 }
 
 const actionTypes = {

@@ -15,6 +15,7 @@ const salesEntrySchema = new mongoose.Schema({
   },
   date: {
     type: Date,
+    // type: String,  // this is a fix for "sharwan-32.."
     required: [true, "Please provide a date"],
   },
   amount:{

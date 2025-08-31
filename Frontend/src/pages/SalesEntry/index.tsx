@@ -12,7 +12,18 @@ import ImportPreview from "@/components/ImportPreview/ImportPreview";
 
 interface ImportRow {
   index: number;
-  data: any;
+  data: {
+    CustomerName: string;
+    Bill_No: string;
+    Bill_Date: string;
+    Amount: number;
+    Item_Description: string;
+    Net_Total_Amount: number;
+    Bill_Attachment: string;
+    Discount?: number;
+    Discount_Type?: string;
+    VAT?: number;
+  };
   isValid: boolean;
   errors: string[];
 }
@@ -28,6 +39,24 @@ const SalesEntryPage = () => {
     addNewSalesEntryHandler,
     formData,
     setFormData,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    handleFilterChange, // Add this
+    filters, // Add this
+    // fetchSalesEntries, // Add fetchSalesEntries here
+    isImportPreviewOpen,
+    setIsImportPreviewOpen,
+    importRows,
+    setImportRows,
+    importLoading,
+    // setImportLoading,
+    // currentFile,
+    setCurrentFile,
+    handleImportPreview,
+    handleImportConfirm,
   } = useSalesEntry();
 
   const { state, dispatch }: CompanyContextType = useCompanyStateGlobal();
@@ -41,10 +70,8 @@ const SalesEntryPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSalesEntry, setEditingSalesEntry] = useState<boolean>(false);
-  const [isImportPreviewOpen, setIsImportPreviewOpen] = useState(false);
-  const [importRows, setImportRows] = useState<ImportRow[]>([]);
-  const [importLoading, setImportLoading] = useState(false);
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  // const [importLoadingLocal, setImportLoadingLocal] = useState(false);
+  // const [currentFileLocal, setCurrentFileLocal] = useState<File | null>(null);
   const { toast } = useToast();
 
   const handleAdd = () => {
@@ -105,189 +132,78 @@ const SalesEntryPage = () => {
     }
   };
 
-  const validateRowData = (data: any, index: number, allRows: any[]): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-    
-    // Map Excel column names to expected field names
-    const billNo = data.Bill_No || data.billNo;
-    const customerName = data.CustomerName || data.customerName;
-    const amount = data.Amount || data.amount;
-    
-    // Basic validation
-    if (!billNo || billNo.toString().trim() === '') {
-      errors.push('Bill number is required');
-    }
-    
-    if (!customerName || customerName.toString().trim() === '') {
-      errors.push('Customer name is required');
-    }
-    
-    if (!amount || isNaN(parseFloat(amount))) {
-      errors.push('Valid amount is required');
-    }
-    
-    // Check for duplicate bill numbers in existing sales entries
-    if (billNo) {
-      const isDuplicateInSystem = salesEntries.some(entry => 
-        entry.billNo === billNo.toString().trim()
-      );
-      if (isDuplicateInSystem) {
-        errors.push('Bill number already exists in the system');
-      }
-
-      // Check for duplicate bill numbers within the imported data itself
-      // Only mark as duplicate if this is NOT the first occurrence
-      const firstOccurrenceIndex = allRows.findIndex((row, rowIndex) => {
-        const rowBillNo = row.Bill_No || row.billNo;
-        return rowBillNo && rowBillNo.toString().trim() === billNo.toString().trim();
-      });
-      
-      if (firstOccurrenceIndex !== -1 && firstOccurrenceIndex !== index) {
-        errors.push('Bill number is duplicated within the import file');
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Replace the existing validateRowData function with backend validation
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    setCurrentFile(file);
-    setImportLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const baseUrl = `${import.meta.env.REACT_APP_API_URL}/salesEntry/import/excel`;
-      const role = localStorage.getItem("role");
-      const isAdmin = role === "admin";
-      const companyID = localStorage.getItem('companyID');
-
-      // Add preview parameter
-      let url = `${baseUrl}?preview=true`;
-      if (isAdmin && companyID) {
-        url += `&companyID=${encodeURIComponent(companyID)}`;
-      }
-
-      console.log('Making request to:', url);
-
-      const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "X-Role": localStorage.getItem("role") || "",
-        },
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Preview failed: ${response.status} - ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('Preview result:', result);
-      
-      // Check if result has the expected structure
-      if (!result.data || !Array.isArray(result.data)) {
-        throw new Error("Invalid response format - expected data array");
-      }
-      
-      // Process the data and validate each row - pass all rows for duplicate checking
-      const processedRows: ImportRow[] = result.data.map((rowData: any, index: number) => {
-        const validation = validateRowData(rowData, index, result.data);
-        return {
-          index,
-          data: rowData,
-          isValid: validation.isValid,
-          errors: validation.errors
-        };
-      });
-
-      console.log('Processed rows with validation:', processedRows);
-      setImportRows(processedRows);
-      setIsImportPreviewOpen(true);
-    } catch (error) {
-      console.error('Full error details:', error);
-      toast({
-        title: "Preview Failed",
-        description: error instanceof Error ? error.message : "There was an error processing the file.",
-        variant: "destructive",
-      });
-    } finally {
-      setImportLoading(false);
-    }
+    if (file) handleImportPreview(file);
   };
 
-  const handleImportConfirm = async (importType: 'all' | 'partial') => {
-    if (!currentFile) return;
+  // const handleImportConfirmLocal = async (importType: 'all' | 'partial') => {
+  //   try {
+  //     if (!currentFileLocal) return;
 
-    setImportLoading(true);
-    
-    try {
-      const formData = new FormData();
-      formData.append("file", currentFile);
+  //     setImportLoadingLocal(true);
       
-      if (importType === 'partial') {
-        const validRows = importRows.filter(row => row.isValid);
-        console.log('validRows inside partially correct form data: ', validRows);
-        formData.append("rowIndexes", JSON.stringify(validRows.map(row => row.index)));
-
-        console.log('for partial submission formData is: ', formData);
-      }
-
-      const baseUrl = `${import.meta.env.REACT_APP_API_URL}/salesEntry/import/excel`;
-      const role = localStorage.getItem("role");
-      const isAdmin = role === "admin";
-      const companyID = localStorage.getItem('companyID');
-
-      // Remove preview parameter for actual import
-      let url = baseUrl;
-      if (isAdmin && companyID) {
-        url += `?companyID=${encodeURIComponent(companyID)}`;
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "X-Role": localStorage.getItem("role") || "",
-        },
-      });
-
-      if (!response.ok) throw new Error("Import failed");
-
-      const validCount = importType === 'all' ? importRows.length : importRows.filter(row => row.isValid).length;
+  //     const formData = new FormData();
+  //     formData.append("file", currentFileLocal);
       
-      toast({
-        title: "Import Successful",
-        description: `Successfully imported ${validCount} sales entries.`,
-      });
+  //     if (importType === 'partial') {
+  //       const validRows = importRows.filter(row => row.isValid);
+  //       console.log('validRows inside partially correct form data: ', validRows);
+  //       formData.append("rowIndexes", JSON.stringify(validRows.map(row => row.index)));
+
+  //       console.log('for partial submission formData is: ', formData);
+  //     }
+
+  //     const baseUrl = `${import.meta.env.REACT_APP_API_URL}/salesEntry/import/excel`;
+  //     const role = localStorage.getItem("role");
+  //     const isAdmin = role === "admin";
+  //     const companyID = localStorage.getItem('companyID');
+
+  //     // Remove preview parameter for actual import
+  //     let url = baseUrl;
+  //     if (isAdmin && companyID) {
+  //       url += `?companyID=${encodeURIComponent(companyID)}`;
+  //     }
+
+  //     const response = await fetch(url, {
+  //       method: "POST",
+  //       body: formData,
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         "X-Role": localStorage.getItem("role") || "",
+  //       },
+  //     });
+
+  //     const result = await response.json();
+  //     if (!response.ok) {
+  //       throw new Error(result.error || result.message || "Import failed");
+  //     }
+
+  //     // Refresh sales entries list
+  //     await fetchSalesEntries();  // Add this function from useSalesEntry hook
       
-      setIsImportPreviewOpen(false);
-      setCurrentFile(null);
-      setImportRows([]);
+  //     toast({
+  //       title: "Import Successful",
+  //       description: `Successfully imported ${result.imported} out of ${result.totalRows} entries.${
+  //         result.errors ? ` ${result.errors.length} errors occurred.` : ''
+  //       }`,
+  //     });
       
-    } catch (error) {
-      toast({
-        title: "Import Failed",
-        description: "There was an error importing the data.",
-        variant: "destructive",
-      });
-    } finally {
-      setImportLoading(false);
-    }
-  };
+  //     setIsImportPreviewOpen(false);
+  //     setCurrentFileLocal(null);
+  //     setImportRows([]);
+      
+  //   } catch (error) {
+  //     toast({
+  //       title: "Import Failed",
+  //       description: "There was an error importing the data.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setImportLoadingLocal(false);
+  //   }
+  // };
 
   return (
     <div className="space-y-6">
@@ -327,10 +243,17 @@ const SalesEntryPage = () => {
           handleAdd={handleAdd}
           handleEdit={handleEdit}
           handleDelete={handleDelete}
+          page={page}
+          setPage={setPage}
+          limit={limit}
+          setLimit={setLimit}
+          totalPages={totalPages}
+          onFilterChange={handleFilterChange} // Add this
+          currentFilters={filters} // Add this
         />
       )}
-
-      <SalesEntryFormModal
+      
+        <SalesEntryFormModal
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         formData={formData}
@@ -355,7 +278,45 @@ const SalesEntryPage = () => {
         onImportAll={() => handleImportConfirm('all')}
         onImportPartial={() => handleImportConfirm('partial')}
         loading={importLoading}
-        title="Sales Entry"
+        title="Sales Entry Import Preview"
+        columns={[
+          { 
+            header: 'Customer Name', 
+            accessor: (row: ImportRow) => row.data.CustomerName 
+          },
+          { 
+            header: 'Bill No', 
+            accessor: (row: ImportRow) => row.data.Bill_No 
+          },
+          { 
+            header: 'Date', 
+            accessor: (row: ImportRow) => row.data.Bill_Date 
+          },
+          { 
+            header: 'Amount', 
+            accessor: (row: ImportRow) => row.data.Amount.toString() 
+          },
+          { 
+            header: 'Description', 
+            accessor: (row: ImportRow) => row.data.Item_Description 
+          },
+          { 
+            header: 'Net Total', 
+            accessor: (row: ImportRow) => row.data.Net_Total_Amount.toString() 
+          },
+          { 
+            header: 'Attachment', 
+            accessor: (row: ImportRow) => row.data.Bill_Attachment 
+          },
+          {
+            header: 'Status',
+            accessor: (row: ImportRow) => row.isValid ? 'Valid' : 'Invalid'
+          },
+          {
+            header: 'Errors',
+            accessor: (row: ImportRow) => row.errors.join(', ')
+          }
+        ]}
       />
     </div>
   );

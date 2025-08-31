@@ -36,6 +36,8 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ role }) => {
       const fetchCompanies = async () => {
         setLoading(true);
         try {
+          // for debugging purpose:
+          console.log('before fetching company from fetchCompanies function');
           const response = await fetch(
             `${import.meta.env.REACT_APP_API_URL}/company/`,
             {

@@ -11,8 +11,8 @@ const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathH
 
 const createAdmin = async (req, res) => {
   console.log(req.body);
-  const { name, email, phoneNo, subsName } = req.body;
-  if (!name || !email || !phoneNo || !subsName) {
+  const { name, email, phoneNo, subsName, mode } = req.body;
+  if (!name || !email || !phoneNo || !subsName || !mode) {
     throw new BadRequestError("Please provide all values");
   }
 
@@ -38,6 +38,7 @@ const createAdmin = async (req, res) => {
     phoneNo,
     subsName,
     subsID,
+    mode,
     emailVerificationToken,
     emailVerificationTokenExpiresAt,
     isVerified: false,

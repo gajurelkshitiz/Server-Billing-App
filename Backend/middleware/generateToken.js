@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const genertateToken = (id, name, role, adminID = null, companyID = null) => {
+const genertateToken = (id, name, role, mode, adminID = null, companyID = null) => {
   const payload = {
     tokenID: id,
     name: name,
-    role: role
+    role: role,
+    mode: mode
   }
   // Add adminID and companyID for users
   if (role === "user" && adminID && companyID) {

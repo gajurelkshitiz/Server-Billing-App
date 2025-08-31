@@ -13,6 +13,7 @@ const authenticationMiddleware = async (req, res, next) => {
         tokenID: payload.tokenID,
         name: payload.name,
         role: payload.role,
+        mode: payload.mode,
         adminID: payload.adminID ?? null,
         companyID: payload.companyID ?? null,
       };

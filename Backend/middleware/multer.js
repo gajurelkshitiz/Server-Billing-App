@@ -22,7 +22,7 @@ const createDirectoryStructure = (adminID, adminName, companyID = null, companyN
     }
 
     // Create company subdirectories
-    const subdirs = ["sales", "purchase", "users", "imported_files", "company_assets"];
+    const subdirs = ["sales", "purchase", "users", "imported_files", "company_assets", "customers", "suppliers"];
     subdirs.forEach((subdir) => {
       const subdirPath = path.join(companyDir, subdir);
       if (!fs.existsSync(subdirPath)) {
@@ -38,6 +38,10 @@ const createDirectoryStructure = (adminID, adminName, companyID = null, companyN
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    //for debug:
+    console.log('Got the file object, doing necessary actions');
+    // ****------------
+    
     // For creation routes, store in a temporary upload folder
     if (req.method === 'POST' && !req.params.id) {
       const tempDir = path.join(__dirname, "../uploads/temp");
@@ -48,7 +52,9 @@ const storage = multer.diskStorage({
       return;
     }
 
-    // For updates, we have the entity info available
+
+
+    // For updates [PATCH], we have the entity info available
     const { tokenID, adminID, companyID, name } = req.user;
     const currentAdminID = adminID || tokenID;
     
@@ -75,6 +81,13 @@ const storage = multer.diskStorage({
         } else {
           subfolder = "purchase-bills";
         }
+      } else if (file.fieldname === "file") { // Add this new condition
+        targetDir = createDirectoryStructure(currentAdminID, name);
+        subfolder = "imported_files";
+      } else if (file.fieldname === "customerFinancialDocument") {
+        targetDir = createDirectoryStructure(currentAdminID, name);
+        subfolder = "customers"
+        // yaha ajhai dynamic banaunu chha, inside {{{ customer -> customer_customerID -> Financial_docs }}}
       } else {
         targetDir = path.join(__dirname, "../uploads/temp");
         subfolder = "misc";

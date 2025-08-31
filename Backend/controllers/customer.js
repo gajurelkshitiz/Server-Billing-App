@@ -2,11 +2,11 @@ const Customer = require('../models/Customer');
 const Company = require('../models/company');
 const mongoose = require('mongoose');
 const { StatusCodes } = require('http-status-codes');
-const { BadRequestError, NotFoundError } = require('../errors');
+const { BadRequestError, notFoundError } = require('../errors');
 
 // Create a new customer
 const createCustomer = async (req, res) => {
-  const { name, email, phoneNo, address, prevClosingBalance, panNo, status, companyID } = req.body;
+  const { name, email, phoneNo, address, prevClosingBalance, type, panNo, status, companyID, creditLimitAmount, creditTimePeriodInDays } = req.body;
   if (!name || !email || !phoneNo || !prevClosingBalance || !panNo || !address || !status || !companyID) {
     throw new BadRequestError('Please provide all values');
   }
@@ -37,7 +37,7 @@ const getAllCustomers = async (req, res) => {
 
 
   const customers = await Customer.find({ companyID: companyID }).sort('createdAt');
-  
+
   res.status(StatusCodes.OK).json({ customers, count: customers.length });
 };
 
@@ -116,7 +116,7 @@ const getCustomer = async (req, res) => {
   const customer = await Customer.findOne({ _id: customerID });
 
   if (!customer) {
-    throw new NotFoundError(`No Customer Found.`);
+    throw new notFoundError(`No Customer Found.`);
   }
 
   res.status(StatusCodes.OK).json({ customer });
@@ -124,13 +124,23 @@ const getCustomer = async (req, res) => {
 
 // Update a customer
 const updateCustomer = async (req, res) => {
+  console.log('Got a request to update a customer: ', req.body);
   const {
     params: { id: customerID },
-    body: { name, email, phoneNo, address, status },
+    body: { name, email, phoneNo, address, status, creditLimitAmount, creditTimePeriodInDays },
   } = req;
 
-  if (name === '' || email === '' || phoneNo === '' || address === '' || status === undefined) {
-    throw new BadRequestError('All fields cannot be empty');
+  // Remove or relax this check:
+  if (
+    ('name' in req.body && req.body.name === '') ||
+    ('email' in req.body && req.body.email === '') ||
+    ('phoneNo' in req.body && req.body.phoneNo === '') ||
+    ('address' in req.body && req.body.address === '') ||
+    ('creditLimitAmount' in req.body && req.body.creditLimitAmount === null) ||
+    ('creditTimePeriodInDays' in req.body && req.body.creditTimePeriodInDays === null) ||
+    ('status' in req.body && req.body.status === undefined)
+  ) {
+    throw new BadRequestError('Fields cannot be empty');
   }
 
   const customer = await Customer.findOneAndUpdate(
@@ -140,7 +150,7 @@ const updateCustomer = async (req, res) => {
   );
 
   if (!customer) {
-    throw new NotFoundError(`No Customer Found with id: ${customerID}`);
+    throw new notFoundError(`No Customer Found with id: ${customerID}`);
   }
   res.status(StatusCodes.OK).json({ customer });
 };
@@ -153,7 +163,7 @@ const deleteCustomer = async (req, res) => {
 
   const customer = await Customer.findOneAndDelete({ _id: customerID });
   if (!customer) {
-    throw new NotFoundError(`No Customer Found with id: ${customerID}`);
+    throw new notFoundError(`No Customer Found with id: ${customerID}`);
   }
   res.status(StatusCodes.OK).send();
 };

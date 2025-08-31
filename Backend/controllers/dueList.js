@@ -4,131 +4,255 @@ const PurchaseEntry = require('../models/PurchaseEntry');
 const Customer = require('../models/Customer');
 const CustomerPayment = require('../models/CustomerPayment');
 const SalesEntry = require('../models/salesEntry');
+const ComputerizedSalesEntry = require('../models/computerizedSalesEntry')
+const User = require('../models/user')
+const Admin = require('../models/admin')
 
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
+const { BadRequestError } = require('../errors');
 
-// list all the purchase entry for a supplier:
-const getPurchaseDuesList = async (req, res) => {
-    console.log(req.query);
-    try {
-        const { supplierID, companyID } = req.query;
-        const entries = await PurchaseEntry.find({
-            $and: [
-            { supplierID: new ObjectId(supplierID) },
-            { companyID: new ObjectId(companyID) }
-            ]
-        });
-        res.json(entries);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching Purchase dues List', error });
-    }
-};
+// // list all the purchase entry for a supplier:
+// const getPurchaseDuesList = async (req, res) => {
+//     console.log(req.query);
+//     try {
+//         const { supplierID, companyID } = req.query;
+//         const entries = await PurchaseEntry.find({
+//             $and: [
+//             { supplierID: new ObjectId(supplierID) },
+//             { companyID: new ObjectId(companyID) }
+//             ]
+//         });
+//         res.json(entries);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error fetching Purchase dues List', error });
+//     }
+// };
 
 // get summary for a supplier:
-const getPurchaseDuesSummary = async (req, res) => {
-  try {
-    const { customerID, companyID } = req.query;
+// const getPurchaseDuesSummary = async (req, res) => {
+//   try {
+//     const { customerID, companyID } = req.query;
 
-    // Validate ObjectIds
-    if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
-      return res.status(400).json({ message: 'Invalid customerID or companyID' });
-    }
+//     // Validate ObjectIds
+//     if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
+//       return res.status(400).json({ message: 'Invalid customerID or companyID' });
+//     }
 
-    const result = await SalesEntry.aggregate([
-      {
-        $match: {
-          $and: [
-            { customerID: new ObjectId(customerID) },
-            { companyID: new ObjectId(companyID) }
-          ]
-        }
-      },
-      {
-        $group: {
-          _id: "$customerID",
-          totalAmount: { $sum: "$amount" },
-          totalDueAmount: { $sum: "$dueAmount" }
-        }
-      }
-    ]);
+//     const result = await SalesEntry.aggregate([
+//       {
+//         $match: {
+//           $and: [
+//             { customerID: new ObjectId(customerID) },
+//             { companyID: new ObjectId(companyID) }
+//           ]
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: "$customerID",
+//           totalAmount: { $sum: "$amount" },
+//           totalDueAmount: { $sum: "$dueAmount" }
+//         }
+//       }
+//     ]);
 
-    // Return summary or fallback empty
-    res.json(result[0] || {
-      _id: customerID,
-      totalAmount: 0,
-      totalDueAmount: 0
-    });
-  } catch (error) {
-    console.error("Aggregation Error:", error);
-    res.status(500).json({ message: 'Error getting sales dues summary', error });
-  }
-};
+//     // Return summary or fallback empty
+//     res.json(result[0] || {
+//       _id: customerID,
+//       totalAmount: 0,
+//       totalDueAmount: 0
+//     });
+//   } catch (error) {
+//     console.error("Aggregation Error:", error);
+//     res.status(500).json({ message: 'Error getting sales dues summary', error });
+//   }
+// };
 
 
 
 // list all the sales entry for a customer:
 const getSalesDuesList = async (req, res) => {
-    console.log(req.query);
     try {
         const { customerID, companyID } = req.query;
-        const entries = await SalesEntry.find({
-            $and: [
-            { customerID: new ObjectId(customerID) },
-            { companyID: new ObjectId(companyID) }
-            ]
-        });
+        const userRole = req.user.role;
+        const userID = req.user.tokenID;
+
+        // Get user to determine mode
+        let user;
+        if (userID && userRole === 'admin') {
+            user = await Admin.findOne({ _id: userID });
+        } else if (userID && userRole === 'user') {
+            user = await User.findOne({ _id: userID });
+        }
+
+        if (!user) {
+            throw new BadRequestError('User Not Found');
+        }
+
+        const userMode = user.mode;
+        console.log(`Sales dues list - User mode: ${userMode}`);
+
+        // Validate ObjectIds
+        if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
+            return res.status(400).json({ message: 'Invalid customerID or companyID' });
+        }
+
+        // Use aggregation to get sales entries with proper ObjectId conversion
+        const collection = userMode === 'computerized' ? ComputerizedSalesEntry : SalesEntry;
+        
+        let entries;
+        
+        if (userMode === 'computerized') {
+            // For computerized entries, use aggregation with ObjectId conversion
+            entries = await ComputerizedSalesEntry.aggregate([
+                {
+                    $match: {
+                        $expr: {
+                            $and: [
+                                { $eq: [{ $toObjectId: '$customerID' }, new mongoose.Types.ObjectId(customerID)] },
+                                { $eq: ['$companyID', new mongoose.Types.ObjectId(companyID)] }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        // Map computerized fields to expected frontend structure
+                        billNo: '$invoiceNo',
+                        amount: '$total',
+                        netTotalAmount: '$grandTotal',
+                        vat: '$vat',
+                        discount: '$discount',
+                        discountType: '$discountType',
+                        itemDescription: {
+                            $reduce: {
+                                input: '$items',
+                                initialValue: '',
+                                in: {
+                                    $concat: [
+                                        '$$value',
+                                        { $cond: [{ $eq: ['$$value', ''] }, '', ', '] },
+                                        '$$this.description'
+                                    ]
+                                }
+                            }
+                        },
+                        billAttachment: { $ifNull: ['$attachment', null] }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        date: 1,
+                        billNo: 1,
+                        amount: 1,
+                        netTotalAmount: 1,
+                        vat: 1,
+                        discount: 1,
+                        discountType: 1,
+                        itemDescription: 1,
+                        billAttachment: 1,
+                        customerID: 1,
+                        companyID: 1,
+                        createdAt: 1,
+                        updatedAt: 1
+                    }
+                },
+                {
+                    $sort: { date: -1 }
+                }
+            ]);
+        } else {
+            // For regular entries, use direct find with ObjectId conversion
+            entries = await SalesEntry.find({
+                customerID: new ObjectId(customerID),
+                companyID: new ObjectId(companyID)
+            }).sort({ date: -1 });
+        }
+
+        console.log(`Found ${entries.length} sales entries for customer ${customerID}`);
+        
         res.json(entries);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching Sales dues List', error });
+        console.error('Error fetching Sales dues List:', error);
+        res.status(500).json({ 
+            message: 'Error fetching Sales dues List', 
+            error: error.message 
+        });
     }
 };
 
 // get summary for a customer:
-const getSalesDuesSummary = async (req, res) => {
-  try {
-    const { customerID, companyID } = req.query;
+// const getSalesDuesSummary = async (req, res) => {
+//   try {
+//     const { customerID, companyID } = req.query;
+//     const userMode = req.user?.mode;
 
-    // Validate ObjectIds
-    if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
-      return res.status(400).json({ message: 'Invalid customerID or companyID' });
-    }
+//     // Validate ObjectIds
+//     if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
+//       return res.status(400).json({ message: 'Invalid customerID or companyID' });
+//     }
 
-    const result = await SalesEntry.aggregate([
-      {
-        $match: {
-          $and: [
-            { customerID: new ObjectId(customerID) },
-            { companyID: new ObjectId(companyID) }
-          ]
-        }
-      },
-      {
-        $group: {
-          _id: "$customerID",
-          totalAmount: { $sum: "$amount" },
-          totalDueAmount: { $sum: "$dueAmount" }
-        }
-      }
-    ]);
+//     const Model = userMode === 'computerized' 
+//       ? ComputerizedSalesEntry // Adjust path as needed
+//       : SalesEntry;
+      
+//     const amountField = userMode === 'computerized' ? 'grandTotal' : 'amount';
+//     const dueAmountField = userMode === 'computerized' ? 'dueAmount' : 'dueAmount'; // Adjust if different
 
-    // Return summary or fallback empty
-    res.json(result[0] || {
-      _id: customerID,
-      totalAmount: 0,
-      totalDueAmount: 0
-    });
-  } catch (error) {
-    console.error("Aggregation Error:", error);
-    res.status(500).json({ message: 'Error getting purchase dues summary', error });
-  }
-};
+//     const result = await Model.aggregate([
+//       {
+//         $match: {
+//           $and: [
+//             { customerID: new ObjectId(customerID) },
+//             { companyID: new ObjectId(companyID) }
+//           ]
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: "$customerID",
+//           totalAmount: { $sum: `$${amountField}` },
+//           totalDueAmount: { $sum: `$${dueAmountField}` }
+//         }
+//       }
+//     ]);
+
+//     // Return summary or fallback empty
+//     res.json(result[0] || {
+//       _id: customerID,
+//       totalAmount: 0,
+//       totalDueAmount: 0
+//     });
+//   } catch (error) {
+//     console.error("Aggregation Error:", error);
+//     res.status(500).json({ message: 'Error getting sales dues summary', error });
+//   }
+// };
 
 
 
 const getSingleCustomerCompleteData = async (req, res) => {
   try {
     const { customerID, companyID } = req.query;
+    const userRole = req.user.role;
+    const userID = req.user.tokenID;
+    console.log(`userRole: ${userRole} and tokenId: ${userID}`);
+
+    let user;
+    if (userID && userRole === 'admin') {
+      user = await Admin.findOne({ _id: userID });
+    } else if (userID && userRole === 'user') {
+      user = await User.findOne({ _id: userID });
+    }
+
+    if (!user) {
+      throw new BadRequestError('User Not Found');
+    }
+    
+    const userMode = user.mode;
+    console.log(`for checking user Mode: ${userMode}`);
 
     // Validate ObjectIds
     if (!ObjectId.isValid(customerID) || !ObjectId.isValid(companyID)) {
@@ -144,12 +268,23 @@ const getSingleCustomerCompleteData = async (req, res) => {
         }
       },
       
-      // Lookup sales entries
+      // Fixed lookup with proper ObjectId conversion (same as getAllCustomersCompleteData)
       {
         $lookup: {
-          from: 'salesentries',
-          localField: '_id',
-          foreignField: 'customerID',
+          from: userMode === 'computerized' ? 'computerizedsalesentries' : 'salesentries',
+          let: { customerId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: [{ $toObjectId: '$customerID' }, '$$customerId'] },
+                    { $eq: ['$companyID', new mongoose.Types.ObjectId(companyID)] }
+                  ]
+                }
+              }
+            }
+          ],
           as: 'salesEntries'
         }
       },
@@ -164,20 +299,37 @@ const getSingleCustomerCompleteData = async (req, res) => {
         }
       },
       
-      // Add calculated fields
+      // Add calculated fields (dynamic based on mode)
       {
         $addFields: {
-          totalSalesAmount: { $sum: '$salesEntries.netTotalAmount' },
+          totalSalesAmount: { 
+            $sum: userMode === 'computerized' 
+              ? '$salesEntries.grandTotal' 
+              : '$salesEntries.netTotalAmount' 
+          },
           totalPayments: { $sum: '$payments.amountPaid' },
           thisYearDue: {
             $subtract: [
-              { $sum: '$salesEntries.netTotalAmount' },
+              { 
+                $sum: userMode === 'computerized' 
+                  ? '$salesEntries.grandTotal' 
+                  : '$salesEntries.netTotalAmount' 
+              },
               { $sum: '$payments.amountPaid' }
             ]
           },
           netTotalDue: {
             $subtract: [
-              { $add: ['$prevClosingBalance', { $sum: '$salesEntries.netTotalAmount' }] },
+              { 
+                $add: [
+                  '$prevClosingBalance', 
+                  { 
+                    $sum: userMode === 'computerized' 
+                      ? '$salesEntries.grandTotal' 
+                      : '$salesEntries.netTotalAmount' 
+                  }
+                ] 
+              },
               { $sum: '$payments.amountPaid' }
             ]
           },
@@ -200,7 +352,8 @@ const getSingleCustomerCompleteData = async (req, res) => {
           thisYearDue: 1,
           lastSaleDate: 1,
           lastPaymentDate: 1,
-          // Add any other customer fields you need
+          creditLimitAmount: 1,
+          creditTimePeriodInDays: 1
         }
       }
     ]);
@@ -214,7 +367,6 @@ const getSingleCustomerCompleteData = async (req, res) => {
 
     const customer = result[0];
     
-    // Remap the output for frontend (similar to getAllCustomersCompleteData)
     const customerData = {
       customerID: customer._id,
       name: customer.name,
@@ -228,8 +380,13 @@ const getSingleCustomerCompleteData = async (req, res) => {
       currentDue: customer.thisYearDue || 0,
       lastSaleDate: customer.lastSaleDate,
       lastPaymentDate: customer.lastPaymentDate,
-      status: customer.netTotalDue > 0 ? 'due' : 'paid'
+      status: customer.netTotalDue > 0 ? 'due' : 'paid',
+      creditLimitAmount: customer.creditLimitAmount,
+      creditTimePeriodInDays: customer.creditTimePeriodInDays
     };
+
+    // for debug purpose:
+    console.log('Customer Complete Data is: ', customerData);
 
     res.json({
       success: true,
@@ -246,30 +403,84 @@ const getSingleCustomerCompleteData = async (req, res) => {
   }
 };
 
-
 const getAllCustomersCompleteData = async (req, res) => {
   try {
     const { companyID } = req.query;
+    const userRole = req.user.role;
+    const userID = req.user.tokenID;
 
-    // Validate companyID
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+
+    // Filter parameters
+    const {
+      customerName,
+      minDue,
+      maxDue,
+      minSales,
+      maxSales,
+      lastSaleDateFrom,
+      lastSaleDateTo,
+      lastPaymentDateFrom,
+      lastPaymentDateTo,
+      status,
+      quickFilter,
+      dueRatio, // For percentage-based filtering
+      inactiveDays // For inactive customers
+    } = req.query;
+
+    let user;
+    if (userID && userRole === 'admin') {
+      user = await Admin.findOne({ _id: userID });
+    } else if (userID && userRole === 'user') {
+      user = await User.findOne({ _id: userID });
+    }
+
+    if (!user) {
+      throw new BadRequestError('User Not Found');
+    }
+
+    const userMode = user.mode;
+    console.log(`User mode: ${userMode}`);
+
     if (!ObjectId.isValid(companyID)) {
       return res.status(400).json({ message: 'Invalid companyID' });
     }
 
-    const result = await Customer.aggregate([
-      // Match all customers for the specific company
+    // Build the aggregation pipeline
+    const pipeline = [
       {
         $match: {
           companyID: new mongoose.Types.ObjectId(companyID)
         }
       },
       
-      // Lookup sales entries
+      // Apply customer name filter early if provided
+      ...(customerName ? [{
+        $match: {
+          name: { $regex: customerName, $options: 'i' }
+        }
+      }] : []),
+      
+      // Fixed lookup with proper ObjectId conversion
       {
         $lookup: {
-          from: 'salesentries',
-          localField: '_id',
-          foreignField: 'customerID',
+          from: userMode === 'computerized' ? 'computerizedsalesentries' : 'salesentries',
+          let: { customerId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: [{ $toObjectId: '$customerID' }, '$$customerId'] },
+                    { $eq: ['$companyID', new mongoose.Types.ObjectId(companyID)] }
+                  ]
+                }
+              }
+            }
+          ],
           as: 'salesEntries'
         }
       },
@@ -287,50 +498,194 @@ const getAllCustomersCompleteData = async (req, res) => {
       // Add calculated fields
       {
         $addFields: {
-          totalSalesAmount: { $sum: '$salesEntries.netTotalAmount' },
+          totalSalesAmount: { 
+            $sum: userMode === 'computerized' 
+              ? '$salesEntries.grandTotal' 
+              : '$salesEntries.netTotalAmount' 
+          },
           totalPayments: { $sum: '$payments.amountPaid' },
           thisYearDue: {
             $subtract: [
-              { $sum: '$salesEntries.netTotalAmount' },
+              { 
+                $sum: userMode === 'computerized' 
+                  ? '$salesEntries.grandTotal' 
+                  : '$salesEntries.netTotalAmount' 
+              },
               { $sum: '$payments.amountPaid' }
             ]
           },
           netTotalDue: {
             $subtract: [
-              { $add: ['$prevClosingBalance', { $sum: '$salesEntries.netTotalAmount' }] },
+              { 
+                $add: [
+                  '$prevClosingBalance', 
+                  { 
+                    $sum: userMode === 'computerized' 
+                      ? '$salesEntries.grandTotal' 
+                      : '$salesEntries.netTotalAmount' 
+                  }
+                ] 
+              },
               { $sum: '$payments.amountPaid' }
             ]
           },
           lastSaleDate: { $max: '$salesEntries.date' },
-          lastPaymentDate: { $max: '$payments.createdAt' }
+          lastPaymentDate: { $max: '$payments.createdAt' },
+          dueToSalesRatio: {
+            $cond: {
+              if: { $gt: [{ $sum: userMode === 'computerized' ? '$salesEntries.grandTotal' : '$salesEntries.netTotalAmount' }, 0] },
+              then: {
+                $divide: [
+                  {
+                    $subtract: [
+                      { 
+                        $add: [
+                          '$prevClosingBalance', 
+                          { 
+                            $sum: userMode === 'computerized' 
+                              ? '$salesEntries.grandTotal' 
+                              : '$salesEntries.netTotalAmount' 
+                          }
+                        ] 
+                      },
+                      { $sum: '$payments.amountPaid' }
+                    ]
+                  },
+                  { $sum: userMode === 'computerized' ? '$salesEntries.grandTotal' : '$salesEntries.netTotalAmount' }
+                ]
+              },
+              else: 0
+            }
+          }
         }
-      },
-      
-      // Project only the fields you want to send to frontend
-      {
-        $project: {
-          name: 1,
-          email: 1,
-          phoneNo: 1,
-          address: 1,
-          prevClosingBalance: 1,
-          totalSalesAmount: 1,
-          totalPayments: 1,
-          netTotalDue: 1,
-          thisYearDue: 1,
-          lastSaleDate: 1,
-          lastPaymentDate: 1,
-          // Add any other customer fields you need
-        }
-      },
-      
-      // Sort by customer name or any other field
-      {
-        $sort: { customerName: 1 }
       }
-    ]);
+    ];
 
-    // Remap the output for frontend
+    // Apply amount-based filters
+    const matchConditions = {};
+
+    if (minDue || maxDue) {
+      matchConditions.netTotalDue = {};
+      if (minDue) matchConditions.netTotalDue.$gte = parseFloat(minDue);
+      if (maxDue) matchConditions.netTotalDue.$lte = parseFloat(maxDue);
+    }
+
+    if (minSales || maxSales) {
+      matchConditions.totalSalesAmount = {};
+      if (minSales) matchConditions.totalSalesAmount.$gte = parseFloat(minSales);
+      if (maxSales) matchConditions.totalSalesAmount.$lte = parseFloat(maxSales);
+    }
+
+    // Apply date-based filters
+    if (lastSaleDateFrom || lastSaleDateTo) {
+      matchConditions.lastSaleDate = {};
+      if (lastSaleDateFrom) matchConditions.lastSaleDate.$gte = new Date(lastSaleDateFrom);
+      if (lastSaleDateTo) matchConditions.lastSaleDate.$lte = new Date(lastSaleDateTo);
+    }
+
+    if (lastPaymentDateFrom || lastPaymentDateTo) {
+      matchConditions.lastPaymentDate = {};
+      if (lastPaymentDateFrom) matchConditions.lastPaymentDate.$gte = new Date(lastPaymentDateFrom);
+      if (lastPaymentDateTo) matchConditions.lastPaymentDate.$lte = new Date(lastPaymentDateTo);
+    }
+
+    // Apply status filter
+    if (status) {
+      if (status === 'due') {
+        matchConditions.netTotalDue = { $gt: 0 };
+      } else if (status === 'paid') {
+        matchConditions.netTotalDue = { $lte: 0 };
+      }
+    }
+
+    // Apply due ratio filter (percentage)
+    if (dueRatio) {
+      matchConditions.dueToSalesRatio = { $gte: parseFloat(dueRatio) / 100 };
+    }
+
+    // Apply inactive days filter
+    if (inactiveDays) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(inactiveDays));
+      matchConditions.lastSaleDate = { $lt: cutoffDate };
+    }
+
+    // Apply quick filters
+    if (quickFilter) {
+      const currentDate = new Date();
+      switch (quickFilter) {
+        case 'highDues':
+          matchConditions.netTotalDue = { $gt: 5000 };
+          break;
+        case 'noSales6Months':
+          const sixMonthsAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 6));
+          matchConditions.lastSaleDate = { $lt: sixMonthsAgo };
+          break;
+        case 'noPayments3Months':
+          const threeMonthsAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 3));
+          matchConditions.lastPaymentDate = { $lt: threeMonthsAgo };
+          break;
+        case 'highRisk':
+          matchConditions.$and = [
+            { netTotalDue: { $gt: 5000 } },
+            { lastPaymentDate: { $lt: new Date(new Date().setMonth(new Date().getMonth() - 6)) } }
+          ];
+          break;
+        case 'topDues':
+          // This will be handled separately with sorting and limiting
+          break;
+      }
+    }
+
+    // Add match stage if we have conditions
+    if (Object.keys(matchConditions).length > 0) {
+      pipeline.push({ $match: matchConditions });
+    }
+
+    // Add projection stage
+    pipeline.push({
+      $project: {
+        name: 1,
+        email: 1,
+        phoneNo: 1,
+        address: 1,
+        prevClosingBalance: 1,
+        totalSalesAmount: 1,
+        totalPayments: 1,
+        netTotalDue: 1,
+        thisYearDue: 1,
+        lastSaleDate: 1,
+        lastPaymentDate: 1,
+        dueToSalesRatio: 1
+      }
+    });
+
+    // Handle topDues quick filter with sorting
+    if (quickFilter === 'topDues') {
+      pipeline.push({ $sort: { netTotalDue: -1 } });
+      pipeline.push({ $limit: 10 });
+    } else {
+      // Regular sorting
+      pipeline.push({ $sort: { name: 1 } });
+    }
+
+    // Get total count for pagination
+    const countPipeline = [...pipeline];
+    countPipeline.push({ $count: "total" });
+    const countResult = await Customer.aggregate(countPipeline);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
+
+    // Apply pagination (skip for topDues since it has its own limit)
+    if (quickFilter !== 'topDues') {
+      pipeline.push({ $skip: startIndex });
+      pipeline.push({ $limit: limit });
+    }
+
+    // Execute the main pipeline
+    const result = await Customer.aggregate(pipeline);
+
+    console.log(`Found ${result.length} customers with filters applied`);
+
     const remappedData = result.map(customer => ({
       customerID: customer._id,
       name: customer.name,
@@ -344,17 +699,22 @@ const getAllCustomersCompleteData = async (req, res) => {
       currentDue: customer.thisYearDue || 0,
       lastSaleDate: customer.lastSaleDate,
       lastPaymentDate: customer.lastPaymentDate,
+      dueToSalesRatio: customer.dueToSalesRatio || 0,
       status: customer.netTotalDue > 0 ? 'due' : 'paid'
     }));
 
     res.json({
       success: true,
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
       count: remappedData.length,
       customers: remappedData
     });
 
   } catch (error) {
-    console.error('Error fetching all customers data:', error);
+    console.error('Error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Error fetching customers data', 
@@ -363,11 +723,13 @@ const getAllCustomersCompleteData = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
-    getPurchaseDuesList,
-    getPurchaseDuesSummary,
+    // getPurchaseDuesList,
+    // getPurchaseDuesSummary,
     getSalesDuesList,
-    getSalesDuesSummary,
+    // getSalesDuesSummary,
     getSingleCustomerCompleteData,
-    getAllCustomersCompleteData
+    getAllCustomersCompleteData,
 };

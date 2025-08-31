@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 // Assuming you have Mongoose models for Admin, User, Company
 const Admin = require('../../models/admin');

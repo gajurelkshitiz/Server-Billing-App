@@ -1,4 +1,5 @@
 // const Payment = require('../models/PaymentList');
+const NepaliDate = require("nepali-datetime");
 const CustomerPayment = require('../models/CustomerPayment');
 const SupplierPayment = require('../models/SupplierPayment');
 const { BadRequestError } = require('../errors');
@@ -13,7 +14,28 @@ const createCustomerPayment = async (req, res) => {
     if (!customerID || !customerName || !companyID || !amountPaid || !paymentMode){
         throw new BadRequestError("Please provide all values");
     }
-    const customerPaymentList = await CustomerPayment.create({...req.body})
+
+    console.log('This is a check who is creating customer:')
+    console.log('admin is entering payment: ', req.user.tokenID)
+    console.log('user is entering payment: ', req.user.adminID)
+    // also add adminID into the payment:
+    let adminID;
+    if(req.user.adminID) {
+        adminID = req.user.adminID;
+    }
+    adminID = req.user.tokenID;
+
+    // get current date:
+    const date = new NepaliDate();
+    console.log('inside customer payment date is: ', date);
+    
+
+    
+    const customerPaymentList = await CustomerPayment.create({
+        ...req.body,
+        date,
+        adminID
+    })
     console.log(customerPaymentList);
     res.status(StatusCodes.CREATED).json({customerPaymentList});
 }

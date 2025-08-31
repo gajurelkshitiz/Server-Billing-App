@@ -29,7 +29,7 @@ router.route("/")
   
 
 router.route("/:id")
-  .get(authorizeRoles(["superadmin"]), getAdmin)
+  .get(authorizeRoles(["superadmin", "admin"]), getAdmin)
   .patch(authorizeRoles(["superadmin"]), upload.single('profileImage'), updateAdmin)
   .delete(authorizeRoles(["superadmin"]), deleteAdmin);
 

@@ -1,3 +1,4 @@
+import AttachmentsPage from "./pages/Attachments";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,19 +37,26 @@ import DropdownComponent from "./DropdownText";
 // import SalesPaymentListPage from "./pages/SalesPaymentList";
 
 // Routes for testing only
-// import SalesLayout from './pages/Sales/SalesLayout';
-// import SalesEntry from './pages/Sales/SalesEntry';
-// import Customer from './pages/Sales/Customer';
-// import WithSearchLayout from './pages/Sales/WithSearchLayout';
+import SalesLayout from './pages/Sales/SalesLayout';
+import SalesEntry from './pages/Sales/SalesEntry';
+import Customer from './pages/Sales/Customer';
+import WithSearchLayout from './pages/Sales/WithSearchLayout';
 // import SalesDueList from './pages/Sales/SalesDueList';
 // import SalesPaymentList from './pages/Sales/SalesPaymentList';
 // import PurchasePaymentListPage from "./pages/PurchasePaymentList";
+
+
 import { FiscalYearProvider } from "./context/FiscalYearContext";
 import CustomerInfoPage from "./pages/CustomerProfileInfo/CustomerInfoPage";
 import SettingsPage from "./pages/Settings/SettingsPage";
 import { AdminProfilePage } from "./pages/AdminProfile";
 import { UserProfilePage } from "./pages/UserProfile";
+import  TemplateDownloadPage  from "./pages/Templates/TemplateDownloadPage";
+// import './styles/payment-slip-print.css';
 
+import SalesEntryWrapper from "./pages/SalesEntryWrapper";
+import NotificationsPage from './pages/Notifications';
+import SalesConfiguration from "./pages/ItemConfiguration";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +76,18 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             {/* <Route path="/verify-Email/:token/:role" element={<VerifyEmail />} /> */}
             <Route path="/set-password" element={<SetPassword />} />
+
+            
+            <Route 
+              path="/attachments"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AttachmentsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={
@@ -163,11 +183,21 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <SalesEntryPage />
+                    <SalesEntryWrapper />
                   </Layout>
                 </ProtectedRoute>
               }
             />
+            {/* <Route 
+              path="/SalesEntry"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SalesEntryPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            /> */}
             {/* <Route 
               path="/purchasedueList"
               element={
@@ -184,6 +214,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <SalesDueListPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/configuration"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SalesConfiguration />
                   </Layout>
                 </ProtectedRoute>
               }
@@ -231,18 +271,33 @@ const App = () => (
             <Route 
               path="/admin-profile"
               element={
-                <Layout>
-                  <AdminProfilePage />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <AdminProfilePage />
+                  </Layout>
+                </ProtectedRoute>
               }
             />
 
             <Route 
               path="/user-profile"
               element={
-                <Layout>
-                  <UserProfilePage />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <UserProfilePage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route 
+              path="/download-templates"
+              element={
+                // <ProtectedRoute>
+                  <Layout>
+                    <TemplateDownloadPage />
+                  </Layout>
+                // </ProtectedRoute>
               }
             />
 
@@ -271,16 +326,16 @@ const App = () => (
             /> */}
 
             {/* This is for testing of nested route of sales module */}
-            {/* <Route path="sales" element={<Layout><SalesLayout /></Layout>}>
+            <Route path="sales" element={<Layout><SalesLayout /></Layout>}>
               <Route path="entry" element={<SalesEntry />} />
-              <Route path="customer" element={<Customer />} /> */}
+              <Route path="customer" element={<Customer />} />
 
               {/* Nested Layout With Search Bar */}
-              {/* <Route element={<WithSearchLayout />}>
-                <Route path="due-list" element={<SalesDueList />} />
-                <Route path="payment-list" element={<SalesPaymentList />} />
+              <Route element={<WithSearchLayout />}>
+                {/* <Route path="due-list" element={<SalesDueList />} />
+                <Route path="payment-list" element={<SalesPaymentList />} /> */}
               </Route>
-            </Route> */}
+            </Route>
 
 
 
@@ -296,6 +351,13 @@ const App = () => (
                   </Layout>
                 </ProtectedRoute>
               }
+            />
+            <Route 
+              path="/notifications" 
+              element={
+               <Layout>
+              <NotificationsPage />
+              </Layout> } 
             />
             <Route 
               path="*" 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import CustomerSearch from '../SalesDueList/components/CustomerSearch';
+import CustomerSearch from '../Sales Due List/components/CustomerSearch';
 
 /**
  * WithSearchLayout Component

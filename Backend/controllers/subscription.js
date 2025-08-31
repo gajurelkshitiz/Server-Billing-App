@@ -1,5 +1,5 @@
 const Subscription = require("../models/subscription");
-const { BadRequestError, UnauthenticatedError, NotFoundError } = require("../errors");
+const { BadRequestError, UnauthenticatedError, notFoundError } = require("../errors");
 const { StatusCodes } = require("http-status-codes");
 const fs = require("fs");
 const path = require("path");
@@ -114,7 +114,7 @@ const getSubscription = async (req, res) => {
   });
 
   if (!subscription) {
-    throw new NotFoundError(`No Subscription with id: ${subscriptionID}`);
+    throw new notFoundError(`No Subscription with id: ${subscriptionID}`);
   }
 
   res.status(StatusCodes.OK).json({ subscription });
@@ -157,7 +157,7 @@ const updateSubscription = async (req, res) => {
   );
 
   if (!subscription) {
-    throw new NotFoundError(`No Subscription Found with id: ${subscriptionID}`);
+    throw new notFoundError(`No Subscription Found with id: ${subscriptionID}`);
   }
   
   res.status(StatusCodes.OK).json({ 
@@ -179,7 +179,7 @@ const purchaseSubscription = async (req, res) => {
     // Find the subscription
     const subscription = await Subscription.findById(subscriptionId);
     if (!subscription) {
-      throw new NotFoundError("Subscription not found");
+      throw new notFoundError("Subscription not found");
     }
 
     if (subscription.status !== 'active') {

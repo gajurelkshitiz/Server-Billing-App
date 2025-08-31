@@ -33,7 +33,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
         >
           {imageUrl && (
             <img
-              src={imageUrl}
+              src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${imageUrl}`}
               alt={altText}
               className="max-w-full max-h-full object-contain rounded-lg"
             />

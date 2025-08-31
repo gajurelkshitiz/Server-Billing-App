@@ -391,7 +391,7 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
               <div className="mt-2">
                 <span className="text-sm font-medium">Preview:</span>
                 <img
-                  src={imagePreview}
+                  src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${imagePreview}`}
                   alt="Preview"
                   className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setOpenImageDialog(true)}

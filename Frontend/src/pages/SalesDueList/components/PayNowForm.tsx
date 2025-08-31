@@ -1,11 +1,11 @@
-import React from 'react';
+// import React from 'react';
 
-const PayNowForm: React.FC = () => {
-  return (
-    <div>
-      {/* Your PayNowForm content */}
-    </div>
-  );
-};
+// const PayNowForm: React.FC = () => {
+//   return (
+//     <div>
+//       {/* Your PayNowForm content */}
+//     </div>
+//   );
+// };
 
-export default PayNowForm;
+// export default PayNowForm;

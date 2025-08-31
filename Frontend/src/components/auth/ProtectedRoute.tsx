@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const currentPath = location.pathname;
 
   // Extra check for purchaseEntry and salesEntry
-  const requiresCompany = ['/purchaseEntry', '/salesEntry', '/purchasedueList', '/salesdueList'].includes(currentPath);
+  const requiresCompany = ['/purchaseEntry', '/salesEntry', '/purchasedueList', '/salesdueList', '/sales-configuration', '/attachments'].includes(currentPath);
 
   // if (!allowedRoutes.includes(currentPath) || (requiresCompany && !isCompanySelected)) {
   //   return <Navigate to="/notfound" replace />;

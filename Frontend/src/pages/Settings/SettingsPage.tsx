@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCompanyStateGlobal, CompanyContextType } from '@/provider/companyState';
 import { 
   Settings, 
   Building, 
@@ -15,7 +16,8 @@ import {
   RotateCcw,
   Server,
   ChevronDown,
-  Menu
+  Menu,
+  User
 } from 'lucide-react';
 import {
   Select,
@@ -26,31 +28,17 @@ import {
 } from '@/components/ui/select';
 
 // Import the modular settings components
-import CompanySettings from '@/components/Settings/CompanySettings';
-import BillingSettings from '@/components/Settings/BillingSettings';
-import FinancialSettings from '@/components/Settings/FinancialSettings';
-import DisplaySettings from '@/components/Settings/DisplaySettings';
-import NotificationSettings from '@/components/Settings/NotificationSettings';
-import SecuritySettings from '@/components/Settings/SecuritySettings';
-import BackupSettings from '@/components/Settings/BackupSettings';
-import IntegrationSettings from '@/components/Settings/IntegrationSettings';
+import CompanySettings from './Components/CompanySettings';
+import AdminSettings from './Components/AdminSettings';
+import BillingSettings from './Components/BillingSettings';
+import FinancialSettings from './Components/FinancialSettings';
+import DisplaySettings from './Components/DisplaySettings';
+import NotificationSettings from './Components/NotificationSettings';
+import SecuritySettings from './Components/SecuritySettings';
+import BackupSettings from './Components/BackupSettings';
+import IntegrationSettings from './Components/IntegrationSettings';
 
 interface SettingsData {
-  // Company Profile Settings
-  company: {
-    name: string;
-    logo: string;
-    email: string;
-    phone: string;
-    address: string;
-    website: string;
-    vatNumber: string;
-    panNumber: string;
-    registrationNumber: string;
-    industryType: string;
-  };
-  
-  // Billing & Invoice Settings
   billing: {
     defaultCurrency: string;
     taxRate: number;
@@ -63,8 +51,6 @@ interface SettingsData {
     reminderDays: number[];
     defaultPaymentMethods: string[];
   };
-  
-  // Financial Settings
   financial: {
     fiscalYearStart: string;
     baseCurrency: string;
@@ -74,8 +60,6 @@ interface SettingsData {
     showCurrencySymbol: boolean;
     roundingMethod: 'round' | 'floor' | 'ceil';
   };
-  
-  // Display & UI Settings
   display: {
     theme: 'light' | 'dark' | 'system';
     language: string;
@@ -86,8 +70,6 @@ interface SettingsData {
     compactMode: boolean;
     showTutorials: boolean;
   };
-  
-  // Notification Settings
   notifications: {
     email: boolean;
     sms: boolean;
@@ -99,8 +81,6 @@ interface SettingsData {
     systemUpdates: boolean;
     marketingEmails: boolean;
   };
-  
-  // Security Settings
   security: {
     twoFactorAuth: boolean;
     sessionTimeout: number;
@@ -111,8 +91,6 @@ interface SettingsData {
     auditLogging: boolean;
     dataEncryption: boolean;
   };
-  
-  // Backup & Export Settings
   backup: {
     autoBackup: boolean;
     backupFrequency: 'daily' | 'weekly' | 'monthly';
@@ -122,8 +100,6 @@ interface SettingsData {
     emailReports: boolean;
     backupLocation: string;
   };
-  
-  // Integration Settings
   integrations: {
     paymentGateways: {
       stripe: { enabled: boolean; apiKey: string; };
@@ -146,220 +122,232 @@ interface SettingsData {
   };
 }
 
+
+// --- Default values for each settings section ---
+const defaultSettings: SettingsData = {
+  billing: {
+    defaultCurrency: 'NPR',
+    taxRate: 13,
+    invoicePrefix: 'INV',
+    invoiceNumbering: 'sequential',
+    paymentTerms: 30,
+    latePaymentFee: 2.5,
+    discountThreshold: 0,
+    autoSendReminders: false,
+    reminderDays: [7, 3, 1, 0],
+    defaultPaymentMethods: [],
+  },
+  financial: {
+    fiscalYearStart: '07-16',
+    baseCurrency: 'NPR',
+    decimalPlaces: 2,
+    thousandSeparator: ',',
+    decimalSeparator: '.',
+    showCurrencySymbol: true,
+    roundingMethod: 'round',
+  },
+  display: {
+    theme: 'system',
+    language: 'en',
+    dateFormat: 'YYYY-MM-DD',
+    timeFormat: '24h',
+    timezone: 'Asia/Kathmandu',
+    itemsPerPage: 10,
+    compactMode: false,
+    showTutorials: true,
+  },
+  notifications: {
+    email: true,
+    sms: false,
+    browser: false,
+    invoiceCreated: true,
+    paymentReceived: true,
+    paymentOverdue: true,
+    lowInventory: false,
+    systemUpdates: true,
+    marketingEmails: false,
+  },
+  security: {
+    twoFactorAuth: false,
+    sessionTimeout: 30,
+    passwordExpiry: 90,
+    loginAttempts: 5,
+    ipRestriction: false,
+    allowedIPs: [],
+    auditLogging: false,
+    dataEncryption: false,
+  },
+  backup: {
+    autoBackup: false,
+    backupFrequency: 'weekly',
+    backupTime: '02:00',
+    cloudStorage: false,
+    retentionPeriod: 30,
+    emailReports: false,
+    backupLocation: '',
+  },
+  integrations: {
+    paymentGateways: {
+      stripe: { enabled: false, apiKey: '' },
+      paypal: { enabled: false, clientId: '' },
+      esewa: { enabled: false, merchantId: '' },
+      khalti: { enabled: false, publicKey: '' },
+    },
+    emailService: {
+      provider: 'smtp',
+      smtpHost: '',
+      smtpPort: 587,
+      smtpUser: '',
+      smtpPassword: '',
+    },
+    smsService: {
+      provider: 'local',
+      apiKey: '',
+      senderId: '',
+    },
+  },
+};
+
+// --- Utility to get user-specific key ---
+function getUserSettingsKey(section: keyof SettingsData, userId: string) {
+  return `settings_${section}_${userId}`;
+}
+
 const SettingsPage: React.FC = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { state }: CompanyContextType = useCompanyStateGlobal();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('company');
+  const [activeTab, setActiveTab] = useState('profile');
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
-  
-  const [settings, setSettings] = useState<SettingsData>({
-    company: {
-      name: 'Your Company Name',
-      logo: '',
-      email: 'contact@company.com',
-      phone: '+977-1-4567890',
-      address: 'Kathmandu, Nepal',
-      website: 'https://yourcompany.com',
-      vatNumber: '12345678901',
-      panNumber: '123456789',
-      registrationNumber: 'REG-2024-001',
-      industryType: 'retail',
-    },
-    billing: {
-      defaultCurrency: 'NPR',
-      taxRate: 13,
-      invoicePrefix: 'INV',
-      invoiceNumbering: 'sequential',
-      paymentTerms: 30,
-      latePaymentFee: 2.5,
-      discountThreshold: 5000,
-      autoSendReminders: true,
-      reminderDays: [7, 3, 1],
-      defaultPaymentMethods: ['cash', 'bank'],
-    },
-    financial: {
-      fiscalYearStart: '07-16',
-      baseCurrency: 'NPR',
-      decimalPlaces: 2,
-      thousandSeparator: ',',
-      decimalSeparator: '.',
-      showCurrencySymbol: true,
-      roundingMethod: 'round',
-    },
-    display: {
-      theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'light',
-      language: 'en',
-      dateFormat: 'DD/MM/YYYY',
-      timeFormat: '24h',
-      timezone: 'Asia/Kathmandu',
-      itemsPerPage: 25,
-      compactMode: false,
-      showTutorials: true,
-    },
-    notifications: {
-      email: true,
-      sms: false,
-      browser: true,
-      invoiceCreated: true,
-      paymentReceived: true,
-      paymentOverdue: true,
-      lowInventory: false,
-      systemUpdates: true,
-      marketingEmails: false,
-    },
-    security: {
-      twoFactorAuth: false,
-      sessionTimeout: 30,
-      passwordExpiry: 90,
-      loginAttempts: 5,
-      ipRestriction: false,
-      allowedIPs: [],
-      auditLogging: true,
-      dataEncryption: true,
-    },
-    backup: {
-      autoBackup: true,
-      backupFrequency: 'weekly',
-      backupTime: '02:00',
-      cloudStorage: false,
-      retentionPeriod: 90,
-      emailReports: true,
-      backupLocation: 'local',
-    },
-    integrations: {
-      paymentGateways: {
-        stripe: { enabled: false, apiKey: '' },
-        paypal: { enabled: false, clientId: '' },
-        esewa: { enabled: true, merchantId: '' },
-        khalti: { enabled: true, publicKey: '' },
-      },
-      emailService: {
-        provider: 'smtp',
-        smtpHost: '',
-        smtpPort: 587,
-        smtpUser: '',
-        smtpPassword: '',
-      },
-      smsService: {
-        provider: 'local',
-        apiKey: '',
-        senderId: '',
-      },
-    },
+
+  // Get user id (use a unique identifier, fallback to 'default')
+  const userId = localStorage.getItem('userId') || 'default';
+
+  // --- State for each settings section ---
+  const [billing, setBilling] = useState<SettingsData['billing']>(() => {
+    const key = getUserSettingsKey('billing', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.billing));
+    return defaultSettings.billing;
+  });
+  const [financial, setFinancial] = useState<SettingsData['financial']>(() => {
+    const key = getUserSettingsKey('financial', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.financial));
+    return defaultSettings.financial;
+  });
+  const [display, setDisplay] = useState<SettingsData['display']>(() => {
+    const key = getUserSettingsKey('display', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.display));
+    return defaultSettings.display;
+  });
+  const [notifications, setNotifications] = useState<SettingsData['notifications']>(() => {
+    const key = getUserSettingsKey('notifications', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.notifications));
+    return defaultSettings.notifications;
+  });
+  const [security, setSecurity] = useState<SettingsData['security']>(() => {
+    const key = getUserSettingsKey('security', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.security));
+    return defaultSettings.security;
+  });
+  const [backup, setBackup] = useState<SettingsData['backup']>(() => {
+    const key = getUserSettingsKey('backup', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.backup));
+    return defaultSettings.backup;
+  });
+  const [integrations, setIntegrations] = useState<SettingsData['integrations']>(() => {
+    const key = getUserSettingsKey('integrations', userId);
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+    localStorage.setItem(key, JSON.stringify(defaultSettings.integrations));
+    return defaultSettings.integrations;
   });
 
-  const [originalSettings, setOriginalSettings] = useState<SettingsData>(settings);
+  // --- Update localStorage on change ---
+  const updateSection = <T,>(section: keyof SettingsData, value: T) => {
+    const key = getUserSettingsKey(section, userId);
+    localStorage.setItem(key, JSON.stringify(value));
+    switch (section) {
+      case 'billing': setBilling(value as SettingsData['billing']); break;
+      case 'financial': setFinancial(value as SettingsData['financial']); break;
+      case 'display': setDisplay(value as SettingsData['display']); break;
+      case 'notifications': setNotifications(value as SettingsData['notifications']); break;
+      case 'security': setSecurity(value as SettingsData['security']); break;
+      case 'backup': setBackup(value as SettingsData['backup']); break;
+      case 'integrations': setIntegrations(value as SettingsData['integrations']); break;
+    }
+  };
 
+  // --- Remove old keys (e.g., 'billingSettings', 'userSettings', etc) ---
   useEffect(() => {
-    loadSettings();
+    const oldKeys = [
+      'billingSettings', 'userSettings', 'displaySettings', 'notificationSettings',
+      'securitySettings', 'backupSettings', 'integrationSettings',
+    ];
+    oldKeys.forEach(k => localStorage.removeItem(k));
   }, []);
 
-  const loadSettings = async () => {
-    setLoading(true);
-    try {
-      const savedSettings = localStorage.getItem('billingSettings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        setSettings(parsed);
-        setOriginalSettings(parsed);
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load settings. Using defaults.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleSettingChange = (section: keyof SettingsData, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [key]: value
-      }
-    }));
-  };
-
-  const handleNestedSettingChange = (section: keyof SettingsData, subsection: string, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [subsection]: {
-          ...(prev[section] as any)[subsection],
-          [key]: value
-        }
-      }
-    }));
-  };
-
-  // Add this missing function
-  const handleImportSettings = (importedSettings: SettingsData) => {
-    setSettings(importedSettings);
-    toast({
-      title: "Settings Imported",
-      description: "Settings have been imported successfully. Remember to save changes.",
+  // --- Per-section onChange handlers for new settings pages ---
+  const handleSectionChange = (section: keyof SettingsData, key: string, value: any) => {
+    updateSection(section, {
+      ...getSectionState(section),
+      [key]: value,
     });
   };
 
+  const handleNestedSectionChange = (section: keyof SettingsData, subsection: string, key: string, value: any) => {
+    updateSection(section, {
+      ...getSectionState(section),
+      [subsection]: {
+        ...(getSectionState(section) as any)[subsection],
+        [key]: value,
+      },
+    });
+  };
+
+  // Helper to get current section state
+  function getSectionState(section: keyof SettingsData) {
+    switch (section) {
+      case 'billing': return billing;
+      case 'financial': return financial;
+      case 'display': return display;
+      case 'notifications': return notifications;
+      case 'security': return security;
+      case 'backup': return backup;
+      case 'integrations': return integrations;
+      default: return {};
+    }
+  }
+
+  // --- Password visibility toggle for integrations ---
   const togglePasswordVisibility = (field: string) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
+    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const saveSettings = async () => {
-    setSaving(true);
-    try {
-      // Save to localStorage (replace with API call)
-      localStorage.setItem('billingSettings', JSON.stringify(settings));
-      localStorage.setItem('theme', settings.display.theme);
-      
-      // Apply theme changes
-      document.documentElement.setAttribute('data-theme', settings.display.theme);
-      
-      setOriginalSettings(settings);
-      
-      toast({
-        title: "Settings Saved",
-        description: "Your settings have been saved successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const resetSettings = () => {
-    setSettings(originalSettings);
-    toast({
-      title: "Settings Reset",
-      description: "Settings have been reset to last saved values.",
-    });
-  };
-
-  const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
-
+  // --- Tabs for settings (with Admin/Company as first tab) ---
+  const isAdmin = state?.companyID === 'all';
+  const userRole = localStorage.getItem('role') || 'user';
   const settingsTabs = [
-    { id: 'company', label: 'Company Profile', icon: Building },
-    { id: 'billing', label: 'Billing & Invoice', icon: Receipt },
-    { id: 'financial', label: 'Financial', icon: Calculator },
+    { id: 'profile', label: isAdmin ? 'Admin Profile' : 'Company Profile', icon: isAdmin ? User : Building },
     { id: 'display', label: 'Display & UI', icon: Palette },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
+    { id: 'billing', label: 'Billing & Invoice', icon: Receipt },
+    { id: 'financial', label: 'Financial', icon: Calculator },
     { id: 'backup', label: 'Backup & Export/Import', icon: Database },
     { id: 'integrations', label: 'Integrations', icon: Server },
   ];
@@ -381,42 +369,18 @@ const SettingsPage: React.FC = () => {
             <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-sm sm:text-base text-gray-500">Configure your billing system preferences</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Settings
+            </h1>
+            <p className="text-sm sm:text-base text-gray-500">
+              Configure your preferences for the billing system
+            </p>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
-          {hasChanges && (
-            <>
-              <Button
-                variant="outline"
-                onClick={resetSettings}
-                disabled={saving}
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
-              <Button
-                onClick={saveSettings}
-                disabled={saving}
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </>
-          )}
         </div>
       </div>
 
       {isMobile ? (
-        // Mobile Layout
         <div className="space-y-4">
-          {/* Mobile Tab Selector */}
           <Select value={activeTab} onValueChange={setActiveTab}>
             <SelectTrigger className="w-full">
               <SelectValue>
@@ -435,63 +399,71 @@ const SettingsPage: React.FC = () => {
             </SelectContent>
           </Select>
 
-          {/* Mobile Content */}
           <div className="space-y-4">
-            {activeTab === 'company' && (
-              <CompanySettings
-                settings={settings.company}
-                onChange={(key, value) => handleSettingChange('company', key, value)}
-              />
+            {activeTab === 'profile' && (
+              isAdmin ? (
+                <AdminSettings />
+              ) : (
+                <CompanySettings />
+              )
             )}
-            
             {activeTab === 'billing' && (
               <BillingSettings
-                settings={settings.billing}
-                onChange={(key, value) => handleSettingChange('billing', key, value)}
+                settings={billing}
+                onChange={(key, value) => handleSectionChange('billing', key, value)}
               />
             )}
-            
             {activeTab === 'financial' && (
               <FinancialSettings
-                settings={settings.financial}
-                onChange={(key, value) => handleSettingChange('financial', key, value)}
+                settings={financial}
+                onChange={(key, value) => handleSectionChange('financial', key, value)}
               />
             )}
-            
             {activeTab === 'display' && (
               <DisplaySettings
-                settings={settings.display}
-                onChange={(key, value) => handleSettingChange('display', key, value)}
+                settings={display}
+                onChange={(key, value) => handleSectionChange('display', key, value)}
               />
             )}
-            
             {activeTab === 'notifications' && (
               <NotificationSettings
-                settings={settings.notifications}
-                onChange={(key, value) => handleSettingChange('notifications', key, value)}
+                settings={notifications}
+                onChange={(key, value) => handleSectionChange('notifications', key, value)}
               />
             )}
-            
             {activeTab === 'security' && (
               <SecuritySettings
-                settings={settings.security}
-                onChange={(key, value) => handleSettingChange('security', key, value)}
+                settings={security}
+                onChange={(key, value) => handleSectionChange('security', key, value)}
               />
             )}
-            
             {activeTab === 'backup' && (
               <BackupSettings
-                settings={settings.backup}
-                onChange={(key, value) => handleSettingChange('backup', key, value)}
-                allSettings={settings}
-                onImportSettings={handleImportSettings}
+                settings={backup}
+                onChange={(key, value) => handleSectionChange('backup', key, value)}
+                allSettings={{ billing, financial, display, notifications, security, backup, integrations }}
+                onImportSettings={(imported) => {
+                  // Only update non-admin/company sections
+                  if (imported) {
+                    if (imported.billing) updateSection('billing', imported.billing);
+                    if (imported.financial) updateSection('financial', imported.financial);
+                    if (imported.display) updateSection('display', imported.display);
+                    if (imported.notifications) updateSection('notifications', imported.notifications);
+                    if (imported.security) updateSection('security', imported.security);
+                    if (imported.backup) updateSection('backup', imported.backup);
+                    if (imported.integrations) updateSection('integrations', imported.integrations);
+                  }
+                  toast({
+                    title: "Settings Imported",
+                    description: "Settings have been imported successfully. Remember to save changes.",
+                  });
+                }}
               />
             )}
-            
             {activeTab === 'integrations' && (
               <IntegrationSettings
-                settings={settings.integrations}
-                onChange={handleNestedSettingChange}
+                settings={integrations}
+                onChange={handleNestedSectionChange}
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}
               />
@@ -499,9 +471,7 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        // Desktop Layout
         <div className="flex gap-6">
-          {/* Sidebar Navigation */}
           <div className="w-64 space-y-1">
             <nav className="space-y-1">
               {settingsTabs.map((tab) => (
@@ -521,64 +491,70 @@ const SettingsPage: React.FC = () => {
               ))}
             </nav>
           </div>
-
-          {/* Main Content */}
           <div className="flex-1 space-y-6">
-            {activeTab === 'company' && (
-              <CompanySettings
-                settings={settings.company}
-                onChange={(key, value) => handleSettingChange('company', key, value)}
-              />
+            {activeTab === 'profile' && (
+              isAdmin ? (
+                <AdminSettings />
+              ) : (
+                <CompanySettings />
+              )
             )}
-            
             {activeTab === 'billing' && (
               <BillingSettings
-                settings={settings.billing}
-                onChange={(key, value) => handleSettingChange('billing', key, value)}
+                settings={billing}
+                onChange={(key, value) => handleSectionChange('billing', key, value)}
               />
             )}
-            
             {activeTab === 'financial' && (
               <FinancialSettings
-                settings={settings.financial}
-                onChange={(key, value) => handleSettingChange('financial', key, value)}
+                settings={financial}
+                onChange={(key, value) => handleSectionChange('financial', key, value)}
               />
             )}
-            
             {activeTab === 'display' && (
               <DisplaySettings
-                settings={settings.display}
-                onChange={(key, value) => handleSettingChange('display', key, value)}
+                settings={display}
+                onChange={(key, value) => handleSectionChange('display', key, value)}
               />
             )}
-            
             {activeTab === 'notifications' && (
               <NotificationSettings
-                settings={settings.notifications}
-                onChange={(key, value) => handleSettingChange('notifications', key, value)}
+                settings={notifications}
+                onChange={(key, value) => handleSectionChange('notifications', key, value)}
               />
             )}
-            
             {activeTab === 'security' && (
               <SecuritySettings
-                settings={settings.security}
-                onChange={(key, value) => handleSettingChange('security', key, value)}
+                settings={security}
+                onChange={(key, value) => handleSectionChange('security', key, value)}
               />
             )}
-            
             {activeTab === 'backup' && (
               <BackupSettings
-                settings={settings.backup}
-                onChange={(key, value) => handleSettingChange('backup', key, value)}
-                allSettings={settings}
-                onImportSettings={handleImportSettings}
+                settings={backup}
+                onChange={(key, value) => handleSectionChange('backup', key, value)}
+                allSettings={{ billing, financial, display, notifications, security, backup, integrations }}
+                onImportSettings={(imported) => {
+                  if (imported) {
+                    if (imported.billing) updateSection('billing', imported.billing);
+                    if (imported.financial) updateSection('financial', imported.financial);
+                    if (imported.display) updateSection('display', imported.display);
+                    if (imported.notifications) updateSection('notifications', imported.notifications);
+                    if (imported.security) updateSection('security', imported.security);
+                    if (imported.backup) updateSection('backup', imported.backup);
+                    if (imported.integrations) updateSection('integrations', imported.integrations);
+                  }
+                  toast({
+                    title: "Settings Imported",
+                    description: "Settings have been imported successfully. Remember to save changes.",
+                  });
+                }}
               />
             )}
-            
             {activeTab === 'integrations' && (
               <IntegrationSettings
-                settings={settings.integrations}
-                onChange={handleNestedSettingChange}
+                settings={integrations}
+                onChange={handleNestedSectionChange}
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}
               />

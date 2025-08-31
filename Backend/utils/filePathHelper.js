@@ -42,31 +42,63 @@ const getFilePathFromRequest = async (req, category) => {
     return null;
 };
 
-const moveFileToFinalLocation = async (tempFilePath, adminID, adminName, category, originalFilename, companyID = null, companyName = null, entityName = null, entityID = null) => {
-  // Remove baseUrl from return - store only relative path
+const moveFileToFinalLocation = async (
+  tempFilePath,
+  adminID,
+  adminName,
+  category,
+  originalFilename,
+  companyID = null,
+  companyName = null,
+  entityName = null,
+  entityID = null,
+  filename = null,
+  subfolders = [], // <-- keep support for subfolders
+) => {
+  // for Debug of values here...
+  console.log(`passed values are:- category: ${category} entityName: ${entityName} entityID: ${entityID} fileName: ${filename}`)
+  // End of debug code here.
+
   const cleanAdminName = adminName.replace(/[^a-zA-Z0-9]/g, '_');
-  
+
+  // Clean all subfolder values
+  const cleanSubfolders = subfolders.map(val =>
+    typeof val === 'string' ? val.replace(/[^a-zA-Z0-9]/g, '_') : val
+  );
+
   let finalDir;
+
   if (companyID && companyName) {
     const cleanCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
-    finalDir = path.join(__dirname, `../uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}/${category}`);
+    if (cleanSubfolders && cleanSubfolders.length > 0) {
+      finalDir = path.join(
+        __dirname,
+        `../uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}`,
+        ...cleanSubfolders,
+        category
+      );
+    } else {
+      finalDir = path.join(
+        __dirname,
+        `../uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}/${category}`
+      );
+    }
   } else {
-    finalDir = path.join(__dirname, `../uploads/${cleanAdminName}_${adminID}/${category}`);
+    finalDir = path.join(
+      __dirname,
+      `../uploads/${cleanAdminName}_${adminID}/${category}`
+    );
   }
 
-  // Create directory if it doesn't exist
   if (!fs.existsSync(finalDir)) {
     fs.mkdirSync(finalDir, { recursive: true });
   }
 
-  // Generate custom filename based on entity info
+  // --- Custom filename logic ---
   let finalFilename = originalFilename;
-  
   if (entityName && entityID) {
     const ext = path.extname(originalFilename);
     const cleanEntityName = entityName.replace(/[^a-zA-Z0-9]/g, '_');
-    
-    // Generate filename based on category/context
     if (category === 'users' || category === 'admin_profile') {
       finalFilename = `${cleanEntityName}_${entityID}${ext}`;
     } else if (category === 'company_assets') {
@@ -74,23 +106,37 @@ const moveFileToFinalLocation = async (tempFilePath, adminID, adminName, categor
     } else if (category === 'sales' || category === 'purchase') {
       const timestamp = Date.now();
       finalFilename = `${category}_${cleanEntityName}_${timestamp}${ext}`;
+    } else if (category === "customerFinancialDocument" || category === "attachments") {
+      console.log('Category was: ', category);
+      finalFilename = filename;
     } else {
       finalFilename = `${cleanEntityName}_${entityID}_${Date.now()}${ext}`;
     }
   }
+  // --- End custom filename logic ---
 
   const finalPath = path.join(finalDir, finalFilename);
-  
-  // Move file from temp to final location
   fs.renameSync(tempFilePath, finalPath);
-  
-  // Return only relative path without baseUrl
+
+  // Build relative path for DB
+  let relativePath;
   if (companyID && companyName) {
     const cleanCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
-    return `/uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}/${category}/${finalFilename}`;
+    if (cleanSubfolders && cleanSubfolders.length > 0) {
+      relativePath = path.join(
+        `/uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}`,
+        ...cleanSubfolders,
+        category,
+        finalFilename
+      );
+    } else {
+      relativePath = `/uploads/${cleanAdminName}_${adminID}/${cleanCompanyName}_${companyID}/${category}/${finalFilename}`;
+    }
   } else {
-    return `/uploads/${cleanAdminName}_${adminID}/${category}/${finalFilename}`;
+    relativePath = `/uploads/${cleanAdminName}_${adminID}/${category}/${finalFilename}`;
   }
+
+  return relativePath.replace(/\\/g, '/'); // For Windows compatibility
 };
 
 const cleanupTempFile = (tempFilePath) => {

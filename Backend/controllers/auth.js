@@ -134,10 +134,10 @@ const login = async (req, res) => {
   
   if (role === "user") {
     // For users, include adminID and companyID in token
-    token = generateToken(account._id, account.name, role, account.adminID, account.companyID);
+    token = generateToken(account._id, account.name, role, account.mode, account.adminID, account.companyID);
   } else if (role === "admin") {
     // For admins, only include their own ID
-    token = generateToken(account._id, account.name, role);
+    token = generateToken(account._id, account.name, role, account.mode);
   } else if (role === "superadmin") {
     // For superadmin, only include their own ID
     token = generateToken(account._id, account.name, role);
@@ -148,6 +148,7 @@ const login = async (req, res) => {
     user: { 
       name: account.name, 
       role: account.role,
+      mode: account.mode,
       ...(role === "user" && { adminID: account.adminID, companyID: account.companyID })
     },
     token,

@@ -11,6 +11,8 @@ type ProfileContextType = {
   setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
   formData: Profile | null;
   setFormData: React.Dispatch<React.SetStateAction<Profile | null>>;
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -24,8 +26,19 @@ export const useProfile = () => {
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [formData, setFormData] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
-    <ProfileContext.Provider value={{ profile, setProfile, formData, setFormData }}>
+    <ProfileContext.Provider
+      value={{
+        profile,
+        setProfile,
+        formData,
+        setFormData,
+        isLoading,
+        setIsLoading,
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );

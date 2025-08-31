@@ -4,6 +4,7 @@ const { StatusCodes } = require("http-status-codes");
 const crypto = require('crypto');
 const { sendVerificationEmail } = require('../middleware/email');
 const Company = require("../models/company");
+const Admin = require("../models/admin")
 const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathHelper");
 const { sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
 
@@ -28,6 +29,13 @@ const createUser = async (req, res) => {
 
   req.body.companyName = company.name;
 
+  // CreatedBy and mode insertion for user:
+  const admin = await Admin.findOne({
+    _id: req.user.tokenID
+  });
+  // const mode = admin.mode;
+  console.log('The mode of current Admin is: ', admin.mode);
+
   // Generate verification token
   const emailVerificationToken = crypto.randomBytes(64).toString('hex');
   const emailVerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
@@ -37,6 +45,7 @@ const createUser = async (req, res) => {
     ...req.body,
     adminID: req.user.tokenID,
     companyID: company._id,
+    mode: admin.mode,
     emailVerificationToken,
     emailVerificationTokenExpiresAt,
     isVerified: false

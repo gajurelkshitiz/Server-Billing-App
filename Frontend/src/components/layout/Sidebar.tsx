@@ -24,6 +24,7 @@ import { allMenuItems } from "@/config/menuItems";
 import LogoutDialog from "@/components/common/LogoutDialog";
 import { useCompanyStateGlobal } from "@/provider/companyState";
 import NewSidebarFooter from "./newSidebarFooter";
+import { useProfile } from "@/context/ProfileContext";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -44,6 +45,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
   const [fiscalYearRefetch, setFiscalYearRefetch] = useState(0);
 
   const { state } = useCompanyStateGlobal();
+  const { profile, isLoading } = useProfile();
 
   let selectedCompany;
   if (role === "admin") {
@@ -56,8 +58,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
     const role = localStorage.getItem("role");
     let allowedRoutes = roleRoutes[role as keyof typeof roleRoutes] || [];
 
-    // Filter menu items based on allowed routes
     let filteredMenuItems = allMenuItems.filter((item) => {
+      // Only filter if NOT loading AND profile exists
+      if (
+        item.title === "Item Configuration" &&
+        !isLoading && // ← Wait for loading to complete
+        profile?.mode !== "computerized"
+      ) {
+        return false;
+      }
       if (item.isParent && item.children) {
         // For parent items, check if any child is allowed
         const hasAllowedChild = item.children.some((child: any) =>
@@ -71,7 +80,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
     // Additional filtering for admin when selectedCompany is 'all'
     if (selectedCompany && selectedCompany === "all" && role === "admin") {
       filteredMenuItems = filteredMenuItems.filter(
-        (item) => item.title !== "Purchase Module" && item.title !== "Sales Module"
+        (item) =>
+          item.title !== "Purchase Module" &&
+          item.title !== "Sales Module" &&
+          item.title !== "Attachments" && 
+          item.title !== "Item Configuration"
       );
     }
 
@@ -127,7 +140,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
     );
 
     setGroupMenu(groupedMenuItems);
-  }, [selectedCompany]);
+  }, [selectedCompany, profile, isLoading]); // ← Add isLoading dependency
 
   useEffect(() => {
     const fetchFiscalYear = async () => {
@@ -177,6 +190,19 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
     const isActive = location.pathname === item.path;
 
     if (item.isParent && item.children) {
+      // Add conditional child for Sales Module
+      let children = item.children;
+      // if (item.title === 'Sales Module' && profile?.mode === 'computerized') {
+      //   children = [
+      //     ...children,
+      //     {
+      //       title: "Sales Configuration",
+      //       path: "/sales-configuration",
+      //       icon: Settings,
+      //       color: "bg-blue-500",
+      //     }
+      //   ]
+      // }
       return (
         <div key={item.title}>
           <Button
@@ -205,7 +231,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
 
           {(!isCollapsed || isMobile) && (isMobile || isExpanded) && (
             <div className="ml-6 space-y-1 mt-1">
-              {item.children.map((child: any) => {
+              {children.map((child: any) => { // <-- use 'children' here!
                 const ChildIcon = child.icon;
                 const isChildActive = location.pathname === child.path;
 

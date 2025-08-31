@@ -13,6 +13,10 @@ const supplierPaymentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'Company',
     },
+    adminID: {
+            type: mongoose.Schema.Types.ObjectId,
+            refPath: 'admin',
+    },
     totalDueLeft: {
         type: Number,
         required: true

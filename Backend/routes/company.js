@@ -22,7 +22,7 @@ router.route("/")
     .get(authorizeRoles(["admin","user"]), getAllCompanies);
 
 router.route("/:id")
-    .get(authorizeRoles(["admin"]), getCompany)
+    .get(authorizeRoles(["admin", "user"]), getCompany)
     .patch(authorizeRoles(["admin"]), upload.single('logo'), updateCompany)
     .delete(authorizeRoles(["admin"]), deleteCompany);
 

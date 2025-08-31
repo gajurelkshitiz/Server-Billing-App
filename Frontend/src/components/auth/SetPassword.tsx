@@ -71,16 +71,16 @@ const SetPassword = () => {
   const passwordsMatch = password && confirmPassword && password === confirmPassword;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md shadow border border-gray-200 bg-white rounded-xl">
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Dear {name || "User"}, your email is successfully verified.
+              {name ? `Dear ${name}, your email is verified.` : "Your email is verified."}
             </h1>
-            <p className="text-gray-600">Set up your password to continue.</p>
+            <p className="text-gray-600">Set your password to continue.</p>
           </div>
-          <form onSubmit={handleSetPassword} className="space-y-6">
+          <form onSubmit={handleSetPassword} className="space-y-5">
             <div>
               <Input
                 type="password"
@@ -89,6 +89,7 @@ const SetPassword = () => {
                 onChange={e => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
             <div>
@@ -99,6 +100,7 @@ const SetPassword = () => {
                 onChange={e => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
+                className="rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
               {confirmPassword && password !== confirmPassword && (
                 <p className="text-red-500 text-sm mt-1">Passwords do not match</p>
@@ -106,7 +108,7 @@ const SetPassword = () => {
             </div>
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow"
               disabled={!passwordsMatch || loading}
             >
               {loading ? "Setting..." : "Set Password"}

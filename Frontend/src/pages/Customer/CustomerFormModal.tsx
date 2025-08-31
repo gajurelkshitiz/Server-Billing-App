@@ -56,6 +56,9 @@ const CustomerFormModal = ({
   // Add more detailed logging
   // console.log(`Using as a role: ${role} and global company context value is: ${state?.companyID} and company Name is: ${state?.companyName}`);
 
+  // Advanced Setting toggle
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   // useEffect(() => {
   //   if (isModalOpen) {
   //     loadCompanies();
@@ -139,15 +142,49 @@ const CustomerFormModal = ({
             <Label htmlFor="prevClosingBalance">
               Prev Year Closing Balance<span className="text-red-500 ml-1">*</span>
             </Label>
-            <Input
-              id="prevClosingBalance"
-              type="Number"
-              value={formData["prevClosingBalance"] || ""}
-              onChange={(e) => handleInputChange("prevClosingBalance", e.target.value)}
-              placeholder="Enter Previous Year Closing Amount"
-              required
-              className="mt-1"
-            />
+            <div className="flex mt-1 w-full max-w-full">
+              {/* Dr./Cr. Toggle Buttons */}
+              <div className="flex rounded-l border border-gray-300 overflow-hidden">
+                <button
+                  type="button"
+                  className={`px-4 py-1 font-semibold focus:outline-none transition-colors ${
+                    formData.type !== "credit"
+                      ? "bg-red-200 text-red-800"
+                      : "bg-white text-gray-700"
+                  }`}
+                  style={{ borderRight: "1px solid #e5e7eb" }}
+                  onClick={() => handleInputChange("type", "debit")}
+                >
+                  Dr.
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-1 font-semibold focus:outline-none transition-colors ${
+                    formData.type === "credit"
+                      ? "bg-green-200 text-green-800"
+                      : "bg-white text-gray-700"
+                  }`}
+                  onClick={() => handleInputChange("type", "credit")}
+                >
+                  Cr.
+                </button>
+              </div>
+              {/* Input field */}
+              <Input
+                id="prevClosingBalance"
+                type="number"
+                value={formData["prevClosingBalance"] || ""}
+                onChange={(e) => handleInputChange("prevClosingBalance", e.target.value)}
+                placeholder="Amount"
+                required
+                className="rounded-l-none rounded-r border border-l-0 border-gray-300 flex-1 min-w-0"
+                style={{
+                  borderTopLeftRadius: 0,
+                  borderBottomLeftRadius: 0,
+                  borderLeft: "none"
+                }}
+              />
+            </div>
           </div>
 
           {/* PAN Number */}
@@ -251,6 +288,54 @@ const CustomerFormModal = ({
             </Select>
           </div>
 
+          
+          {/* Advanced Setting Toggle */}
+          <div>
+            <button
+              type="button"
+              className="text-blue-600 underline text-sm focus:outline-none"
+              onClick={() => setShowAdvanced((prev) => !prev)}
+            >
+              {showAdvanced ? 'Hide Advanced ' : 'Advanced '}
+            </button>
+          </div>
+
+          {/* Advanced Fields */}
+          {showAdvanced && (
+            <>
+              <div>
+                <Label htmlFor="creditLimitAmount">
+                  Credit Limit Amount
+                </Label>
+                <Input
+                  id="creditLimitAmount"
+                  type="number"
+                  name="creditLimitAmount"
+                  value={formData["creditLimitAmount"] || ""}
+                  onChange={e => handleInputChange("creditLimitAmount", e.target.value)}
+                  placeholder="Enter credit limit amount"
+                  min="0"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="creditTimePeriodInDays">
+                  Credit Time Period (Days)
+                </Label>
+                <Input
+                  id="creditTimePeriodInDays"
+                  type="number"
+                  name="creditTimePeriodInDays"
+                  value={formData["creditTimePeriodInDays"] || ""}
+                  onChange={e => handleInputChange("creditTimePeriodInDays", e.target.value)}
+                  placeholder="Enter credit time period in days"
+                  min="0"
+                  className="mt-1"
+                />
+              </div>
+            </>
+          )}
+
           <div className="flex space-x-3 pt-4">
             <Button
               type="button"
@@ -277,6 +362,7 @@ const CustomerFormModal = ({
                 : "Create"}
             </Button>
           </div>
+
         </form>
       </DialogContent>
     </Dialog>

@@ -188,7 +188,8 @@ const exportCsv = (res, data) => {
 };
 
 // Main export controller
-const exportAllDatabaseData = async (req, res) => {
+const 
+exportAllDatabaseData = async (req, res) => {
   console.log(req.query);
   console.log(req.query.format);
 

@@ -4,16 +4,26 @@ const router = express.Router();
 const authorizeRoles = require("../middleware/authorizeRoles");
 const {
   exportAllDatabaseData,
-  // exportAllDatabaseDataJSON
 } = require("../controllers/superadminDatabaseExport.js");
 
-// Only superadmin should be able to export entire database
+const {
+  exportAdminDatabaseData
+} = require("../controllers/adminDatabaseExport.js");
+
+// Single route that handles both superadmin and admin
 router.route("/files")
-  .get(authorizeRoles(["superadmin"]), exportAllDatabaseData);
-
-
-// yo chaidaina paxi....  
-// router.route("/json")
-//   .get(authorizeRoles(["superadmin"]), exportAllDatabaseDataJSON);
+  .get(authorizeRoles(["superadmin", "admin"]), (req, res) => {
+    // Route based on user role
+    if (req.user.role === "superadmin") {
+      return exportAllDatabaseData(req, res);
+    } else if (req.user.role === "admin") {
+      return exportAdminDatabaseData(req, res);
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Invalid role."
+      });
+    }
+  });
 
 module.exports = router;
