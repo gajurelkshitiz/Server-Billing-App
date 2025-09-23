@@ -10,6 +10,7 @@ const ObjectId = mongoose.Types.ObjectId;
 
 // Customer Payment Entry
 const createCustomerPayment = async (req, res) => {
+    console.log('For Customer Payment Checking: ', req.body);
     const {customerID, customerName, companyID, amountPaid, paymentMode} = req.body;
     if (!customerID || !customerName || !companyID || !amountPaid || !paymentMode){
         throw new BadRequestError("Please provide all values");
@@ -44,11 +45,27 @@ const createCustomerPayment = async (req, res) => {
 // Supplier Payment Entry
 const createSupplierPayment = async (req, res) => {
     console.log(req.body);
-    const {supplierID, supplierName, companyID, totalDueLeft, amountPaid, paymentMode, remarks} = req.body;
-    if (!supplierID || !supplierName || !companyID || !totalDueLeft || !amountPaid || !paymentMode || !remarks){
+    const {supplierID, supplierName, companyID, amountPaid, paymentMode} = req.body;
+    if (!supplierID || !supplierName || !companyID || !amountPaid || !paymentMode){
         throw new BadRequestError("Please provide all values");
     }
-    const supplierPaymentList = await SupplierPayment.create({...req.body})
+    // also add adminID into the payment:
+    let adminID;
+    if(req.user.adminID) {
+        adminID = req.user.adminID;
+    }
+    adminID = req.user.tokenID;
+
+    // get current date:
+    const date = new NepaliDate();
+    console.log('inside customer payment date is: ', date);
+
+
+    const supplierPaymentList = await SupplierPayment.create({
+        ...req.body,
+        date, 
+        adminID
+    })
     console.log(supplierPaymentList);
     res.status(StatusCodes.CREATED).json({supplierPaymentList});
 }
@@ -80,6 +97,37 @@ const getSalesPaymentList = async (req, res) => {
     }
 };
 
+
+
+// list all the PurchasePaymentList for a Supplier
+const getPurchasePaymentList = async (req, res) => {
+    console.log(req.query);
+    try {
+        const { supplierID, companyID } = req.query;
+
+        if (!supplierID || !companyID) {
+            return res.status(400).json({ message: "Missing supplierID or companyID" });
+        }
+
+        if (!ObjectId.isValid(supplierID) || !ObjectId.isValid(companyID)) {
+            return res.status(400).json({ message: "Invalid ObjectId format" });
+        }
+
+        const entries = await SupplierPayment.find({
+            supplierID: new ObjectId(supplierID),
+            companyID: new ObjectId(companyID)
+        });
+
+        console.log('entries:', entries);
+        res.json(entries);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching Purchase Payment List", error });
+    }
+};
+
+
+
+// TODO: Maybe these are not being used::
 
 // get payment summary for sales:
 const getSalesPaymentSummary = async (req, res) => {
@@ -122,31 +170,7 @@ const getSalesPaymentSummary = async (req, res) => {
     
 }
 
-// list all the PurchasePaymentList for a Supplier
-const getPurchasePaymentList = async (req, res) => {
-    console.log(req.query);
-    try {
-        const { supplierID, companyID } = req.query;
 
-        if (!supplierID || !companyID) {
-            return res.status(400).json({ message: "Missing supplierID or companyID" });
-        }
-
-        if (!ObjectId.isValid(supplierID) || !ObjectId.isValid(companyID)) {
-            return res.status(400).json({ message: "Invalid ObjectId format" });
-        }
-
-        const entries = await SupplierPayment.find({
-            supplierID: new ObjectId(supplierID),
-            companyID: new ObjectId(companyID)
-        });
-
-        console.log('entries:', entries);
-        res.json(entries);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching Purchase Payment List", error });
-    }
-};
 
 
 // get payment summary for sales:
@@ -195,7 +219,7 @@ module.exports = {
     createCustomerPayment,
     createSupplierPayment,
     getSalesPaymentList,
-    getSalesPaymentSummary,
     getPurchasePaymentList,
+    getSalesPaymentSummary,
     getPurchasePaymentSummary
 };

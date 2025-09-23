@@ -116,6 +116,7 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
+    console.log('Filtering file:', file.originalname, 'with mimetype:', file.mimetype);
     const allowedMimes = [
       "image/jpeg", "image/png", "image/gif", "image/webp",
       "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

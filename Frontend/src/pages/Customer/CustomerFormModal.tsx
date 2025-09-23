@@ -59,29 +59,12 @@ const CustomerFormModal = ({
   // Advanced Setting toggle
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // useEffect(() => {
-  //   if (isModalOpen) {
-  //     loadCompanies();
-  //   }
-  // }, [isModalOpen]);
 
   useEffect(() => {
     if (isModalOpen && state?.companyID && !formData.companyID) {
       handleInputChange("companyID", state.companyID);
     }
   }, [isModalOpen, state?.companyID]);
-
-  // const loadCompanies = async () => {
-  //   setLoadingCompanies(true);
-  //   try {
-  //     const companiesData = await fetchCompanies();
-  //     setCompanies(companiesData);
-  //   } catch (error) {
-  //     console.error("Failed to load companies:", error);
-  //   } finally {
-  //     setLoadingCompanies(false);
-  //   }
-  // };
 
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

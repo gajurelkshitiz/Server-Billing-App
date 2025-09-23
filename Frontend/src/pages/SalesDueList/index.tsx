@@ -36,6 +36,7 @@ const SalesDueListPage = () => {
   } = useSalesDueList();
 
   const handlePay = (customerData: any) => {
+    console.log('Selected customer for payment: ', customerData);
     setSelectedCustomer(customerData);
     setSelectedAction('pay');
   };
@@ -264,7 +265,7 @@ const SalesDueListPage = () => {
 
   useEffect(() => {
     if (state.companyID === 'all') {
-      navigate('/dashboard');
+      navigate('/home/dashboard');
     }
   }, [state.companyID]);
 
@@ -314,7 +315,13 @@ const SalesDueListPage = () => {
 
         {selectedAction === 'pay' && selectedCustomer && (
           <PaymentProcessModal
-            selectedCustomer={selectedCustomer}
+            partyType="customer"
+            selectedParty={{
+              id: selectedCustomer._id || selectedCustomer.customerID,
+              name: selectedCustomer.name,
+              totalDue: selectedCustomer.totalDue,
+            }}
+            // selectedCustomer={selectedCustomer}
             onClose={handleModalClose}
             onSuccess={handlePaymentSuccess}
           />

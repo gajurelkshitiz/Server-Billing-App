@@ -1,30 +1,65 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PurchaseEntry } from "./../types";
 import { getAuthHeaders } from "@/utils/auth";
+import { useNotifications } from "@/context/NotificationContext";
 
 export function usePurchaseEntry() {
   const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<PurchaseEntry>>({});
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    supplierID: "",
+    minAmount: "",
+    maxAmount: "",
+  });
+
 
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
-  // const getAuthHeaders = () => ({
-  //   Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //   "Content-Type": "application/json",
-  //   "X-Role": localStorage.getItem("role") || "",
-  // });
 
-  const fetchPurchaseEntries = async () => {
+  const fetchPurchaseEntries = async (pageParam = page, limitParam = limit, filterParams = filters) => {
     setLoading(true);
+    const baseUrl = `${import.meta.env.REACT_APP_API_URL}/purchaseEntry/`;
+    const role = localStorage.getItem("role");
+    const isAdmin = role === "admin";
+    const companyID = localStorage.getItem('companyID'); 
+
+    // Build query parameters
+    const queryParams = new URLSearchParams({
+      page: pageParam.toString(),
+      limit: limitParam.toString(),
+    });
+
+    // Add company ID
+    if (isAdmin && companyID) {
+      queryParams.append('companyID', companyID);
+    }
+
+    // Add filter parameters
+    if (filterParams.startDate) queryParams.append('startDate', filterParams.startDate);
+    if (filterParams.endDate) queryParams.append('endDate', filterParams.endDate);
+    if (filterParams.supplierID) queryParams.append('supplierID', filterParams.supplierID);
+    if (filterParams.minAmount) queryParams.append('minAmount', filterParams.minAmount);
+    if (filterParams.maxAmount) queryParams.append('maxAmount', filterParams.maxAmount);
+
+    const url = `${baseUrl}?${queryParams.toString()}`;
+
+    console.log("url for fetching purchase entries is: ", url);
+
     try {
-      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/purchaseEntry/`, {
+      const response = await fetch(url, {
         headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
+        console.log('purchaseEntries from purchase entry hook is: ', data.purchaseEntries);
         setPurchaseEntries(data.purchaseEntries || []);
       } else {
         toast({
@@ -47,6 +82,17 @@ export function usePurchaseEntry() {
   useEffect(() => {
     fetchPurchaseEntries();
   }, []);
+
+  // Handle filter changes - memoize this function
+  const handleFilterChange = useCallback((newFilters: any) => {
+    setFilters(newFilters);
+    fetchPurchaseEntries(1, limit, newFilters); // Reset to page 1 when filters change
+  }, [limit]);
+
+  // Only fetch on page/limit changes, not on filters (filters are handled by handleFilterChange)
+  useEffect(() => {
+    fetchPurchaseEntries(page, limit, filters);
+  }, [page, limit]);
 
   const addNewPurchaseEntryHandler = async () => {
     // const url = `${import.meta.env.REACT_APP_API_URL}/purchaseEntry/`;
@@ -190,6 +236,13 @@ export function usePurchaseEntry() {
     // deleteAdmin,
     addNewPurchaseEntryHandler,
     formData,
-    setFormData
+    setFormData,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    handleFilterChange, // Add this new function
+    filters, // Add this to expose current filters
   };
 }

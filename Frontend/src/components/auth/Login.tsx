@@ -54,7 +54,7 @@ const Login = () => {
         setProfile(null); // <-- Reset context after login
 
         // Optionally, fetch profile here or let ProfilePage/Header do it
-        navigate('/dashboard');
+        navigate('/home/dashboard');
       } else if (response.status === 401) {
         toast({
           title: "Unauthorized",

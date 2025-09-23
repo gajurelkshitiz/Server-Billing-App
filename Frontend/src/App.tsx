@@ -6,7 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./components/auth/Login";
-import Dashboard from "./components/dashboard/Dashboard";
+import HomeLayout from "./pages/Home/HomeLayout";
+import Dashboard from "./pages/Home/dashboard/Dashboard";
+import Analytics from "./pages/Home/analytics/Analytics";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import NotFound from "./pages/NotFound";
@@ -16,7 +18,6 @@ import { NotificationProvider } from '@/context/NotificationContext';
 import AdminPage from "./pages/Admin";
 import SubscriptionPage from "./pages/Subscription";
 import SubscriptionAvailablePage from "./pages/SubscriptionAvailable";
-import PurchaseEntryPage from "./pages/PurchaseEntry"
 import { Sub } from "@radix-ui/react-dropdown-menu";
 import UserPage from "./pages/User";
 import CompanyPage from "./pages/Company";
@@ -32,6 +33,7 @@ import { ProfileProvider } from "@/context/ProfileContext"; // <-- import
 import { CompanyProvider } from "@/context/CompanyContext"; // <-- import
 // import PurchaseDueListPage from "./pages/PurchaseDueList";
 import SalesDueListPage from "./pages/SalesDueList";
+import PurchaseDueListPage from "./pages/PurchaseDueList";
 import { CompanyStateProvider } from "./provider/companyState";
 import DropdownComponent from "./DropdownText";
 // import SalesPaymentListPage from "./pages/SalesPaymentList";
@@ -48,6 +50,7 @@ import WithSearchLayout from './pages/Sales/WithSearchLayout';
 
 import { FiscalYearProvider } from "./context/FiscalYearContext";
 import CustomerInfoPage from "./pages/CustomerProfileInfo/CustomerInfoPage";
+import SupplierInfoPage from "./pages/SupplierProfileInfo/SupplierInfoPage";
 import SettingsPage from "./pages/Settings/SettingsPage";
 import { AdminProfilePage } from "./pages/AdminProfile";
 import { UserProfilePage } from "./pages/UserProfile";
@@ -55,6 +58,7 @@ import  TemplateDownloadPage  from "./pages/Templates/TemplateDownloadPage";
 // import './styles/payment-slip-print.css';
 
 import SalesEntryWrapper from "./pages/SalesEntryWrapper";
+import PurchaseEntryWrapper from "./pages/PurchaseEntryWrapper";
 import NotificationsPage from './pages/Notifications';
 import SalesConfiguration from "./pages/ItemConfiguration";
 
@@ -88,16 +92,39 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <Dashboard />
+                    <HomeLayout />
                   </Layout>
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Dashboard />} />
+            </Route>
+
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <HomeLayout />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Analytics />} />
+            </Route> */}
+
+
+             {/* This is for testing of nested route of  Home */}
+            <Route path="home" element={<Layout><HomeLayout /></Layout>}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="analytics" element={<Analytics />} />
+            </Route>
+
             <Route
               path="/admin"
               element={
@@ -173,7 +200,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <PurchaseEntryPage />
+                    <PurchaseEntryWrapper />
                   </Layout>
                 </ProtectedRoute>
               }
@@ -198,7 +225,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             /> */}
-            {/* <Route 
+            <Route 
               path="/purchasedueList"
               element={
                 <ProtectedRoute>
@@ -207,7 +234,7 @@ const App = () => (
                   </Layout>
                 </ProtectedRoute>
               }
-            /> */}
+            />
             <Route 
               path="/salesdueList"
               element={
@@ -306,6 +333,15 @@ const App = () => (
               element={
                   <Layout>
                     <CustomerInfoPage />
+                  </Layout>
+              }
+            />
+
+            <Route 
+              path="/supplierInfo/:companyID/:supplierID"
+              element={
+                  <Layout>
+                    <SupplierInfoPage />
                   </Layout>
               }
             />

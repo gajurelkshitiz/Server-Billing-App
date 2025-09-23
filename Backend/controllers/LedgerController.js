@@ -1,10 +1,12 @@
 // controllers/LedgerController.js
 const {
-    getCustomerLedgerService
+    getCustomerLedgerService,
+    getSupplierLedgerService
 } = require("../services/LedgerService.js");
 
 const getCustomerLedger = async (req, res) => {
   try {
+    console.log("This is customer ledger.");
     const { customerId } = req.params;
     const { fromDate, toDate } = req.query;
 
@@ -24,10 +26,11 @@ const getCustomerLedger = async (req, res) => {
 
 const getSupplierLedger = async (req, res) => {
   try {
+    console.log("This is Supplier ledger.");
     const { supplierId } = req.params;
     const { fromDate, toDate } = req.query;
 
-    const ledger = await LedgerService.getSupplierLedgerService(
+    const ledger = await getSupplierLedgerService(
       supplierId,
       fromDate,
       toDate

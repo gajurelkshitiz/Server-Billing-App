@@ -15,74 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Supplier } from "./types";
-import { useToast } from "@/hooks/use-toast";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { Company } from "src/pages/Company/types";
 import { fetchCompanies } from "../DataFetchingFunctions/fetchCompanies";
-
-interface FormField {
-  name: string;
-  label: string;
-  type: "text" | "email" | "password" | "number" | "tel" | "select";
-  required?: boolean;
-  options?: { label: string; value: string }[];
-  placeholder?: string;
-  dynamicOptions?: boolean; // Add this property
-}
-
-const fields: FormField[] = [
-  {
-    name: "name",
-    label: "Full Name",
-    type: "text",
-    placeholder: "enter full name",
-    required: true,
-  },
-  {
-    name: "companyID",
-    label: "Company Name",
-    type: "select",
-    required: true,
-    dynamicOptions: true, // Mark as dynamic
-    placeholder: "Select Company",
-  },
-  {
-    name: "address",
-    label: "Address",
-    type: "text",
-    placeholder: "enter your address",
-    required: true,
-  },
-  {
-    name: "email",
-    label: "Email",
-    type: "email",
-    placeholder: "Enter email (eg. example@gmail.com)",
-    required: true,
-  },
-  {
-    name: "status",
-    label: "Status",
-    type: "select",
-    required: true,
-    dynamicOptions: false, // Mark as static
-    options: [
-      { label: "Active", value: "true" },
-      { label: "Inactive", value: "false" },
-    ],
-  },
-];
+import { useToast } from "@/hooks/use-toast";
+import { useCompanyStateGlobal, CompanyContextType } from "../../provider/companyState";
 
 interface SupplierFormModalProps {
   isModalOpen: boolean;
-  setIsModalOpen: any;
+  setIsModalOpen: (open: boolean) => void;
   formData: Record<string, any>;
   handleInputChange: (name: string, value: string) => void;
   handleSubmit: (e: any) => void;
-  addNewSupplierHandler?: () => Promise<boolean>;
-  updateSupplierHandler?: () => Promise<boolean>;
   editingSupplier: boolean;
   title: string;
   loading?: boolean;
@@ -94,74 +39,38 @@ const SupplierFormModal = ({
   formData,
   handleInputChange,
   handleSubmit,
-  addNewSupplierHandler,
-  updateSupplierHandler,
   editingSupplier,
   title,
   loading = false,
 }: SupplierFormModalProps) => {
-  // State for dynamic options
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const { toast } = useToast();
+  const { state }: CompanyContextType = useCompanyStateGlobal();
 
-  // --- Add local loading state for submit button ---
+  // Local loading for submit button
   const [localLoading, setLocalLoading] = useState(false);
 
-  // Load companies when modal opens
+
   useEffect(() => {
-    if (isModalOpen) {
-      console.log("Before loading companies");
-      loadCompanies(); // Rename function
-      console.log("After loading companies");
-      console.log(companies);
+    if (isModalOpen && state?.companyID && !formData.companyID) {
+      handleInputChange("companyID", state.companyID);
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, state?.companyID]);
 
-  const loadCompanies = async () => {
-    // Rename function
-    setLoadingCompanies(true);
-    try {
-      const companiesData = await fetchCompanies();
-      setCompanies(companiesData);
-    } catch (error) {
-      console.error("Failed to load companies:", error);
-    } finally {
-      setLoadingCompanies(false);
-    }
-  };
 
-  // Function to get dynamic options
-  const getDynamicOptions = (fieldName: string) => {
-    switch (fieldName) {
-      case "companyID":
-        return companies.map((company) => ({
-          // Use companies instead of suppliers
-          label: company.name,
-          value: company._id,
-        }));
-      // Add more cases for other dynamic fields
-      default:
-        return [];
-    }
-  };
-
+  // Validate required fields
   const validateForm = () => {
-    for (const field of fields) {
-      if (
-        field.required &&
-        (!formData[field.name] || formData[field.name].toString().trim() === "")
-      ) {
-        return field.label; // Return the label of the missing field
-      }
-    }
-    // Phone number validation
-    if (!formData.phoneNo || !isValidPhoneNumber(formData.phoneNo)) {
-      return "Phone Number";
-    }
+    if (!formData.name || formData.name.trim() === "") return "Full Name";
+    if (!formData.companyID || formData.companyID.trim() === "") return "Company Name";
+    if (!formData.prevClosingBalance || formData.prevClosingBalance === "") return "Prev Year Closing Balance";
+    if (!formData.panNo || formData.panNo.trim() === "") return "PAN Number";
+    if (!formData.address || formData.address.trim() === "") return "Address";
+    if (!formData.email || formData.email.trim() === "") return "Email";
+    if (!formData.phoneNo || !isValidPhoneNumber(formData.phoneNo)) return "Phone Number";
+    if (formData.status === undefined || formData.status === "") return "Status";
     return null;
   };
-
-  const { toast } = useToast();
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -189,13 +98,12 @@ const SupplierFormModal = ({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-
         <form
           onSubmit={handleFormSubmit}
           className="space-y-4 flex-1 overflow-y-auto p-2"
           style={{ minHeight: 0 }}
         >
-          {/* Name Field */}
+          {/* Full Name */}
           <div>
             <Label htmlFor="name">
               Full Name
@@ -206,49 +114,96 @@ const SupplierFormModal = ({
               type="text"
               value={formData["name"] || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              placeholder="enter your name"
-              required={true}
+              placeholder="Enter full name"
+              required
               className="mt-1"
             />
           </div>
 
-          {/* for company name dropdown */}
+          {/* Company Name (disabled input, like CustomerFormModal) */}
           <div>
             <Label htmlFor="companyID">
               Company Name
               <span className="text-red-500 ml-1">*</span>
             </Label>
-            <Select
-              value={formData["companyID"] || ""}
-              onValueChange={(value) => handleInputChange("companyID", value)}
-              disabled={loadingCompanies || editingSupplier}
-            >
-              <SelectTrigger id="companyID" className="mt-1">
-                <SelectValue
-                  placeholder={loadingCompanies ? "Loading..." : "Select Company"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingCompanies ? (
-                  <SelectItem value="__loading__" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : companies.length === 0 ? (
-                  <SelectItem value="__none__" disabled>
-                    No companies found
-                  </SelectItem>
-                ) : (
-                  companies.map((company) => (
-                    <SelectItem key={company._id} value={company._id}>
-                      {company.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Input
+              id="companyID"
+              type="text"
+              value={state?.companyName || "No company selected"}
+              disabled
+              className="mt-1 bg-gray-50 text-gray-1000 cursor-not-allowed"
+            />
           </div>
 
-          {/* Address Field */}
+          {/* Prev Year Closing Balance with Dr/Cr toggle */}
+          <div>
+            <Label htmlFor="prevClosingBalance">
+              Prev Year Closing Balance
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <div className="flex mt-1 w-full max-w-full">
+              {/* Dr./Cr. Toggle Buttons */}
+              <div className="flex rounded-l border border-gray-300 overflow-hidden">
+                <button
+                  type="button"
+                  className={`px-4 py-1 font-semibold focus:outline-none transition-colors ${
+                    formData.type !== "credit"
+                      ? "bg-red-200 text-red-800"
+                      : "bg-white text-gray-700"
+                  }`}
+                  style={{ borderRight: "1px solid #e5e7eb" }}
+                  onClick={() => handleInputChange("type", "debit")}
+                >
+                  Dr.
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-1 font-semibold focus:outline-none transition-colors ${
+                    formData.type === "credit"
+                      ? "bg-green-200 text-green-800"
+                      : "bg-white text-gray-700"
+                  }`}
+                  onClick={() => handleInputChange("type", "credit")}
+                >
+                  Cr.
+                </button>
+              </div>
+              {/* Input field */}
+              <Input
+                id="prevClosingBalance"
+                type="number"
+                value={formData["prevClosingBalance"] || ""}
+                onChange={(e) => handleInputChange("prevClosingBalance", e.target.value)}
+                placeholder="Amount"
+                required
+                className="rounded-l-none rounded-r border border-l-0 border-gray-300 flex-1 min-w-0"
+                style={{
+                  borderTopLeftRadius: 0,
+                  borderBottomLeftRadius: 0,
+                  borderLeft: "none"
+                }}
+              />
+            </div>
+          </div>
+
+          {/* PAN Number */}
+          <div>
+            <Label htmlFor="panNo">
+              PAN Number
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="panNo"
+              type="text"
+              value={formData["panNo"] || ""}
+              onChange={(e) => handleInputChange("panNo", e.target.value)}
+              placeholder="Enter PAN Number"
+              required
+              className="mt-1"
+            />
+          </div>
+
+          {/* Address */}
           <div>
             <Label htmlFor="address">
               Address
@@ -259,13 +214,13 @@ const SupplierFormModal = ({
               type="text"
               value={formData["address"] || ""}
               onChange={(e) => handleInputChange("address", e.target.value)}
-              placeholder="enter you address"
-              required={true}
+              placeholder="Enter address"
+              required
               className="mt-1"
             />
           </div>
 
-          {/* Email Field */}
+          {/* Email */}
           <div>
             <Label htmlFor="email">
               Email
@@ -276,17 +231,18 @@ const SupplierFormModal = ({
               type="email"
               value={formData["email"] || ""}
               onChange={(e) => handleInputChange("email", e.target.value)}
-              placeholder="email (e.g. example@gmail.com) "
-              required={true}
+              placeholder="Enter email (e.g. example@gmail.com)"
+              required
               className="mt-1"
               disabled={editingSupplier}
             />
           </div>
 
-          {/* Phone Number Field */}
+          {/* Phone Number */}
           <div>
             <Label htmlFor="phoneNo">
-              Phone Number<span className="text-red-500 ml-1">*</span>
+              Phone Number
+              <span className="text-red-500 ml-1">*</span>
             </Label>
             <PhoneInput
               id="phoneNo"
@@ -309,7 +265,7 @@ const SupplierFormModal = ({
             )}
           </div>
 
-          {/* Status Field */}
+          {/* Status */}
           <div>
             <Label htmlFor="status">
               Status
@@ -321,23 +277,22 @@ const SupplierFormModal = ({
                   ? "true"
                   : formData.status === false
                   ? "false"
-                  : ""
+                  : formData.status || ""
               }
               onValueChange={(value) => handleInputChange("status", value)}
+              required
             >
               <SelectTrigger id="status" className="mt-1">
                 <SelectValue placeholder="Select..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem key="true" value="true">
-                  Active
-                </SelectItem>
-                <SelectItem key="false" value="false">
-                  Inactive
-                </SelectItem>
+                <SelectItem key="true" value="true">Active</SelectItem>
+                <SelectItem key="false" value="false">Inactive</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          
 
           <div className="flex space-x-3 pt-4">
             <Button

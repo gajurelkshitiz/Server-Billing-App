@@ -1,16 +1,16 @@
 export const roleRoutes = {
   superadmin: [
-    '/dashboard', '/admin', '/subscription', '/subscription-available', '/fiscalyear', '/permission','/notifications', '/settings'
+    '/home/dashboard', '/admin', '/subscription', '/subscription-available', '/fiscalyear', '/permission','/notifications', '/settings'
   ],
   admin: [
-    '/dashboard', '/user', '/company', '/customer', '/supplier', '/purchaseEntry', 
+    '/home/dashboard', '/user', '/company', '/customer', '/supplier', '/purchaseEntry', 
     '/salesEntry', '/purchasedueList', '/salesdueList', '/salespaymentList', '/purchasepaymentList', 
-    '/paymentList', 'customerInfo', '/fiscalYear', '/subscription-available', '/permission', '/notifications', '/settings', 
-    '/admin-profile', '/download-templates', '/attachments', '/configuration'
+    '/paymentList', 'customerInfo', 'supplierInfo' ,'/fiscalYear', '/subscription-available', '/permission', '/notifications', '/settings', 
+    '/admin-profile', '/download-templates', '/attachments', '/configuration', '/home/analytics'
   ],
   user: [
-    '/dashboard', '/purchaseEntry', '/salesEntry', '/customer', '/supplier', '/purchasedueList', 
-    '/salesdueList', '/salespaymentList', '/purchasepaymentList', 'paymentList', 'customerInfo', '/permission', '/notifications',
-    '/settings', '/user-profile', '/download-templates',
+    '/home/dashboard', '/purchaseEntry', '/salesEntry', '/customer', '/supplier', '/purchasedueList', 
+    '/salesdueList', '/salespaymentList', '/purchasepaymentList', 'paymentList', 'customerInfo', 'supplierInfo', '/permission', '/notifications',
+    '/settings', '/user-profile', '/download-templates', '/home/analytics'
   ]
 };

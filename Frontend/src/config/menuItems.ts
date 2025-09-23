@@ -39,8 +39,8 @@ import {
 export const allMenuItems = [
   {
     section: "MAIN",
-    title: "Dashboard",
-    path: "/dashboard",
+    title: "Home",
+    path: "/home/dashboard",
     icon: FaChartLine, // Changed from FaHome to FaChartLine for better dashboard representation
     color: "bg-indigo-600", // Changed to more professional indigo
   },
@@ -84,13 +84,13 @@ export const allMenuItems = [
         color: "bg-blue-600", // Changed to blue for suppliers
         countKey: "suppliers",
       },
-      // {
-      //   title: "Purchase Due List",
-      //   path: "/purchasedueList",
-      //   icon: FaClipboardList,
-      //   color: "bg-amber-600", // Changed to amber for due items
-      //   countKey: "purchasedueList",
-      // },
+      {
+        title: "Purchase Due List",
+        path: "/purchasedueList",
+        icon: FaClipboardList,
+        color: "bg-amber-600", // Changed to amber for due items
+        countKey: "purchasedueList",
+      },
       // {
       //   title: "Purchase Payment List",
       //   path: "/purchasepaymentList",

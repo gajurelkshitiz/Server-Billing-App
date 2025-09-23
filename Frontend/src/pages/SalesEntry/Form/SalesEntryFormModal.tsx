@@ -386,12 +386,12 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
                 }
                 // required
               />
-            </div>
             {imagePreview && (
               <div className="mt-2">
                 <span className="text-sm font-medium">Preview:</span>
                 <img
-                  src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${imagePreview}`}
+                  // src={`${import.meta.env.REACT_APP_BACKEND_IMAGE_URL}${imagePreview}`}
+                  src={imagePreview}
                   alt="Preview"
                   className="max-h-40 border rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setOpenImageDialog(true)}
@@ -408,6 +408,7 @@ const SalesEntryFormModal: React.FC<SalesEntryFormModalProps> = ({
                 </div>
               </div>
             )}
+            </div>
 
             <div className="flex space-x-3 pt-4">
               <Button

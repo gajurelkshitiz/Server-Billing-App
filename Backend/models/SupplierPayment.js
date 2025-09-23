@@ -9,6 +9,9 @@ const supplierPaymentSchema = new mongoose.Schema({
     supplierName: {
         type: String,
     },
+    date: {
+        type: String,
+    },
     companyID: {
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'Company',
@@ -16,10 +19,6 @@ const supplierPaymentSchema = new mongoose.Schema({
     adminID: {
             type: mongoose.Schema.Types.ObjectId,
             refPath: 'admin',
-    },
-    totalDueLeft: {
-        type: Number,
-        required: true
     },
     amountPaid: {
         type: Number,

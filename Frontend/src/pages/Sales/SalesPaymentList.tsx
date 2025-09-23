@@ -60,7 +60,7 @@
 //   // Redirect to dashboard if company selection is invalid
 //   useEffect(() => {
 //     if (state.companyID == 'all' && state.companyID) {
-//       navigate('/dashboard');
+//       navigate('/home/dashboard');
 //     }
 //   }, [state.companyID])
 

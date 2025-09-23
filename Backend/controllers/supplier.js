@@ -6,10 +6,12 @@ const { BadRequestError, notFoundError } = require('../errors');
 
 // Define supplier-related functions
 const createSupplier = async (req, res) => {
-  const { name, email, phoneNo, address, status, companyID } = req.body;
-  if (!name || !email || !phoneNo || !address || !status || !companyID) {
+  const { name, email, phoneNo, address, prevClosingBalance, type, panNo, status, companyID } = req.body;
+  if (!name || !email || !phoneNo || !address || !prevClosingBalance || !panNo || !status || !companyID) {
     throw new BadRequestError('Please provide all values');
   }
+
+  console.log(req.body);
   req.body.createdBy = req.user.tokenID;
   // req.body.companyID = req.user.companyID;
   req.body.adminID = req.user.adminID;
@@ -25,26 +27,17 @@ const createSupplier = async (req, res) => {
 // euta adminID vanne, sabai users ma supplied chha, jun hami supplier mani supply garum,
 //  ani based on adminID hami supply kura haru fetch garum, based on one Admin ko data
 const getAllSuppliers = async (req, res) => {
-  const { adminID, companyID, tokenID } = req.user;
+
+   let companyID;
+  // for user, companyID from token:
+  companyID = req.user.companyID;
+
+  // for admin, where companyID comes from param
+  if (!companyID && req.query.companyID){
+    companyID = req.query.companyID;
+  }
   
-  // req.query;
-  console.log('checking req query for suppliers: ', req.query);
-
-  let suppliers;
-
-  if (adminID) {
-    // User: fetch suppliers created by this user
-    suppliers = await Supplier.find({ companyID: companyID }).sort('createdAt');
-  }
-  else {
-    // Admin: fetch suppliers created by admin (adminID == null) or by users under this admin (adminID == tokenID)
-    suppliers = await Supplier.find({
-      $or: [
-        { createdBy: tokenID, adminID: null },
-        { adminID: tokenID }
-      ]
-    }).sort('createdAt');
-  }
+  const suppliers = await Supplier.find({ companyID: companyID }).sort('createdAt');
 
   res.status(StatusCodes.OK).json({ suppliers, count: suppliers.length });
 };
@@ -134,10 +127,10 @@ const getSupplier = async (req, res) => {
 const updateSupplier = async (req, res) => {
   const {
     params: { id: supplierID },
-    body: { name, email, phoneNo, address, status },
+    body: { name, email, phoneNo, address, status, creditLimitAmount, creditTimePeriodInDays },
   } = req;
 
-  if (name === '' || email === '' || phoneNo === '' || address === '' || status === undefined) {
+  if (name === '' || email === '' || phoneNo === '' || address === '' || status === undefined || creditLimitAmount === undefined || creditTimePeriodInDays === undefined) {
     throw new BadRequestError('All fields cannot be empty');
   }
 

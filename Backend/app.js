@@ -2,10 +2,11 @@ require("dotenv").config();
 require("express-async-errors");
 
 // importing additional security packages
-const helmet = require("helmet");
+const helmet = require("helmet");     // yesle photo lai load huna deyena.
 const cors = require("cors");
 const xss = require("xss-clean");
 const rateLimiter = require("express-rate-limit");
+// const morgan = require("morgan");
 
 const express = require("express");
 const app = express();
@@ -18,7 +19,6 @@ const connectDB = require("./db/connect");
 // authentication middleware
 const authenticationMiddleware = require("./middleware/authentication");
 const errorMiddleware = require('./middleware/errorMiddleware');
-const logger = require('./middleware/logger');
 
 // routers importing
 const authRouter = require("./routes/auth");
@@ -32,8 +32,9 @@ const supplierRouter = require('./routes/supplier');
 const purchaseEntryRouter = require('./routes/purchaseEntry');
 const salesEntryRouter = require('./routes/salesEntry');
 const computerizedSalesEntryRouter = require('./routes/computerizedSalesEntry');
-const dueRouter = require('./routes/dueList');
-const paymentRouter = require('./routes/paymentList');
+const computerizedPurchaseEntryRouter = require('./routes/computerizedPurchaseEntry')
+const dueRouter = require('./routes/due');
+const paymentRouter = require('./routes/payment');
 const adminCountRouter = require('./routes/Dashboard Counts/adminDashboardCounts')
 const userCountRouter = require('./routes/Dashboard Counts/userDashboardCounts')
 const superadminCountRouter = require('./routes/Dashboard Counts/superadminDashboardCounts')
@@ -54,6 +55,9 @@ const adminDatabaseExportRouter = require('./routes/adminDatabaseExport')
 // invoice Generate
 const salesInvoiceRoutes = require('./routes/salesInvoice');
 
+// dashboard and analytics Charts:
+const dashboardChartRoutes = require('./routes/dashboardCharts');
+
 
 // importing error handling middlewares
 const notFoundMiddleware = require("./middleware/not-found");
@@ -63,17 +67,22 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 app.use(
   rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 2000, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    limit: 3000, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
     standardHeaders: "draft-8", // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
     // store: ... , // Redis, Memcached, etc. See below.
   })
 );
 
-// Use logger middleware
-app.use(logger);    
+// Use logger middleware : morgan
+// app.use(morgan('dev'));
+
+// Security middleware that protects app by setting various HTTP headers
+// app.use(helmet());
+
 // app.use(bodyParser.json());  
 app.use(express.json()); 
+// app.use(express.urlencoded({ extended: true })); // For urlencoded bodiesw
 
 // Static file serving for uploads with hierarchical structure
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -104,12 +113,13 @@ app.use("/api/v1/user", authenticationMiddleware, userRouter);
 app.use("/api/v1/company", authenticationMiddleware, companyRouter);
 
 app.use('/api/v1/fiscalYear', authenticationMiddleware, fiscalYearRouter);
-app.use('/api/v1/customer', authenticationMiddleware, customerRouter);
+app.use('/api/v1/customer', authenticationMiddleware, customerRouter); // used
 app.use('/api/v1/supplier', authenticationMiddleware, supplierRouter);
 app.use('/api/v1/purchaseEntry', authenticationMiddleware, purchaseEntryRouter);
 app.use('/api/v1/salesEntry', authenticationMiddleware, salesEntryRouter);
 app.use('/api/v1/computerizedSalesEntry', authenticationMiddleware, computerizedSalesEntryRouter);
-app.use('/api/v1/due', authenticationMiddleware, dueRouter);
+app.use('/api/v1/computerizedPurchaseEntry', authenticationMiddleware, computerizedPurchaseEntryRouter);
+app.use('/api/v1/due', authenticationMiddleware, dueRouter); // used for customer due TODO: will add supplier due logic also here.
 app.use('/api/v1/payment', authenticationMiddleware, paymentRouter);
 app.use('/api/v1/adminCount', authenticationMiddleware, adminCountRouter)
 app.use('/api/v1/userCount', authenticationMiddleware, userCountRouter)
@@ -125,9 +135,13 @@ app.use('/api/v1/databaseExport', authenticationMiddleware, fullDatabaseExportRo
 // app.use('/api/v1/admin-database-export', authenticationMiddleware, adminDatabaseExportRouter)
 // app.use('/api/v1/admin-database-export', adminDatabaseExportRouter)
 
-app.use('/api/v1/ledger', ledgerCreationRouter);
+app.use('/api/v1/ledger', ledgerCreationRouter); // used
 
 app.use('/api/v1/notifications', authenticationMiddleware, notificationRouter);
+
+// for dashboard and Analytics Charts:
+app.use('/api/v1/dashboard', authenticationMiddleware, dashboardChartRoutes);
+
 
 app.use('/api', salesInvoiceRoutes);
 

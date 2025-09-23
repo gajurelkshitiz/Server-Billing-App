@@ -230,22 +230,6 @@ const CustomerInfoPage: React.FC = () => {
       ),
       width: '80px'
     },
-    // { 
-    //   key: 'discount', 
-    //   header: 'Discount', 
-    //   render: (discount: number, row: any) => {
-    //     const displayValue = row.discountType === 'percentage' 
-    //       ? `${discount}%` 
-    //       : `Rs.${discount.toLocaleString('en-NP', { minimumFractionDigits: 2 })}`;
-        
-    //     return (
-    //       <span className="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded">
-    //         {displayValue}
-    //       </span>
-    //     );
-    //   },
-    //   width: '100px'
-    // },
     { 
       key: 'netTotalAmount', 
       header: 'Net Total', 
@@ -440,7 +424,13 @@ const CustomerInfoPage: React.FC = () => {
         {/* Modals */}
         {selectedAction === 'pay' && customer && (
           <PaymentProcessModal
-            selectedCustomer={customer}
+            partyType="customer"
+            selectedParty={{
+              id: customer.id,
+              name: customer.name,
+              totalDue: customer.totalDue
+            }}
+            // selectedCustomer={customer}
             onClose={handleModalClose}
             onSuccess={handlePaymentSuccess}
           />

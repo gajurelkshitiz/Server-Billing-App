@@ -197,55 +197,6 @@ export const useCustomerData = (companyID: string | undefined, customerID: strin
     fetchCustomerData();
   }, [companyID, customerID]);
 
-  // const addNewFinacialDocumentHandler = async () => {
-  //   const url = `${import.meta.env.REACT_APP_API_URL}/financial-documents`;  
-  //   try {
-  //     const form = new FormData();
-  //     // Append all fields to FormData
-  //     for (const key in formData) {
-  //       if (formData[key] !== undefined && formData[key] !== null) {
-  //         form.append(key, formData[key]);
-  //       }
-  //     }
-  //     const response = await fetch(url, {
-  //       method: "POST",
-  //       headers: {
-  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //         "X-Role": localStorage.getItem("role") || "",
-  //         // Do NOT set Content-Type, browser will set it for FormData
-  //       },
-  //       body: form,
-  //     });
-  //     const res_data = await response.json();
-  //     console.log(`Response Data from server after admin create: `);
-  //     console.log(res_data);
-
-  //     if (response.ok) {
-  //       toast({
-  //         title: "Success",
-  //         description: `Admin Created Successfully.`,
-  //       });
-  //       fetchAdmins();
-  //       setFormData({})
-  //       // TODO: close the model
-  //       return true;
-  //     } else {
-  //       toast({
-  //         title: "Error",
-  //         description: `Failed to create admin: ${res_data.msg}`,
-  //         variant: "destructive",
-  //       });
-  //       return false;
-  //     }
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to create admin",
-  //       variant: "destructive",
-  //     });
-  //     return false;
-  //   }
-  // };
 
   return {
     customer,

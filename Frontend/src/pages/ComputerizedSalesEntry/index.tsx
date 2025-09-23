@@ -65,7 +65,7 @@ const ComputerizedSalesEntryPage = () => {
 
   useEffect(() => {
     if (state.companyID == 'all' && state.companyID) {
-      navigate('/dashboard');
+      navigate('/home/dashboard');
     }
   }, [state.companyID]);
 

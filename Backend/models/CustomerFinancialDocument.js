@@ -1,6 +1,7 @@
 // models/CustomerFinancialDocument.js
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const { AttachmentSchema, ChequeSchema, GuaranteeSchema } = require('./FinancialDocumentTypes');
 
 // Base schema (common to all types)
 const baseOptions = {
@@ -16,43 +17,8 @@ const BaseSchema = new Schema({
 
 const CustomerFinancialDocument = mongoose.model('CustomerFinancialDocument', BaseSchema);
 
-// Attachment schema
-const Attachment = CustomerFinancialDocument.discriminator('attachment',
-  new Schema({
-    fileUrl: { type: String },
-    fileName: { type: String, required: true },
-    category: {
-      type: String,
-      required: true,
-      enum: ["Contract Agreement", "Legal Documents", "Registration Documents", "Other"]
-    }
-  })
-);
-
-// Cheque schema
-const Cheque = CustomerFinancialDocument.discriminator('cheque',
-  new Schema({
-    chequeNo: { type: String, required: true },
-    fileUrl: { type: String },
-    amount: { type: Number, required: true },
-    bankName: { type: String, required: true },
-    issueDate: { type: Date, required: true },
-    dueDate: { type: Date, required: true },
-    status: { type: String, enum: ["pending", "cleared", "bounced"], required: true }
-  })
-);
-
-// Guarantee schema
-const Guarantee = CustomerFinancialDocument.discriminator('guarantee',
-  new Schema({
-    guaranteeNo: { type: String, required: true },
-    fileUrl: { type: String },
-    amount: { type: Number, required: true },
-    bankName: { type: String, required: true },
-    issueDate: { type: Date, required: true },
-    expiryDate: { type: Date, required: true },
-    status: { type: String, enum: ["active", "expired", "claimed"], required: true }
-  })
-);
+const Attachment = CustomerFinancialDocument.discriminator('customer_attachment', AttachmentSchema);
+const Cheque = CustomerFinancialDocument.discriminator('customer_cheque', ChequeSchema);
+const Guarantee = CustomerFinancialDocument.discriminator('customer_guarantee', GuaranteeSchema);
 
 module.exports = { CustomerFinancialDocument, Attachment, Cheque, Guarantee };

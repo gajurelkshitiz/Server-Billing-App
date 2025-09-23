@@ -5,13 +5,19 @@ import { useToast } from "@/hooks/use-toast";
 import PaymentModeDropdown from "@/components/customUI/PaymentModeDropdown";
 
 interface PaymentProcessModalProps {
-  selectedCustomer: any;
+  partyType: 'customer' | 'supplier';
+  selectedParty: {
+    id: string;
+    name: string;
+    totalDue: number;
+  };
   onClose: () => void;
   onSuccess: () => void;
 }
 
 const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
-  selectedCustomer,
+  partyType,
+  selectedParty,
   onClose,
   onSuccess
 }) => {
@@ -24,7 +30,6 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
-    // Basic validation
     if (!amountPaid || amountPaid <= 0 || !paymentMode) {
       toast({
         title: "Error",
@@ -34,7 +39,7 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
       return;
     }
 
-    if (amountPaid > selectedCustomer.totalDue) {
+    if (amountPaid > selectedParty.totalDue) {
       toast({
         title: "Error",
         description: "Amount cannot be greater than total due",
@@ -45,12 +50,28 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/payment/customer`, {
+      const endpoint = partyType === 'customer'
+        ? '/payment/customer'
+        : '/payment/supplier';
+
+      
+      // TODO: Delete this: Only for debug:
+      console.log('For Checking only the body of payment details {BODY} ::: ')
+      console.log({
+        [`${partyType}ID`]: selectedParty.id,
+        [`${partyType}Name`]: selectedParty.name,
+        companyID: state.companyID,
+        amountPaid,
+        paymentMode,
+        remarks,
+      });
+
+      const response = await fetch(`${import.meta.env.REACT_APP_API_URL}${endpoint}`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          customerID: selectedCustomer.customerID || selectedCustomer.id,
-          customerName: selectedCustomer.name,
+          [`${partyType}ID`]: selectedParty.id,
+          [`${partyType}Name`]: selectedParty.name,
           companyID: state.companyID,
           amountPaid,
           paymentMode,
@@ -95,17 +116,16 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
         </div>
         
         <div className="space-y-4">
-          {/* Customer Info */}
           <div className="bg-gray-50 p-3 rounded-lg space-y-2">
             <p className="text-gray-700">
-              <span className="font-medium">Customer:</span> {selectedCustomer.name}
+              <span className="font-medium">{partyType === 'customer' ? 'Customer' : 'Supplier'}:</span> {selectedParty.name}
             </p>
             <p className="text-gray-700">
               <span className="font-medium">Company:</span> {state.companyName}
             </p>
             <p className="text-gray-700">
               <span className="font-medium">Total Due:</span> 
-              <span className="text-red-600 font-semibold"> Rs.{selectedCustomer.totalDue}</span>
+              <span className="text-red-600 font-semibold"> Rs.{selectedParty.totalDue}</span>
             </p>
           </div>
 
@@ -117,7 +137,7 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
               onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
               className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
               placeholder="0.00"
-              max={selectedCustomer.totalDue}
+              max={selectedParty.totalDue}
             />
           </div>
 
@@ -162,4 +182,4 @@ const PaymentProcessModal: React.FC<PaymentProcessModalProps> = ({
   );
 };
 
-export default PaymentProcessModal; 
+export default PaymentProcessModal;

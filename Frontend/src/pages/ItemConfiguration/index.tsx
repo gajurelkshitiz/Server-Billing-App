@@ -26,7 +26,7 @@ const SalesConfiguration: React.FC = () => {
 
   useEffect(() => {
     if (state.companyID == 'all' && state.companyID) {
-      navigate('/dashboard');
+      navigate('/home/dashboard');
     }
   }, [state.companyID]);
 

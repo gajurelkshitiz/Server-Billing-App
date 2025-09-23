@@ -5,7 +5,7 @@ const Company = require('../models/company');
 const { moveFileToFinalLocation, cleanupTempFile } = require('../utils/filePathHelper');
 const path = require('path');
 
-const createDocument = async (req, res) => {
+const createCustomerDocument = async (req, res) => {
   try {
     // for debug:
     console.log('Document Creation request recieved.');
@@ -112,6 +112,6 @@ const getDocumentsByCustomer = async (req, res) => {
 
 
 module.exports = {
-    createDocument,
+    createCustomerDocument,
     getDocumentsByCustomer
 }

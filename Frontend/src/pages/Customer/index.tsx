@@ -33,7 +33,7 @@ const CustomerPage = () => {
 
   useEffect(() => {
     if (state.companyID === 'all') {
-      navigate('/dashboard');
+      navigate('/home/dashboard');
     }
   }, [state.companyID]);
 

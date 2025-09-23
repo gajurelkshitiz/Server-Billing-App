@@ -298,7 +298,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobile = false, isMobileMenuOp
                 className="text-xl font-extrabold cursor-pointer"
                 style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
                 onClick={() => {
-                  navigate("/dashboard");
+                  navigate("/home/dashboard");
                   if (isMobile) setIsMobileMenuOpen?.(false);
                 }}
               >

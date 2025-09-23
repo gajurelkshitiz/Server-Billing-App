@@ -64,7 +64,7 @@ const SalesEntryPage = () => {
 
   useEffect(() => {
     if (state.companyID == 'all' && state.companyID) {
-      navigate('/dashboard');
+      navigate('/home/dashboard');
     }
   }, [state.companyID]);
 
@@ -93,27 +93,29 @@ const SalesEntryPage = () => {
   };
 
   const handleInputChange = (name: string, value: string) => {
-    if (name === "billNo" && typeof value === "string") {
-      const isDuplicate = salesEntries.some(entry => 
-        entry.billNo === value && 
-        (!editingSalesEntry || entry._id !== formData._id)
-      );
-      
-      if (isDuplicate) {
-        toast({
-          title: "Validation Error",
-          description: "Bill number already exists. Please use a unique bill number.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+    // Only check for duplicate billNo when the input loses focus (not on every keystroke)
+    // So, remove this logic from handleInputChange and move it to the form submit handler
+
+    // Just update the formData here
 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    // Check for duplicate billNo only on submit
+    const isDuplicateBillNo = salesEntries.some(
+      entry => entry.billNo === formData.billNo && (!editingSalesEntry || entry._id !== formData._id)
+    );
+    if (isDuplicateBillNo) {
+      toast({
+        title: "Duplicate Bill Number",
+        description: "This bill number already exists. Please enter a unique bill number.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (editingSalesEntry) {
       await updateSalesEntryHandler();

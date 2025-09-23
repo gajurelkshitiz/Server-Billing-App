@@ -1,0 +1,11 @@
+{
+  "name": "Billing System",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently --names \"BILLING_BACKEND,BILLING_FRONTEND\" -c \"cyan,green\" \"npm run dev --prefix Backend\" \"npm run dev --prefix Frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}

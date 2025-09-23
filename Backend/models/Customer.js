@@ -22,12 +22,6 @@ const customerSchema = new mongoose.Schema({
     enum: ['credit', 'debit'],
     default: 'debit'
   },
-  creditLimitAmount: {
-    type: Number,
-  },
-  creditTimePeriodInDays: {
-    type: Number,
-  },
   panNo: {
     type: String,
     required: [true, "Please provide PAN No"]
@@ -40,6 +34,12 @@ const customerSchema = new mongoose.Schema({
     //   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     //   "Email Not Valid",
     // ],
+  },
+  creditLimitAmount: {
+    type: Number,
+  },
+  creditTimePeriodInDays: {
+    type: Number,
   },
   status: {
     type: Boolean,

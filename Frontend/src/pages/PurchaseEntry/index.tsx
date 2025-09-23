@@ -20,6 +20,13 @@ const PurchaseEntryPage = () => {
     addNewPurchaseEntryHandler,
     formData,
     setFormData,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    handleFilterChange, // Add this
+    filters, // Add this
   } = usePurchaseEntry();
 
   const {state, dispatch}:CompanyContextType = useCompanyStateGlobal()
@@ -28,7 +35,7 @@ const PurchaseEntryPage = () => {
   
   useEffect(() => {
     if (state.companyID == 'all' && state.companyID) {
-      navigate('/dashboard');
+      navigate('/home/dashboard');
     }
   },[state.companyID])
   
@@ -58,20 +65,8 @@ const PurchaseEntryPage = () => {
   // };
 
   const handleInputChange = (name: string, value: string) => {
-    // Only validate if dueAmount is being changed and amount is present
-    if (name === "dueAmount" && typeof value === "string") {
-      const due = parseFloat(value);
-      const amount = parseFloat(String(formData.amount ?? "0"));
-      if (due > amount) {
-        // alert("Due Amount cannot be greater than Total Amount!");
-        toast({
-          title: "Error",
-          description: `Due Amount cannot be greater than ${formData.amount}`,
-          variant: "destructive",
-        });
-        return; // Prevent update
-      }
-    }
+  
+    // Just update the formData here:
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -79,11 +74,12 @@ const PurchaseEntryPage = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
+
     if (editingPurchaseEntry) {
       await updatePurchaseEntryHandler();
       setIsModalOpen(false);
     } else {
-      console.log(formData);
+      console.log('checking the status of formData', formData);
       await addNewPurchaseEntryHandler();
       setIsModalOpen(false);
     }
@@ -103,6 +99,13 @@ const PurchaseEntryPage = () => {
         handleAdd={handleAdd}
         handleEdit={handleEdit}
         // handleDelete={handleDelete}
+        page={page}
+        setPage={setPage}
+        limit={limit}
+        setLimit={setLimit}
+        totalPages={totalPages}
+        onFilterChange={handleFilterChange} // Add this
+        currentFilters={filters} // Add this
       />
       <PurchaseEntryFormModal
         isModalOpen={isModalOpen}

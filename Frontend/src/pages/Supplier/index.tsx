@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { useToast } from "@/hooks/use-toast";
 import SupplierTable from "./SupplierPage";
 import SupplierFormModal from "./SupplierFormModal";
 import { useSuppliers } from "./useSuppliers";
 import { Supplier } from "./types";
+import { CompanyContextType, useCompanyStateGlobal } from "@/provider/companyState";
+import { useNavigate } from "react-router-dom";
 
 const SupplierPage = () => {
-  
+  const navigate = useNavigate();
+
   const {
     suppliers,
     loading,
@@ -16,7 +19,25 @@ const SupplierPage = () => {
     addNewSupplierHandler,
     formData,
     setFormData,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    handleFilterChange,
+    filters
   } = useSuppliers();
+
+  const { state, dispatch }: CompanyContextType = useCompanyStateGlobal();
+  const role = localStorage.getItem('role');
+
+  useEffect(() => {
+    if (state.companyID === 'all') {
+      navigate('/home/dashboard');
+    }
+  })
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<boolean>(false);
   const { toast } = useToast();
@@ -65,11 +86,17 @@ const SupplierPage = () => {
       <h1 className="text-3xl font-bold text-gray-900">Supplier Management</h1>
       <SupplierTable
         data={suppliers}
-        // TODO: Loading related kaam garna baki chha
         loading={loading}
         handleAdd={handleAdd}
         handleEdit={handleEdit}
         handleDelete={handleDelete}
+        page={page}
+        setPage={setPage}
+        limit={limit}
+        setLimit={setLimit}
+        totalPages={totalPages}
+        onFilterChange={handleFilterChange}
+        currentFilters={filters}
       />
       <SupplierFormModal
         isModalOpen={isModalOpen}
@@ -77,8 +104,6 @@ const SupplierPage = () => {
         formData={formData}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
-        addNewSupplierHandler={addNewSupplierHandler}
-        updateSupplierHandler={updateSupplierHandler}
         editingSupplier={editingSupplier}
         title={editingSupplier ? "Edit Supplier" : "Add New Supplier"}
       />

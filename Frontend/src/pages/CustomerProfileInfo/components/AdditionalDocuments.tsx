@@ -62,7 +62,7 @@ const AdditionalDocuments: React.FC<AdditionalDocumentsProps> = ({ customerId })
     const fetchDocuments = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.REACT_APP_API_URL}/financial-documents/${customerId}`,
+          `${import.meta.env.REACT_APP_API_URL}/financial-documents/customer/${customerId}`,
           {
             headers: getAuthHeaders(),
           }
@@ -415,7 +415,7 @@ const AdditionalDocuments: React.FC<AdditionalDocumentsProps> = ({ customerId })
     formData.companyID = localStorage.getItem("companyID");
 
     console.log("Updated Document: ", formData);
-    const url = `${import.meta.env.REACT_APP_API_URL}/financial-documents`;  
+    const url = `${import.meta.env.REACT_APP_API_URL}/financial-documents/customer`;  
     try {
       const form = new FormData();
       // Append all fields to FormData

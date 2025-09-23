@@ -13,10 +13,29 @@ const supplierSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  prevClosingBalance: {
+    type: Number,
+    default: 0
+  },
+  type: {
+    type: String,
+    enum: ['credit', 'debit'],
+    default: 'debit'
+  },
+  panNo: {
+    type: String,
+    required: [true, "Please provide PAN No"]
+  },
   email: {
     type: String,
     required:[true,'please provide a valid phone number'],
     unique: true,
+  },
+  creditLimitAmount: {
+    type: Number,
+  },
+  creditTimePeriodInDays: {
+    type: Number,
   },
   status: {
     type: Boolean,
@@ -38,10 +57,6 @@ const supplierSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin"
   },
-  // companyName: {
-  //   type: String,
-  //   ref: 'Company'
-  // }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Supplier', supplierSchema);
