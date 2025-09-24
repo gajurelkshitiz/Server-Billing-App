@@ -71,6 +71,7 @@ const verifyEmail = async (req, res) => {
 // login for superadmin and admin and user
 const login = async (req, res) => {
   console.log("Login request received");
+  console.log(req.body);
 
   const { email, password } = req.body;
 
@@ -88,6 +89,7 @@ const login = async (req, res) => {
   // If not found, try Admin
   if (!account) {
     account = await Admin.findOne({ email });
+    console.log(account);
     if (account) role = "admin";
   }
 
@@ -102,13 +104,8 @@ const login = async (req, res) => {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "User with this email not found" });
   }
 
-  // console.log('original password')
-  // console.log(account.password)
-  // console.log('entered password ')
-  // console.log(password)
+  /*  // This feature has been stopped by the owner.
 
-  // console.log(role)
-  // console.log(account.isVerified)
   // check for verified/unverified user or Admin.
   if (role === "user" || role === "admin") {
     if (!account.isVerified) {
@@ -118,11 +115,21 @@ const login = async (req, res) => {
     }
   }
 
+  */
+
+
+  console.log('checkpoint - A');
+  console.log('password: ', password);
+  console.log('Account password: ', account.password);
+
+  // password ko value save bhako chhaina when creating admin.
+
   // Validate password
   const isPasswordCorrect = await checkPassword(password, account.password);
 
-  // console.log(isPasswordCorrect)
-  // console.log("check password correct or not boolean")
+  console.log('Is password correct: ', isPasswordCorrect);
+
+
   if (!isPasswordCorrect) {
     throw new UnauthenticatedError("Incorrect Password");
   }

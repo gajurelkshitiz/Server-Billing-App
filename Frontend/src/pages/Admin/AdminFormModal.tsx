@@ -298,7 +298,7 @@ const AdminFormModal = ({
           </div>
 
           {/* Password (only when creating) */}
-          {/* {!editingAdmin && (
+          {!editingAdmin && (
             <div>
               <Label htmlFor="password">
                 Password<span className="text-red-500 ml-1">*</span>
@@ -312,7 +312,7 @@ const AdminFormModal = ({
                 required
               />
             </div>
-          )} */}
+          )}
 
           {/* Phone Number */}
           <div>

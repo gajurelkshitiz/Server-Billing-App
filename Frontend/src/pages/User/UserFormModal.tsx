@@ -95,15 +95,6 @@ const UserFormModal = ({
     }
   };
 
-  // const validateForm = () => {
-  //   if (!formData.name || formData.name.trim() === "") return "Full Name";
-  //   if (!formData.companyID || formData.companyID.trim() === "") return "Company";
-  //   if (!formData.departmentNo || formData.departmentNo.trim() === "") return "Department";
-  //   if (!formData.email || formData.email.trim() === "") return "Email";
-  //   // if (!editingUser && (!formData.password || formData.password.trim() === "")) return "Password";
-  //   if (!formData.phoneNo || !isValidPhoneNumber(formData.phoneNo)) return "Phone Number";
-  //   return null;
-  // };
 
   const handleImageFileChange = (name: string, file: File | null) => {
     if (!file) {
@@ -287,7 +278,7 @@ const UserFormModal = ({
           </div>
 
           {/* Password (hide when editing) */}
-          {/* {!editingUser && (
+          {!editingUser && (
             <div>
               <Label htmlFor="password">
                 Password<span className="text-red-500 ml-1">*</span>
@@ -302,7 +293,7 @@ const UserFormModal = ({
                 className="mt-1"
               />
             </div>
-          )} */}
+          )} 
 
           {/* Phone Number */}
           <div>

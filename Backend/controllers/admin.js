@@ -11,8 +11,8 @@ const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathH
 
 const createAdmin = async (req, res) => {
   console.log(req.body);
-  const { name, email, phoneNo, subsName, mode } = req.body;
-  if (!name || !email || !phoneNo || !subsName || !mode) {
+  const { name, email, password, phoneNo, subsName, mode } = req.body;
+  if (!name || !email || !password || !phoneNo || !subsName || !mode) {
     throw new BadRequestError("Please provide all values");
   }
 
@@ -35,13 +35,14 @@ const createAdmin = async (req, res) => {
   const admin = await Admin.create({ 
     name,
     email,
+    password,
     phoneNo,
     subsName,
     subsID,
     mode,
     emailVerificationToken,
     emailVerificationTokenExpiresAt,
-    isVerified: false,
+    // isVerified: false,
     superadminID: req.user.tokenID
   });
 
@@ -68,6 +69,17 @@ const createAdmin = async (req, res) => {
     }
   }
 
+
+  res.status(200).json({
+    status: "success",
+    admin
+  })
+
+
+  /*
+
+  // This feature has been stopped by the owner of this project:
+
   try {
     const emailResult = await sendVerificationEmail(admin.email, admin.name, emailVerificationToken, "admin");
     const whatsappResult = await sendCustomTemplateWhatsappMessage(admin.phoneNo, admin.name);
@@ -91,6 +103,7 @@ const createAdmin = async (req, res) => {
       error: error.message || error,
     });
   }
+  */
 };
 
 const getAllAdmins = async (req, res) => {
@@ -125,7 +138,7 @@ const exportAdmins = async (req, res) => {
     // { header: "SuperAdmin ID", key: "superadminID", width: 10 },
     { header: "Role", key: "role", width: 10 },
     { header: "Last Login", key: "lastLogin", width: 10 },
-    { header: "Is Verified", key: "isVerified", width: 10 },
+    // { header: "Is Verified", key: "isVerified", width: 10 },
     // { header: "SuperAdmin ID", key: "superadminID", width: 10 },
     { header: "Email Verification Token", key: "emailVerificationToken", width: 10 },
     { header: "Email Verification Token Expires At", key: "emailVerificationTokenExpiresAt", width: 10 },

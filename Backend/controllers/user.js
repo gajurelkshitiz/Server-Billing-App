@@ -12,8 +12,8 @@ const { sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
 
 const createUser = async (req, res) => {
   console.log('inside create user', req.body);
-  const { name, email, phoneNo, companyID, departmentNo } = req.body;
-  if (!name || !email || !phoneNo || !companyID || !departmentNo) {
+  const { name, email, password, phoneNo, companyID, departmentNo } = req.body;
+  if (!name || !email || !password || !phoneNo || !companyID || !departmentNo) {
     throw new BadRequestError("Please provide all values");
   }
 
@@ -48,7 +48,7 @@ const createUser = async (req, res) => {
     mode: admin.mode,
     emailVerificationToken,
     emailVerificationTokenExpiresAt,
-    isVerified: false
+    // isVerified: false
   });
 
   // Handle profile image upload after user creation

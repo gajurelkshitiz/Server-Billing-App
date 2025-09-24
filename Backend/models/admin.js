@@ -58,9 +58,14 @@ const adminSchema = new mongoose.Schema({
     type:Date,
     default:Date.now
   },
-  isVerified: {
-    type: Boolean,
-    default: false
+  // isVerified: {
+  //   type: Boolean,
+  //   default: false
+  // },
+  password: {
+    type: String,
+    required: [true, "Please Enter Password"],
+    // select: false,
   },
   emailVerificationToken: {
     type: String,
@@ -89,10 +94,10 @@ const adminSchema = new mongoose.Schema({
   { timestamps: true }
 );
 
-// adminSchema.pre("save", async function () {
-//   const salt = await bcrypt.genSalt(10);
-//   this.password = await bcrypt.hash(this.password, salt);
-// });
+adminSchema.pre("save", async function () {
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
 
 // Middleware
 adminSchema.pre("save", function(next) {
