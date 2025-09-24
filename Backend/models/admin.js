@@ -24,7 +24,7 @@ const adminSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    // required: [true, "Please Enter Password"],
+    required: [true, "Please Enter Password"],
     minLength: 5,
   },
   phoneNo: {
@@ -62,11 +62,6 @@ const adminSchema = new mongoose.Schema({
   //   type: Boolean,
   //   default: false
   // },
-  password: {
-    type: String,
-    required: [true, "Please Enter Password"],
-    // select: false,
-  },
   emailVerificationToken: {
     type: String,
   },
@@ -94,9 +89,14 @@ const adminSchema = new mongoose.Schema({
   { timestamps: true }
 );
 
-adminSchema.pre("save", async function () {
+adminSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified (or is new)
+  if (!this.isModified('password')) return next();
+
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Middleware
