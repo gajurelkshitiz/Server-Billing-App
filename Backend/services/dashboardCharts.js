@@ -6,6 +6,7 @@ const computerizedPurchaseEntry = require('../models/computerizedPurchaseEntry')
 const purchaseEntry = require('../models/PurchaseEntry');
 const Customer = require('../models/Customer');
 const CustomerPayment = require('../models/CustomerPayment');
+const FiscalYear = require('../models/FiscalYear')
 // import BikramSambat, {ADToBS, BSToAD}  from "bikram-sambat-js"
 const BikramSambat = require('bikram-sambat-js');
 
@@ -100,6 +101,55 @@ const netRevenueData = async (mode, companyID) => {
     return result;
 }
 
+
+const fiscalYearTotalRevenue = async (mode, companyID) => {
+    // First, get the active fiscal year
+    const activeFiscalYear = await FiscalYear.findOne({status:true})
+
+    if (!activeFiscalYear) {
+        return {totalRevenue: 0, fiscalYear: null};
+    }
+
+    let totalRevenueData;
+
+    if (mode === 'computerized') {
+        totalRevenueData = await computerizedSalesEntry.aggregate([
+            {
+                $match: {
+                    companyID: new Types.ObjectId(companyID),
+                    fiscalYear: activeFiscalYear.name 
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: "$grandTotal" }
+                }
+            }
+        ]);
+    } else {
+        totalRevenueData = await salesEntry.aggregate([
+            {
+                $match: {
+                    companyID: new Types.ObjectId(companyID),
+                    fiscalYear: activeFiscalYear.name
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: "$netTotalAmount" }
+                }
+            }
+        ])
+    }
+
+
+    return {
+        totalRevenue: totalRevenueData,
+        fiscalYear: activeFiscalYear.name 
+    }
+}
 
 
 const recievableSummary = async (mode, companyID) => {
@@ -332,6 +382,38 @@ const monthlyRevenue = async (companyID) => {
 };
 
 
+const fiscalYearTotalEarning = async (companyID) => {
+    // First, get the active fiscal year
+    const activeFiscalYear = await FiscalYear.findOne({status:true})
+
+    if (!activeFiscalYear) {
+        return {totalEarning: 0, fiscalYear: null};
+    }
+
+    const totalEarningData = await CustomerPayment.aggregate([
+        { 
+            $match: { 
+            companyID: new Types.ObjectId(companyID),
+            fiscalYear: activeFiscalYear.name
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalEarning: { $sum: '$amountPaid' }
+            }
+        }
+    ])
+
+    return {
+        totalEarning: totalEarningData,
+        fiscalYear: activeFiscalYear.name
+    }
+
+
+}
+
+
 const salesVsPurchase = async (mode, companyID) => {
 
     let salesEntryData;
@@ -406,7 +488,9 @@ const salesVsPurchase = async (mode, companyID) => {
 module.exports = {
     transactionDistributionData,
     netRevenueData,
+    fiscalYearTotalRevenue,
     recievableSummary,
     monthlyRevenue,
+    fiscalYearTotalEarning,
     salesVsPurchase
 };

@@ -8,11 +8,13 @@ router.get('/data', async (req, res) => {
         const companyID = req.user.companyID || req.query.companyID;
 
         // console.log('companyID', companyID);
-        const [ transactionalDistribution, netRevenue, recievableSummary, monthlyRevenue, salesVsPurchase ] = await Promise.all([
+        const [ transactionalDistribution, netRevenue, fiscalYearTotalRevenue, recievableSummary, monthlyRevenue, fiscalYearTotalEarning, salesVsPurchase ] = await Promise.all([
             dashboardChartService.transactionDistributionData(mode, companyID),
             dashboardChartService.netRevenueData(mode, companyID),
+            dashboardChartService.fiscalYearTotalRevenue(mode, companyID),
             dashboardChartService.recievableSummary(mode, companyID),
             dashboardChartService.monthlyRevenue(companyID),
+            dashboardChartService.fiscalYearTotalEarning(companyID),
             dashboardChartService.salesVsPurchase(mode, companyID)
         ]);
 
@@ -20,8 +22,10 @@ router.get('/data', async (req, res) => {
         res.json({
             transactionalDistribution: transactionalDistribution,
             netRevenue: netRevenue,
+            fiscalYearTotalRevenue, fiscalYearTotalRevenue,
             recievableSummary: recievableSummary,
             monthlyRevenue: monthlyRevenue,
+            fiscalYearTotalEarning: fiscalYearTotalEarning,
             salesVsPurchase: salesVsPurchase
         })
     } catch (error) {

@@ -18,9 +18,11 @@ const Dashboard = () => {
   const {
     transactionalDistribution,
     netRevenue,
+    fiscalYearTotalRevenue,
     receivable,
     topCustomers,
     monthlyRevenue,
+    fiscalYearTotalEarning,
     salesPaymentRatio,
     loading,
     error
@@ -117,10 +119,15 @@ const Dashboard = () => {
   const currentAmount = receivable?.currentAmount || 0;
   const overDueAmount = receivable?.overDueAmount || 0;
   const mrrData = monthlyRevenue;
-  const salesVsPaymentsData = [
-    { name: 'Sales', amount: 1650000, fill: '#3b82f6' },
-    { name: 'Payments', amount: 1225000, fill: '#10b981' },
-  ];
+  // const salesVsPaymentsData = [
+  //   { name: 'Sales', amount: 1650000, fill: '#3b82f6' },
+  //   { name: 'Payments', amount: 1225000, fill: '#10b981' },
+  // ];
+  const salesVsPaymentsData = salesPaymentRatio.map(item => ({
+    ...item, 
+    amount: item.amount || 0 // Ensure amount exists, default to o if missing
+  }))
+
 
   const quickLinks = getQuickLinks();
 
@@ -242,12 +249,12 @@ const Dashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle>Net Revenue</CardTitle>
-            <div className="text-gray-500 text-sm">Last Year</div>
+            <div className="text-gray-500 text-sm">This Year</div>
           </CardHeader>
           <CardContent>
             {/* TODO: yo eksin ma milamla */}
-            <div className="text-2xl font-bold mb-2">Rs.595,500.60</div>
-            <div className="text-green-600 font-semibold mb-2">6.23% Year on Year</div>
+            <div className="text-2xl font-bold mb-2">Rs.{fiscalYearTotalRevenue.toLocaleString()}</div>
+            {/* <div className="text-green-600 font-semibold mb-2">6.23% Year on Year</div> */}
             <ResponsiveContainer width="100%" height={120}>
               <BarChart data={netRevenueData}>
                 <XAxis dataKey="month" fontSize={10} />
@@ -332,8 +339,8 @@ const Dashboard = () => {
             <div className="text-gray-500 text-sm">This Year</div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold mb-2">$68,404.00</div>
-            <div className="text-green-600 font-semibold mb-2">9.75% Year on Year</div>
+            <div className="text-2xl font-bold mb-2">Rs. {fiscalYearTotalEarning.toLocaleString()}</div>
+            {/* <div className="text-green-600 font-semibold mb-2">9.75% Year on Year</div> */}
             <ResponsiveContainer width="100%" height={80}>
               <LineChart data={mrrData}>
                 <XAxis dataKey="month" fontSize={10} />

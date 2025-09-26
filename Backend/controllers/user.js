@@ -74,28 +74,28 @@ const createUser = async (req, res) => {
     }
   }
 
-  try {
-    const emailResult = await sendVerificationEmail(user.email, user.name, emailVerificationToken, "user");
-    const whatsappResult = await sendCustomTemplateWhatsappMessage(user.phoneNo, user.name);
+  // try {
+  //   const emailResult = await sendVerificationEmail(user.email, user.name, emailVerificationToken, "user");
+  //   const whatsappResult = await sendCustomTemplateWhatsappMessage(user.phoneNo, user.name);
 
-    const emailSuccess = emailResult && emailResult.status === "success";
-    const whatsappSuccess = whatsappResult && whatsappResult.status === "success";
+  //   const emailSuccess = emailResult && emailResult.status === "success";
+  //   const whatsappSuccess = whatsappResult && whatsappResult.status === "success";
 
-    res.status(StatusCodes.CREATED).json({
-      status: emailSuccess && whatsappSuccess ? "success" : "partial_success",
-      message: `User created successfully. Email: ${emailSuccess ? "sent" : "failed"}, WhatsApp: ${whatsappSuccess ? "sent" : "failed"}`,
-      user,
-      emailResult,
-      whatsappResult
-    });
-  } catch (error) {
-    res.status(StatusCodes.CREATED).json({
-      status: "user_created_notification_failed",
-      message: "User created but notifications failed",
-      user,
-      error: error.message
-    });
-  }
+  //   res.status(StatusCodes.CREATED).json({
+  //     status: emailSuccess && whatsappSuccess ? "success" : "partial_success",
+  //     message: `User created successfully. Email: ${emailSuccess ? "sent" : "failed"}, WhatsApp: ${whatsappSuccess ? "sent" : "failed"}`,
+  //     user,
+  //     emailResult,
+  //     whatsappResult
+  //   });
+  // } catch (error) {
+  //   res.status(StatusCodes.CREATED).json({
+  //     status: "user_created_notification_failed",
+  //     message: "User created but notifications failed",
+  //     user,
+  //     error: error.message
+  //   });
+  // }
 };
 
 

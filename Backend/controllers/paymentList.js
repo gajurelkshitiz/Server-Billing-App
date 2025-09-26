@@ -5,6 +5,7 @@ const SupplierPayment = require('../models/SupplierPayment');
 const { BadRequestError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
+const FiscalYear = require("../models/FiscalYear");
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -29,12 +30,17 @@ const createCustomerPayment = async (req, res) => {
     // get current date:
     const date = new NepaliDate();
     console.log('inside customer payment date is: ', date);
-    
 
+    // save the current fiscal Year value also, for filter by filter year later
+    const fiscalYearObj = await FiscalYear.findOne({ status: true });
+    console.log('Fiscal Year : ', fiscalYearObj);
+    const fiscalYear = fiscalYearObj.name;
+        
     
     const customerPaymentList = await CustomerPayment.create({
         ...req.body,
         date,
+        fiscalYear,
         adminID
     })
     console.log(customerPaymentList);
@@ -60,10 +66,16 @@ const createSupplierPayment = async (req, res) => {
     const date = new NepaliDate();
     console.log('inside customer payment date is: ', date);
 
+    // save the current fiscal Year value also, for filter by filter year later
+    const fiscalYearObj = await FiscalYear.findOne({ status: true });
+    console.log('Fiscal Year : ', fiscalYearObj);
+    const fiscalYear = fiscalYearObj.name;
+
 
     const supplierPaymentList = await SupplierPayment.create({
         ...req.body,
         date, 
+        fiscalYear,
         adminID
     })
     console.log(supplierPaymentList);

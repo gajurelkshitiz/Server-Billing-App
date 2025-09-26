@@ -22,11 +22,6 @@ const adminSchema = new mongoose.Schema({
     ],
     unique: true,
   },
-  password: {
-    type: String,
-    required: [true, "Please Enter Password"],
-    minLength: 5,
-  },
   phoneNo: {
     type: String,
     required: [true, "Please provide phone number"],
@@ -62,6 +57,11 @@ const adminSchema = new mongoose.Schema({
   //   type: Boolean,
   //   default: false
   // },
+  password: {
+    type: String,
+    required: [true, "Please Enter Password"],
+    // select: false,
+  },
   emailVerificationToken: {
     type: String,
   },
@@ -89,20 +89,20 @@ const adminSchema = new mongoose.Schema({
   { timestamps: true }
 );
 
+// Only hash password if it's new or modified
 adminSchema.pre("save", async function (next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
-
-
+  
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Middleware
+// Middleware for updatedAt
 adminSchema.pre("save", function(next) {
   this.updatedAt = Date.now();
   next();
-} )
+});
 
 module.exports = mongoose.model("Admin", adminSchema);

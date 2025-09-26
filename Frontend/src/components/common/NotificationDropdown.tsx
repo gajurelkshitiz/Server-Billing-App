@@ -185,7 +185,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         </div>
 
         {/* Footer: Show/Hide Past Notifications */}
-        {notifications.length > 0 && (
+        {/* {notifications.length > 0 && ( */}
           <div className="border-t border-gray-100 p-3 flex flex-col gap-2">
             {typeof showPast !== 'undefined' && (
               <Button
@@ -212,7 +212,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               View all notifications
             </Button>
           </div>
-        )}
+        {/* )} */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

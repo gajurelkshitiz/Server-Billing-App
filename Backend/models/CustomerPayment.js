@@ -28,6 +28,10 @@ const customerPaymentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    fiscalYear: {
+        type: String,
+        ref: 'FiscalYear'
+    },
     remarks: {
         type: String
     }

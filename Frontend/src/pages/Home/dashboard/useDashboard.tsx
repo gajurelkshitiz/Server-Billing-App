@@ -5,9 +5,11 @@ export function useDashboardData() {
     const [data, setData] = useState(null);
     const [transactionalDistribution, setTransactionalDistribution] = useState([]);
     const [netRevenue, setNetRevenue] = useState([]);
+    const [fiscalYearTotalRevenue, setFiscalYearTotalRevenue] = useState();
     const [receivable, setReceivable] = useState([]);
     const [topCustomers, setTopCustomes] = useState([]);
     const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+    const [fiscalYearTotalEarning, setFiscalYearTotalEarning] = useState();
     const [salesPaymentRatio, setSalesPaymentRatio] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -41,8 +43,10 @@ export function useDashboardData() {
             //setting values here:
             setTransactionalDistribution(data.transactionalDistribution || []);
             setNetRevenue(data.netRevenue || []);
+            setFiscalYearTotalRevenue(data.fiscalYearTotalRevenue.totalRevenue[0].totalRevenue || 0)
             setReceivable(data.recievableSummary || {});
             setMonthlyRevenue(data.monthlyRevenue || []);
+            setFiscalYearTotalEarning(data.fiscalYearTotalEarning.totalEarning[0].totalEarning || 0);
             setSalesPaymentRatio(data.salesVsPurchase || []);
 
         } catch (err) {
@@ -100,9 +104,11 @@ export function useDashboardData() {
     return { 
         transactionalDistribution,
         netRevenue,
+        fiscalYearTotalRevenue,
         receivable,
         topCustomers,
         monthlyRevenue,
+        fiscalYearTotalEarning,
         salesPaymentRatio,
         loading, 
         error 

@@ -10,7 +10,7 @@ const { sendCustomTemplateWhatsappMessage } = require("../middleware/whatsapp");
 const { moveFileToFinalLocation, cleanupTempFile } = require("../utils/filePathHelper");
 
 const createAdmin = async (req, res) => {
-  console.log(req.body);
+  console.log('Data before creating admin: ',req.body);
   const { name, email, password, phoneNo, subsName, mode } = req.body;
   if (!name || !email || !password || !phoneNo || !subsName || !mode) {
     throw new BadRequestError("Please provide all values");
