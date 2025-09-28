@@ -5,30 +5,55 @@ import { LuPrinter } from "react-icons/lu";
 import { FaCheckCircle } from "react-icons/fa";
 import { BsXCircleFill } from "react-icons/bs";
 
-const BillPreviewModal = ({ isOpen, onClose, salesEntryId, title }) => {
+interface BillPreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  entryId: string;
+  title?: string;
+  type: "sales" | "purchase";
+}
+
+const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
+  isOpen,
+  onClose,
+  entryId,
+  title,
+  type,
+}) => {
   const [showPrintConfirmation, setShowPrintConfirmation] = useState(false);
 
-  const pdfUrl = `http://localhost:8000/api/preview-invoice?computerizedSalesEntryID=${salesEntryId}`;
+  // Dynamic URL based on type
+  const pdfUrl =
+    type === "sales"
+      ? `http://localhost:8000/api/v1/salesInvoice/preview-invoice?computerizedSalesEntryID=${entryId}`
+      : `http://localhost:8000/api/v1/purchaseInvoice/preview-invoice?computerizedPurchaseEntryID=${entryId}`;
 
   // Handler for incrementing print count
   const handleIncrementPrintCount = useCallback(async () => {
     try {
-      await fetch(
-        `${import.meta.env.REACT_APP_API_URL}/computerizedSalesEntry/increment-print-count`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "X-Role": localStorage.getItem("role") || "",
-          },
-          body: JSON.stringify({ computerizedSalesEntryID: salesEntryId }),
-        }
-      );
+      const endpoint =
+        type === "sales"
+          ? "computerizedSalesEntry/increment-print-count"
+          : "computerizedPurchaseEntry/increment-print-count";
+
+      const bodyKey =
+        type === "sales"
+          ? "computerizedSalesEntryID"
+          : "computerizedPurchaseEntryID";
+
+      await fetch(`${import.meta.env.REACT_APP_API_URL}/${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "X-Role": localStorage.getItem("role") || "",
+        },
+        body: JSON.stringify({ [bodyKey]: entryId }),
+      });
     } catch (e) {
       // Optionally handle error
     }
-  }, [salesEntryId]);
+  }, [entryId, type]);
 
   // Handler for closing the modal
   const handleClose = useCallback(() => {

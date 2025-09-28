@@ -111,7 +111,7 @@ const ComputerizedPurchaseEntryPage = () => {
       const result = await addNewPurchaseEntryHandler();
       // If addNewSalesEntryHandler returns the new entry or its ID, use it. Otherwise, fetch the latest entry.
       if (result) {
-        newId = result.computerizedSalesEntry._id;
+        newId = result.computerizedPurchaseEntry._id;
       } else if (purchaseEntries.length > 0) {  // this will not get updated, so shows the previous code: its a bug as of now:
         // newId = salesEntries[0]._id; // fallback: show the latest
         console.log('Purchase Entries: ', purchaseEntries);
@@ -328,8 +328,9 @@ const ComputerizedPurchaseEntryPage = () => {
       <BillPreviewModal
         isOpen={isBillPreviewOpen}
         onClose={() => setIsBillPreviewOpen(false)}
-        salesEntryId={previewPurchaseEntryId || ''}
+        entryId={previewPurchaseEntryId || ''}
         title="Bill Preview"
+        type="purchase"
       />
     </div>
   );

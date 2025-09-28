@@ -44,9 +44,9 @@ function drawCompanyInfo(doc, invoiceData, currentY) {
   return currentY;
 }
 
-function generateSalesInvoice(invoiceData, res) {
+function generatePurchaseInvoice(invoiceData, res) {
 
-  console.log('Started making sales invoice');
+  console.log('Started making purchase invoice');
 
   const doc = new PDFDocument({ margin: 20, size: 'A4' });
 
@@ -100,34 +100,34 @@ function generateSalesInvoice(invoiceData, res) {
     .stroke();
 
   // For Vertical Partition
-  doc
-    .moveTo(285, currentY)  
-    .lineTo(285, currentY + 70)
-    .stroke();
+  // doc
+  //   .moveTo(285, currentY)  
+  //   .lineTo(285, currentY + 70)
+  //   .stroke();
 
 
-  currentY += 10   
+  // currentY += 10   
   // Billed to / Shipped to
-  doc
-    .font('Helvetica-Bold')
-    .text('Billed to:', 30, currentY)
-    .text('Shipped to:', 300, currentY);
+  // doc
+  //   .font('Helvetica-Bold')
+  //   .text('Billed to:', 30, currentY)
+  //   .text('Shipped to:', 300, currentY);
 
-  currentY += 15;
+  // currentY += 15;
 
-  doc
-    .font('Helvetica')
-    .text(invoiceData.billedTo.name, 30, currentY)
-    .text(`Address: ${invoiceData.billedTo.address}`, 30, currentY + 15)
-    .text(`PAN No.: ${invoiceData.billedTo.pan}`, 30, currentY + 30)
-    .text(invoiceData.shippedTo.name, 300, currentY)
-    .text(`Address: ${invoiceData.shippedTo.address}`, 300, currentY + 15);
+  // doc
+  //   .font('Helvetica')
+  //   .text(invoiceData.billedTo.name, 30, currentY)
+  //   .text(`Address: ${invoiceData.billedTo.address}`, 30, currentY + 15)
+  //   .text(`PAN No.: ${invoiceData.billedTo.pan}`, 30, currentY + 30)
+  //   .text(invoiceData.shippedTo.name, 300, currentY)
+  //   .text(`Address: ${invoiceData.shippedTo.address}`, 300, currentY + 15);
 
-  currentY += 45;
-  doc
-    .moveTo(10, currentY)
-    .lineTo(585, currentY)
-    .stroke();
+  // currentY += 45;
+  // doc
+  //   .moveTo(10, currentY)
+  //   .lineTo(585, currentY)
+  //   .stroke();
 
 
   // Table Header
@@ -327,4 +327,4 @@ function generateSalesInvoice(invoiceData, res) {
   doc.end();
 }
 
-module.exports = { generateSalesInvoice, drawHeader, drawCompanyInfo };
+module.exports = { generatePurchaseInvoice, drawHeader, drawCompanyInfo };

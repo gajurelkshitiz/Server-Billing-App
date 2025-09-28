@@ -97,6 +97,9 @@ const getCustomerLedgerService = async (customerId, fromDate, toDate) => {
 
   return {
     customer: customer.name,
+    panNo: customer.panNo,
+    address: customer.address,
+    phoneNo: customer.phoneNo,
     openingBalance: customer.prevClosingBalance,
     openingBalanceType: customer.type,
     transactions: ledger,
@@ -170,6 +173,9 @@ const getSupplierLedgerService = async (supplierId, fromDate, toDate) => {
 
   return {
     supplier: supplier.name,
+    panNo: supplier.panNo,
+    address: supplier.address,
+    phoneNo: supplier.phoneNo,
     openingBalance: supplier.prevClosingBalance,
     openingBalanceType: supplier.type,
     transactions: ledger,

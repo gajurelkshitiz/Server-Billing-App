@@ -298,19 +298,6 @@ const recievableSummary = async (mode, companyID) => {
         { name: '>360', value: moreThanThreeSixty, color: '#A28EFF' },
     ];
 
-
-
-    // console.log("Receivable Summary:", { 
-    //     totalPayment, 
-    //     totalDue, 
-    //     totalReceivable, 
-    //     breakevenDate,
-    //     salesAfterBreakevenCount: salesAfterBreakeven.length,
-    //     currentAmount,
-    //     overDueAmount,
-    //     receivableData
-    // });
-
     return {
         totalReceivable,
         currentAmount,
@@ -404,6 +391,16 @@ const fiscalYearTotalEarning = async (companyID) => {
             }
         }
     ])
+
+    console.log('fiscalYearTotalEarning is: ', totalEarningData);
+
+    // If no payments found, return default structure
+    if (!totalEarningData || totalEarningData.length === 0) {
+        return {
+            totalEarning: [{totalEarning: 0}],
+            fiscalYear: activeFiscalYear.name
+        }
+    }
 
     return {
         totalEarning: totalEarningData,

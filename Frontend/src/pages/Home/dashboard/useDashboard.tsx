@@ -43,10 +43,10 @@ export function useDashboardData() {
             //setting values here:
             setTransactionalDistribution(data.transactionalDistribution || []);
             setNetRevenue(data.netRevenue || []);
-            setFiscalYearTotalRevenue(data.fiscalYearTotalRevenue.totalRevenue[0].totalRevenue || 0)
+            setFiscalYearTotalRevenue(data.fiscalYearTotalRevenue?.totalRevenue?.[0]?.totalRevenue || 0)
             setReceivable(data.recievableSummary || {});
             setMonthlyRevenue(data.monthlyRevenue || []);
-            setFiscalYearTotalEarning(data.fiscalYearTotalEarning.totalEarning[0].totalEarning || 0);
+            setFiscalYearTotalEarning(data.fiscalYearTotalEarning?.totalEarning?.[0]?.totalEarning || 0);
             setSalesPaymentRatio(data.salesVsPurchase || []);
 
         } catch (err) {

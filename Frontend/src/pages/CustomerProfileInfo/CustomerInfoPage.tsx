@@ -448,8 +448,9 @@ const CustomerInfoPage: React.FC = () => {
           <BillPreviewModal
             isOpen={isBillPreviewOpen}
             onClose={() => setIsBillPreviewOpen(false)}
-            salesEntryId={previewSalesEntryId || ''}
+            entryId={previewSalesEntryId || ''}
             title="Bill Preview"
+            type="sales"
           />
         )}
       </div>

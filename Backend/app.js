@@ -54,6 +54,7 @@ const adminDatabaseExportRouter = require('./routes/adminDatabaseExport')
 
 // invoice Generate
 const salesInvoiceRoutes = require('./routes/salesInvoice');
+const purchaseInvoiceRoutes = require('./routes/purchaseInvoice');
 
 // dashboard and analytics Charts:
 const dashboardChartRoutes = require('./routes/dashboardCharts');
@@ -143,7 +144,8 @@ app.use('/api/v1/notifications', authenticationMiddleware, notificationRouter);
 app.use('/api/v1/dashboard', authenticationMiddleware, dashboardChartRoutes);
 
 
-app.use('/api', salesInvoiceRoutes);
+app.use('/api/v1/salesInvoice', salesInvoiceRoutes);
+app.use('/api/v1/purchaseInvoice', purchaseInvoiceRoutes);
 
 
 // for client's real IP:
